@@ -30,9 +30,8 @@ export default function AboutPage() {
           {/* Using a standard img tag for simplicity, next/image can be optimized later */}
           <img 
             className="w-[min(260px,70%)] mx-auto rounded-[18px] grayscale object-cover" 
-            src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80" 
-            alt="Portrait" 
-            onError={(e) => (e.currentTarget.style.display = 'none')}
+            src={"https://iedcsnmimt.vercel.app/static/media/steve.0ead07c00054eb156af5.png"}
+            alt="Steve Jobs Portrait" 
           />
         </div>
         
