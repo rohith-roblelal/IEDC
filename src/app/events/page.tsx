@@ -93,31 +93,39 @@ export default function EventsPage() {
     }, 1800);
   };
 
-  const openEvents = EVENTS.filter(e => e.registrationOpen);
+  const isEventClosed = (event: typeof EVENTS[0]) => {
+    if (!event.registrationOpen) return true;
+    const eventDate = new Date(event.date);
+    eventDate.setHours(23, 59, 59, 999);
+    return eventDate.getTime() < new Date().getTime();
+  };
+
+  const displayEvents = EVENTS;
 
   return (
-    <div className="py-24 px-6 relative">
+    <div className="py-24 px-6 relative" suppressHydrationWarning>
       <h2 className="text-center text-[clamp(1.8rem,4vw,2.4rem)] font-bold mb-5">Upcoming Events</h2>
       <p className="max-w-[680px] mx-auto text-center text-[#C4C4D4] font-medium text-base mb-10">
         Register for open events hosted by IEDC SNMIMT. Your spot is confirmed once you submit the form.
       </p>
 
-      {openEvents.length === 0 ? (
+      {displayEvents.length === 0 ? (
         <div className="text-center text-[#C4C4D4] max-w-[480px] mx-auto p-8 border border-dashed border-white/10 rounded-[18px]">
           No events are open for registration right now. Check back soon or follow us on Instagram for updates.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1100px] mx-auto">
-          {openEvents.map(event => {
+          {displayEvents.map(event => {
             const registered = hasRegistered(event.id);
+            const closed = isEventClosed(event);
             return (
               <motion.article 
                 key={event.id}
                 whileHover={{ y: -5 }}
                 className="bg-gradient-to-br from-[#3A2065]/55 to-[#0D1030]/90 border border-white/10 rounded-[18px] p-7 flex flex-col gap-3.5 shadow-xl"
               >
-                <span className={`self-start text-[0.72rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full ${registered ? 'bg-[#4F7DF9]/20 text-[#4F7DF9]' : 'bg-[#22D46B]/15 text-[#22D46B]'}`}>
-                  {registered ? 'Registered' : 'Registration Open'}
+                <span className={`self-start text-[0.72rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full ${closed ? 'bg-red-500/15 text-red-400' : registered ? 'bg-[#4F7DF9]/20 text-[#4F7DF9]' : 'bg-[#22D46B]/15 text-[#22D46B]'}`}>
+                  {closed ? 'Event Finished' : registered ? 'Registered' : 'Registration Open'}
                 </span>
                 <h3 className="text-[1.35rem] font-bold leading-tight">{event.title}</h3>
                 <div className="text-[#C4C4D4] text-[0.88rem] font-medium flex flex-col gap-1 mt-1">
@@ -128,10 +136,10 @@ export default function EventsPage() {
                 <p className="text-[#C4C4D4] text-[0.92rem] flex-1 mt-2">{event.description}</p>
                 <button 
                   onClick={() => setSelectedEvent(event)}
-                  disabled={registered}
-                  className={`mt-2 w-full font-bold py-3 px-6 rounded-full transition-transform ${registered ? 'bg-[#3A2065] text-white cursor-not-allowed' : 'bg-[#22D46B] text-[#1A1A2E] hover:-translate-y-0.5'}`}
+                  disabled={!closed && registered}
+                  className={`mt-2 w-full font-bold py-3 px-6 rounded-full transition-transform ${(!closed && registered) ? 'bg-[#3A2065] text-white cursor-not-allowed' : closed ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#22D46B] text-[#1A1A2E] hover:-translate-y-0.5'}`}
                 >
-                  {registered ? 'Already Registered' : 'Register Now'}
+                  {closed ? 'View Details' : registered ? 'Already Registered' : 'Register Now'}
                 </button>
               </motion.article>
             );
@@ -165,35 +173,48 @@ export default function EventsPage() {
               <h3 className="text-[1.3rem] font-bold mb-1.5">Event Registration</h3>
               <p className="text-gray-500 font-medium text-[0.88rem] mb-5">{selectedEvent.title} · {selectedEvent.date}</p>
               
-              <form onSubmit={handleRegister} className="flex flex-col gap-3.5">
-                <input type="text" name="name" placeholder="Full Name" required autoComplete="name" className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] outline-none focus:ring-2 focus:ring-[#4F7DF9]" />
-                <input type="email" name="email" placeholder="College Email" required autoComplete="email" className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] outline-none focus:ring-2 focus:ring-[#4F7DF9]" />
-                <input type="text" name="registerNumber" placeholder="Register Number" required pattern="[A-Za-z0-9\-\/]+" title="Enter your college register number" className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] outline-none focus:ring-2 focus:ring-[#4F7DF9]" defaultValue={typeof window !== 'undefined' ? sessionStorage.getItem('iedc-last-register-number') || '' : ''} />
-                <select name="department" required className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] outline-none focus:ring-2 focus:ring-[#4F7DF9] appearance-none">
-                  <option value="" disabled selected>Select Department</option>
-                  <option value="CSE">Computer Science (CSE)</option>
-                  <option value="ECE">Electronics (ECE)</option>
-                  <option value="ME">Mechanical (ME)</option>
-                  <option value="CE">Civil (CE)</option>
-                  <option value="MBA">MBA</option>
-                  <option value="Other">Other</option>
-                </select>
-                <select name="year" required className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] outline-none focus:ring-2 focus:ring-[#4F7DF9] appearance-none">
-                  <option value="" disabled selected>Select Year</option>
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                </select>
-                <button type="submit" className="w-full bg-[#4F7DF9] text-white font-bold py-3.5 rounded-[10px] mt-2 hover:-translate-y-0.5 transition-transform">
-                  Confirm Registration
-                </button>
-                {formStatus.message && (
-                  <div className={`text-center mt-2 text-sm font-medium ${formStatus.error ? 'text-red-500' : 'text-green-500'}`}>
-                    {formStatus.message}
+              {isEventClosed(selectedEvent) ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-600 font-medium mb-6 text-[0.95rem]">{selectedEvent.description}</p>
+                  <div className="bg-gray-100 rounded-[10px] p-5 text-sm text-gray-600 mb-6 flex flex-col gap-2 text-left">
+                    <p><strong className="text-gray-900">📍 Venue:</strong> {selectedEvent.venue}</p>
+                    <p><strong className="text-gray-900">🕐 Time:</strong> {selectedEvent.time}</p>
                   </div>
-                )}
-              </form>
+                  <div className="inline-block bg-red-100 text-red-600 font-bold px-6 py-2.5 rounded-full text-[0.9rem]">
+                    Registration Closed
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleRegister} className="flex flex-col gap-3.5">
+                  <input type="text" name="name" placeholder="Full Name" required autoComplete="name" className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] outline-none focus:ring-2 focus:ring-[#4F7DF9]" />
+                  <input type="email" name="email" placeholder="College Email" required autoComplete="email" className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] outline-none focus:ring-2 focus:ring-[#4F7DF9]" />
+                  <input type="text" name="registerNumber" placeholder="Register Number" required pattern="[A-Za-z0-9\-\/]+" title="Enter your college register number" className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] outline-none focus:ring-2 focus:ring-[#4F7DF9]" defaultValue={typeof window !== 'undefined' ? sessionStorage.getItem('iedc-last-register-number') || '' : ''} />
+                  <select name="department" required className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] outline-none focus:ring-2 focus:ring-[#4F7DF9] appearance-none">
+                    <option value="" disabled selected>Select Department</option>
+                    <option value="CSE">Computer Science (CSE)</option>
+                    <option value="ECE">Electronics (ECE)</option>
+                    <option value="ME">Mechanical (ME)</option>
+                    <option value="CE">Civil (CE)</option>
+                    <option value="MBA">MBA</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <select name="year" required className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] outline-none focus:ring-2 focus:ring-[#4F7DF9] appearance-none">
+                    <option value="" disabled selected>Select Year</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                  </select>
+                  <button type="submit" className="w-full bg-[#4F7DF9] text-white font-bold py-3.5 rounded-[10px] mt-2 hover:-translate-y-0.5 transition-transform">
+                    Confirm Registration
+                  </button>
+                  {formStatus.message && (
+                    <div className={`text-center mt-2 text-sm font-medium ${formStatus.error ? 'text-red-500' : 'text-green-500'}`}>
+                      {formStatus.message}
+                    </div>
+                  )}
+                </form>
+              )}
             </motion.div>
           </motion.div>
         )}

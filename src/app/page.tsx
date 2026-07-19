@@ -37,27 +37,23 @@ export default function Home() {
             </Link>
           </div>
           
-          <motion.svg 
+          <motion.img 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="mt-11 mx-auto w-[min(220px,60%)]" 
-            viewBox="0 0 200 200" 
-            xmlns="http://www.w3.org/2000/svg"
+            src="/logo.png"
+            alt="IEDC SNMIMT Logo"
+            className="mt-11 mx-auto w-[min(260px,70%)] object-contain drop-shadow-[0_0_20px_rgba(168,85,247,0.3)]" 
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="mt-4 flex flex-col items-center justify-center"
           >
-            <defs>
-              <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#3B82F6"/>
-                <stop offset="50%" stopColor="#A855F7"/>
-                <stop offset="100%" stopColor="#F97316"/>
-              </linearGradient>
-            </defs>
-            <circle cx="65" cy="70" r="42" fill="none" stroke="url(#logoGrad)" strokeWidth="14"/>
-            <circle cx="135" cy="70" r="42" fill="none" stroke="url(#logoGrad)" strokeWidth="14"/>
-            <path d="M105 40 L80 75 L100 75 L90 110 L125 65 L103 65 Z" fill="url(#logoGrad)"/>
-            <text x="100" y="150" textAnchor="middle" fontFamily="var(--font-poppins)" fontWeight="800" fontSize="26" fill="#FFFFFF">IEDC</text>
-            <text x="100" y="172" textAnchor="middle" fontFamily="var(--font-poppins)" fontWeight="500" fontSize="13" fill="#A855F7">SNMIMT</text>
-          </motion.svg>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-wider">IEDC</h2>
+            <p className="text-[#A855F7] font-medium tracking-[0.2em] text-sm md:text-base mt-1">SNMIMT</p>
+          </motion.div>
         </motion.div>
       </section>
 

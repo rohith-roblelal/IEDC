@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IEDC SNMIMT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0E27;
+      --bg-footer: #0A0A0F;
+      --purple-deep: #3D1A5C;
+      --purple-navy: #0D1030;
+      --grad-blue: #3B82F6;
+      --grad-purple: #A855F7;
+      --grad-orange: #F97316;
+      --accent-green: #22D46B;
+      --accent-blue: #4F7DF9;
+      --accent-purple: #3A2065;
+      --heading-accent: #8B7FE8;
+      --text-body: #C4C4D4;
+      --white: #FFFFFF;
+      --dark-text: #1A1A2E;
+      --radius-lg: 28px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Poppins', sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    button,
+    input,
+    textarea {
+      font-family: inherit;
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 14, 39, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 1.05rem;
+      white-space: nowrap;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: var(--text-body);
+    }
+
+    .nav-links a.active {
+      color: var(--white);
+      position: relative;
+    }
+
+    .nav-links a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent-blue);
+      border-radius: 2px;
+    }
+
+    .nav-login {
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    .nav-toggle {
+      display: none;
+    }
+
+    .nav-links.open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: rgba(10, 14, 39, 0.98);
+      padding: 20px 24px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      gap: 16px;
+    }
+
+    .nav-inner {
+      position: relative;
+    }
+
+    @media (max-width: 760px) {
+      .nav-links {
+        display: none;
+      }
+
+      .nav-toggle {
+        display: block;
+        background: none;
+        border: none;
+        color: var(--white);
+        font-size: 1.4rem;
+        cursor: pointer;
+      }
+    }
+
+    /* HERO */
+    .hero-section {
+      padding: 48px 24px 0;
+    }
+
+    .hero-card {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      background: radial-gradient(circle at 75% 20%, var(--purple-deep), var(--purple-navy) 70%);
+      border-radius: var(--radius-lg);
+      padding: 56px 32px;
+      text-align: center;
+    }
+
+    .hero-card h1 {
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .hero-card h1 span {
+      color: var(--heading-accent);
+      display: block;
+    }
+
+    .hero-card p {
+      margin: 20px auto 0;
+      max-width: 640px;
+      color: var(--text-body);
+      font-size: 0.98rem;
+    }
+
+    .hero-logo {
+      margin: 44px auto 0;
+      width: min(220px, 60%);
+    }
+
+    /* SECTION GENERIC */
+    section {
+      padding: 88px 24px;
+    }
+
+    .section-heading {
+      text-align: center;
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .section-body {
+      max-width: 680px;
+      margin: 0 auto;
+      text-align: center;
+      color: var(--text-body);
+      font-weight: 500;
+      font-size: 1rem;
+    }
+
+    .btn {
+      display: inline-block;
+      border: none;
+      border-radius: 999px;
+      padding: 16px 36px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn:focus-visible {
+      outline: 3px solid var(--white);
+      outline-offset: 3px;
+    }
+
+    .btn-purple {
+      background: var(--accent-purple);
+      color: var(--white);
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .btn-green {
+      background: var(--accent-green);
+      color: var(--dark-text);
+    }
+
+    .btn-blue {
+      background: var(--accent-blue);
+      color: var(--white);
+      width: 100%;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .btn-sm {
+      padding: 12px 28px;
+      font-size: 0.88rem;
+      width: auto;
+    }
+
+    .hero-cta {
+      margin-top: 28px;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    /* EVENTS */
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+      max-width: var(--max-width);
+      margin: 40px auto 0;
+    }
+
+    .event-card {
+      background: linear-gradient(160deg, rgba(58, 32, 101, 0.55), rgba(13, 16, 48, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .event-badge {
+      align-self: flex-start;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(34, 212, 107, 0.15);
+      color: var(--accent-green);
+    }
+
+    .event-badge.closed {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-body);
+    }
+
+    .event-badge.registered {
+      background: rgba(79, 125, 249, 0.18);
+      color: var(--accent-blue);
+    }
+
+    .event-card h3 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .event-meta {
+      color: var(--text-body);
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+
+    .event-meta span {
+      display: block;
+      margin-top: 4px;
+    }
+
+    .event-desc {
+      color: var(--text-body);
+      font-size: 0.92rem;
+      flex: 1;
+    }
+
+    .event-card .btn {
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .events-empty {
+      text-align: center;
+      color: var(--text-body);
+      max-width: 480px;
+      margin: 40px auto 0;
+      padding: 32px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-md);
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--white);
+      color: var(--dark-text);
+      border-radius: var(--radius-md);
+      padding: 32px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .modal .event-title-label {
+      color: #666;
+      font-size: 0.88rem;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: #888;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--dark-text);
+    }
+
+    .register-form input,
+    .register-form select {
+      width: 100%;
+      border: 1px solid #E0E0E8;
+      background: #F4F4F8;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 0.95rem;
+      color: var(--dark-text);
+      margin-bottom: 14px;
+    }
+
+    .register-form input:focus,
+    .register-form select:focus {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 1px;
+    }
+
+    .register-form .btn {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    /* ABOUT IEDC */
+    .about-cta {
+      margin-top: 28px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      color: var(--dark-text);
+      border-radius: var(--radius-md);
+      padding: 28px 40px;
+      max-width: 280px;
+      margin: 44px auto 0;
+      text-align: center;
+      box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+    }
+
+    .stat-card .num {
+      font-size: 2.4rem;
+      font-weight: 800;
+    }
+
+    .stat-card .label {
+      color: #555;
+      font-weight: 500;
+      margin-top: 4px;
+      font-size: 0.95rem;
+    }
+
+    /* VISION */
+    .vision-portrait {
+      width: min(260px, 70%);
+      margin: 0 auto;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      filter: grayscale(1);
+    }
+
+    .quote-card {
+      background: var(--white);
+      color: var(--dark-text);
+      border-radius: var(--radius-md);
+      padding: 32px;
+      max-width: 340px;
+      margin: 28px auto 56px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 1.15rem;
+      box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+    }
+
+    .quote-card cite {
+      display: block;
+      margin-top: 14px;
+      font-style: normal;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .vision-statement {
+      max-width: 680px;
+      margin: 24px auto 0;
+      text-align: center;
+      font-weight: 600;
+      color: var(--white);
+      font-size: 1.05rem;
+      font-style: italic;
+    }
+
+    /* PODCAST */
+    .podcast-card {
+      max-width: 900px;
+      margin: 40px auto 0;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #1a2f5c, #0d1b3a);
+      display: flex;
+      align-items: flex-end;
+      cursor: pointer;
+      border: none;
+      width: 100%;
+      padding: 0;
+    }
+
+    .podcast-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 30%, rgba(59, 130, 246, 0.35), transparent 60%);
+    }
+
+    .podcast-content {
+      position: relative;
+      padding: 28px 32px;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .podcast-text h3 {
+      font-size: clamp(1.2rem, 3vw, 1.7rem);
+      font-weight: 700;
+    }
+
+    .podcast-text p {
+      color: var(--text-body);
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+
+    .play-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid var(--white);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .podcast-date {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      font-size: 0.8rem;
+      color: var(--text-body);
+    }
+
+    /* PARTNERS */
+    .partners-heading {
+      text-align: center;
+      font-size: clamp(2.2rem, 8vw, 3.4rem);
+      font-weight: 300;
+      color: var(--white);
+      opacity: 0.9;
+      margin: 24px 0 40px;
+    }
+
+    .social-row {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .social-row a {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: background 0.15s ease;
+    }
+
+    .social-row a:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .partners-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .partner-card {
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--dark-text);
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 8px;
+    }
+
+    @media (max-width: 640px) {
+      .partners-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* TEAM */
+    .team-wrap {
+      max-width: var(--max-width);
+      margin: 48px auto 0;
+    }
+
+    .team-tier {
+      margin-bottom: 56px;
+    }
+
+    .team-tier:last-child {
+      margin-bottom: 0;
+    }
+
+    .team-tier-label {
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--heading-accent);
+      margin-bottom: 24px;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .team-grid.faculty {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 320px));
+      justify-content: center;
+    }
+
+    .team-grid.leadership {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 280px));
+      justify-content: center;
+    }
+
+    .team-card {
+      background: linear-gradient(160deg, rgba(58, 32, 101, 0.4), rgba(13, 16, 48, 0.85));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 28px 22px;
+      text-align: center;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .team-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(139, 127, 232, 0.35);
+    }
+
+    .team-card.featured {
+      background: radial-gradient(circle at 50% 0%, rgba(79, 125, 249, 0.2), rgba(13, 16, 48, 0.95));
+      border-color: rgba(79, 125, 249, 0.25);
+      padding: 32px 24px;
+    }
+
+    .team-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.35rem;
+      color: var(--white);
+      background: linear-gradient(135deg, var(--grad-blue), var(--grad-purple));
+      overflow: hidden;
+    }
+
+    .team-card.featured .team-avatar {
+      width: 88px;
+      height: 88px;
+      font-size: 1.6rem;
+    }
+
+    .team-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .team-role {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(79, 125, 249, 0.18);
+      color: var(--accent-blue);
+      margin-bottom: 10px;
+    }
+
+    .team-card.featured .team-role {
+      background: rgba(34, 212, 107, 0.15);
+      color: var(--accent-green);
+    }
+
+    .team-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .team-card.featured .team-name {
+      font-size: 1.2rem;
+    }
+
+    .team-meta {
+      margin-top: 8px;
+      color: var(--text-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .team-contact {
+      margin-top: 12px;
+      font-size: 0.82rem;
+    }
+
+    .team-contact a {
+      color: var(--heading-accent);
+      font-weight: 500;
+    }
+
+    .team-contact a:hover {
+      color: var(--white);
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--bg-footer);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 64px 24px 40px;
+      margin-top: 40px;
+    }
+
+    .footer-inner {
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    footer h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    footer .address {
+      color: var(--text-body);
+      font-weight: 500;
+      margin-top: 14px;
+      font-size: 0.95rem;
+    }
+
+    .divider {
+      width: 1px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.15);
+      margin: 40px auto;
+    }
+
+    .contact-form {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 32px;
+      max-width: 420px;
+      margin: 24px auto 0;
+      box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.6);
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      border: 1px solid #E0E0E8;
+      background: #F4F4F8;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 0.95rem;
+      color: var(--dark-text);
+      margin-bottom: 14px;
+      resize: vertical;
+    }
+
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 1px;
+    }
+
+    .contact-form textarea {
+      min-height: 90px;
+    }
+
+    .form-status {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: var(--accent-green);
+      min-height: 1.2em;
+      text-align: center;
+    }
+
+    .footer-social {
+      margin-top: 40px;
+    }
+
+    .footer-legal {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      color: var(--text-body);
+      font-size: 0.85rem;
+    }
+
+    .footer-legal a:hover {
+      color: var(--white);
+    }
+
+    .copyright {
+      margin-top: 24px;
+      color: #6B6B7C;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 500px) {
+      section {
+        padding: 64px 20px;
+      }
+
+      .hero-card {
+        padding: 40px 22px;
+      }
+
+      .contact-form {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="brand">IEDC SNMIMT</a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#" class="active" data-section="home">Home</a></li>
+        <li><a href="#events" data-section="events">Events</a></li>
+        <li><a href="#about" data-section="about">About</a></li>
+        <li><a href="#team" data-section="team">Team</a></li>
+        <li><a href="#partners" data-section="partners">Partners</a></li>
+      </ul>
+      <a href="#events" class="nav-login">Register</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Open menu">☰</button>
+    </div>
+  </nav>
+
+  <section class="hero-section">
+    <div class="hero-card">
+      <h1>Hi Everyone, Welcome To<span>IEDC-SNMIMT</span></h1>
+      <p>The Innovation and Entrepreneurship Development Cell at SNMIMT — workshops, hackathons, talks, and startup
+        initiatives for students. Browse upcoming events below and register in a few clicks.</p>
+      <div class="hero-cta">
+        <a href="#events" class="btn btn-green btn-sm">View Events</a>
+        <a href="#about" class="btn btn-purple btn-sm" style="width:auto;max-width:none;">About the Club</a>
+      </div>
+      <svg class="hero-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3B82F6" />
+            <stop offset="50%" stop-color="#A855F7" />
+            <stop offset="100%" stop-color="#F97316" />
+          </linearGradient>
+        </defs>
+        <circle cx="65" cy="70" r="42" fill="none" stroke="url(#logoGrad)" stroke-width="14" />
+        <circle cx="135" cy="70" r="42" fill="none" stroke="url(#logoGrad)" stroke-width="14" />
+        <path d="M105 40 L80 75 L100 75 L90 110 L125 65 L103 65 Z" fill="url(#logoGrad)" />
+        <text x="100" y="150" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="800" font-size="26"
+          fill="#FFFFFF">IEDC</text>
+        <text x="100" y="172" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="500" font-size="13"
+          fill="#A855F7">SNMIMT</text>
+      </svg>
+    </div>
+  </section>
+
+  <section id="events">
+    <h2 class="section-heading">Upcoming Events</h2>
+    <p class="section-body">Register for open events hosted by IEDC SNMIMT. Your spot is confirmed once you submit the
+      form.</p>
+    <div class="events-grid" id="eventsGrid"></div>
+    <div class="events-empty" id="eventsEmpty" hidden>No events are open for registration right now. Check back soon or
+      follow us on Instagram for updates.</div>
+  </section>
+
+  <section id="about">
+    <h2 class="section-heading">About IEDC</h2>
+    <p class="section-body">IEDC has been developed to foster and nurture innovations combined with entrepreneurship
+      amongst young minds, there is growth potential to be untapped and IEDC aims to fill this abyss.</p>
+    <div class="center about-cta">
+      <a href="#events" class="btn btn-purple">See Upcoming Events</a>
+    </div>
+    <div class="stat-card">
+      <div class="num">46+</div>
+      <div class="label">Events In The Last Year</div>
+    </div>
+  </section>
+
+  <section id="team">
+    <h2 class="section-heading">Our Team</h2>
+    <p class="section-body">Meet the faculty mentors and student leaders driving innovation and entrepreneurship at
+      SNMIMT.</p>
+    <div class="team-wrap" id="teamWrap"></div>
+  </section>
+
+  <section id="vision">
+    <img class="vision-portrait" src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80"
+      alt="Portrait" onerror="this.style.display='none'">
+    <div class="quote-card">
+      "Creativity is just connecting things"
+      <cite>Steve Jobs</cite>
+    </div>
+    <h2 class="section-heading">Our Vision</h2>
+    <p class="vision-statement">"To dive into the inner potential and to promote technological disruptions when
+      proffering the nurturing mind to think laterally and divergently, IEDC is a body to develop entrepreneurial skills
+      and to foster innovations to start up."</p>
+  </section>
+
+  <section id="podcast">
+    <h2 class="section-heading">Our Podcast</h2>
+    <button class="podcast-card" aria-label="Play Women in Tech podcast episode">
+      <span class="podcast-date">February 29, 2023</span>
+      <div class="podcast-content">
+        <div class="podcast-text">
+          <h3>Women in tech</h3>
+          <p>Breaking barriers and building future</p>
+        </div>
+        <span class="play-btn">▶</span>
+      </div>
+    </button>
+  </section>
+
+  <section id="beta">
+    <h2 class="section-heading">About Beta</h2>
+    <p class="section-body">Beta is an initiative by IEDC SNMIMT designed to empower startups and foster innovation. We
+      provide resources, mentorship, and funding opportunities to help early-stage businesses succeed in the competitive
+      market.</p>
+    <div class="center about-cta">
+      <button class="btn btn-green">View Startups</button>
+    </div>
+  </section>
+
+  <section id="partners">
+    <div class="social-row">
+      <a href="#" aria-label="Facebook">f</a>
+      <a href="#" aria-label="Instagram">ig</a>
+      <a href="#" aria-label="GitHub">gh</a>
+      <a href="#" aria-label="Linkedln">in</a>
+    </div>
+    <h2 class="partners-heading">collaborative</h2>
+    <div class="partners-grid">
+      <div class="partner-card">Institution's Innovation Council</div>
+      <div class="partner-card">ed club</div>
+      <div class="partner-card">TinkerHub</div>
+      <div class="partner-card">y1p</div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <h3>IEDC SNMIMT</h3>
+      <p class="address">Maliankara P.O, Moothankunnam, Ernakulam Dt. Kerala-683516, India</p>
+      <div class="divider"></div>
+      <h3>Contact</h3>
+      <form class="contact-form" id="contactForm">
+        <input type="text" placeholder="Your Name" required>
+        <input type="email" placeholder="Your Email" required>
+        <textarea placeholder="Your Enquiry" required></textarea>
+        <button type="submit" class="btn btn-blue">Send</button>
+        <div class="form-status" id="formStatus"></div>
+      </form>
+      <div class="footer-social social-row">
+        <a href="#" aria-label="Facebook">f</a>
+        <a href="#" aria-label="Instagram">ig</a>
+        <a href="#" aria-label="GitHub">gh</a>
+        <a href="#" aria-label="Linkedln">in</a>
+      </div>
+      <div class="footer-legal">
+        <a href="#">Terms of Service</a>
+        <a href="#">Privacy</a>
+      </div>
+      <p class="copyright">© IEDC-SNMIMT 2025-26. All rights reserved</p>
+    </div>
+  </footer>
+
+  <div class="modal-overlay" id="registerModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-labelledby="modalTitle">
+      <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+      <h3 id="modalTitle">Event Registration</h3>
+      <p class="event-title-label" id="modalEventName"></p>
+      <form class="register-form" id="registerForm">
+        <input type="hidden" id="registerEventId" name="eventId">
+        <input type="text" id="studentName" placeholder="Full Name" required autocomplete="name">
+        <input type="email" id="studentEmail" placeholder="College Email" required autocomplete="email">
+        <input type="text" id="registerNumber" placeholder="Register Number" required pattern="[A-Za-z0-9\-\/]+"
+          title="Enter your college register number">
+        <select id="department" required>
+          <option value="" disabled selected>Select Department</option>
+          <option value="CSE">Computer Science (CSE)</option>
+          <option value="ECE">Electronics (ECE)</option>
+          <option value="ME">Mechanical (ME)</option>
+          <option value="CE">Civil (CE)</option>
+          <option value="MBA">MBA</option>
+          <option value="Other">Other</option>
+        </select>
+        <select id="year" required>
+          <option value="" disabled selected>Select Year</option>
+          <option value="1">1st Year</option>
+          <option value="2">2nd Year</option>
+          <option value="3">3rd Year</option>
+          <option value="4">4th Year</option>
+        </select>
+        <button type="submit" class="btn btn-blue">Confirm Registration</button>
+        <div class="form-status" id="registerStatus"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Update names, roles, and photos when the team changes
+    const TEAM = {
+      faculty: [
+        {
+          name: 'Dr. Faculty Name',
+          role: 'Nodal Officer',
+          meta: 'Department of Management',
+          email: 'nodal.officer@snmimt.ac.in',
+          photo: ''
+        },
+        {
+          name: 'Prof. Faculty Name',
+          role: 'Staff Coordinator',
+          meta: 'IEDC Faculty Mentor',
+          email: 'staff.coordinator@snmimt.ac.in',
+          photo: ''
+        }
+      ],
+      leadership: [
+        {
+          name: 'Student Name',
+          role: 'Student Lead',
+          meta: '4th Year · CSE',
+          email: '',
+          photo: ''
+        },
+        {
+          name: 'Student Name',
+          role: 'Assistant Lead',
+          meta: '3rd Year · ECE',
+          email: '',
+          photo: ''
+        }
+      ],
+      core: [
+        { name: 'Student Name', role: 'CTO', meta: '3rd Year · CSE', email: '', photo: '' },
+        { name: 'Student Name', role: 'COO', meta: '3rd Year · MBA', email: '', photo: '' },
+        { name: 'Student Name', role: 'IPR Lead', meta: '4th Year · CSE', email: '', photo: '' },
+        { name: 'Student Name', role: 'Marketing Lead', meta: '2nd Year · CSE', email: '', photo: '' },
+        { name: 'Student Name', role: 'Design Lead', meta: '3rd Year · CSE', email: '', photo: '' },
+        { name: 'Student Name', role: 'Events Lead', meta: '2nd Year · ECE', email: '', photo: '' }
+      ]
+    };
+
+    function getInitials(name) {
+      return name.split(' ').filter(Boolean).slice(0, 2).map(function (part) {
+        return part[0].toUpperCase();
+      }).join('');
+    }
+
+    function buildTeamCard(member, featured) {
+      const avatarContent = member.photo
+        ? '<img src="' + member.photo + '" alt="' + member.name + '">'
+        : getInitials(member.name);
+
+      const contact = member.email
+        ? '<div class="team-contact"><a href="mailto:' + member.email + '">' + member.email + '</a></div>'
+        : '';
+
+      return (
+        '<article class="team-card' + (featured ? ' featured' : '') + '">' +
+        '<div class="team-avatar">' + avatarContent + '</div>' +
+        '<span class="team-role">' + member.role + '</span>' +
+        '<h3 class="team-name">' + member.name + '</h3>' +
+        (member.meta ? '<p class="team-meta">' + member.meta + '</p>' : '') +
+        contact +
+        '</article>'
+      );
+    }
+
+    function renderTeam() {
+      const wrap = document.getElementById('teamWrap');
+      if (!wrap) return;
+
+      wrap.innerHTML =
+        '<div class="team-tier">' +
+        '<p class="team-tier-label">Faculty &amp; Nodal Officers</p>' +
+        '<div class="team-grid faculty">' +
+        TEAM.faculty.map(function (m) { return buildTeamCard(m, true); }).join('') +
+        '</div>' +
+        '</div>' +
+        '<div class="team-tier">' +
+        '<p class="team-tier-label">Student Leadership</p>' +
+        '<div class="team-grid leadership">' +
+        TEAM.leadership.map(function (m) { return buildTeamCard(m, true); }).join('') +
+        '</div>' +
+        '</div>' +
+        '<div class="team-tier">' +
+        '<p class="team-tier-label">Core Team</p>' +
+        '<div class="team-grid">' +
+        TEAM.core.map(function (m) { return buildTeamCard(m, false); }).join('') +
+        '</div>' +
+        '</div>';
+    }
+
+    // Update this list when new club events are announced
+    const EVENTS = [
+      {
+        id: 'astra-2025',
+        title: 'Astra 2025',
+        date: 'March 22, 2026',
+        time: '9:00 AM – 5:00 PM',
+        venue: 'SNMIMT Main Auditorium',
+        description: 'Annual tech fest with hackathons, startup pitches, and innovation showcases open to all SNMIMT students.',
+        registrationOpen: true
+      },
+      {
+        id: 'startup-bootcamp',
+        title: 'Startup Bootcamp',
+        date: 'April 5, 2026',
+        time: '10:00 AM – 4:00 PM',
+        venue: 'IEDC Innovation Lab',
+        description: 'A one-day intensive session on ideation, business models, and pitching — led by industry mentors.',
+        registrationOpen: true
+      },
+      {
+        id: 'ideathon-2026',
+        title: 'Ideathon 2026',
+        date: 'May 10, 2026',
+        time: '9:30 AM – 6:00 PM',
+        venue: 'Seminar Hall B',
+        description: 'Team up and solve real-world problems. Top teams get mentorship and incubation support from IEDC.',
+        registrationOpen: true
+      }
+    ];
+
+    const STORAGE_KEY = 'iedc-snmimt-registrations';
+
+    function getRegistrations() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveRegistration(entry) {
+      const list = getRegistrations();
+      list.push(entry);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function isRegistered(eventId, registerNumber) {
+      return getRegistrations().some(function (r) {
+        return r.eventId === eventId && r.registerNumber.toLowerCase() === registerNumber.toLowerCase();
+      });
+    }
+
+    function hasRegisteredForEvent(eventId) {
+      const saved = sessionStorage.getItem('iedc-last-register-number');
+      if (!saved) return false;
+      return getRegistrations().some(function (r) {
+        return r.eventId === eventId && r.registerNumber.toLowerCase() === saved.toLowerCase();
+      });
+    }
+
+    function renderEvents() {
+      const grid = document.getElementById('eventsGrid');
+      const empty = document.getElementById('eventsEmpty');
+      const openEvents = EVENTS.filter(function (e) { return e.registrationOpen; });
+
+      grid.innerHTML = '';
+
+      if (openEvents.length === 0) {
+        empty.hidden = false;
+        return;
+      }
+
+      empty.hidden = true;
+
+      openEvents.forEach(function (event) {
+        const alreadyRegistered = hasRegisteredForEvent(event.id);
+        const card = document.createElement('article');
+        card.className = 'event-card';
+        card.innerHTML =
+          '<span class="event-badge' + (alreadyRegistered ? ' registered' : '') + '">' +
+          (alreadyRegistered ? 'Registered' : 'Registration Open') +
+          '</span>' +
+          '<h3>' + event.title + '</h3>' +
+          '<div class="event-meta">' +
+          '<span>📅 ' + event.date + '</span>' +
+          '<span>🕐 ' + event.time + '</span>' +
+          '<span>📍 ' + event.venue + '</span>' +
+          '</div>' +
+          '<p class="event-desc">' + event.description + '</p>' +
+          '<button class="btn ' + (alreadyRegistered ? 'btn-purple' : 'btn-green') + '" ' +
+          'data-event-id="' + event.id + '" ' +
+          (alreadyRegistered ? 'disabled' : '') + '>' +
+          (alreadyRegistered ? 'Already Registered' : 'Register Now') +
+          '</button>';
+        grid.appendChild(card);
+      });
+
+      grid.querySelectorAll('[data-event-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          openRegisterModal(btn.dataset.eventId);
+        });
+      });
+    }
+
+    const modal = document.getElementById('registerModal');
+    const registerForm = document.getElementById('registerForm');
+    const registerStatus = document.getElementById('registerStatus');
+
+    function openRegisterModal(eventId) {
+      const event = EVENTS.find(function (e) { return e.id === eventId; });
+      if (!event || !event.registrationOpen) return;
+
+      document.getElementById('registerEventId').value = eventId;
+      document.getElementById('modalEventName').textContent = event.title + ' · ' + event.date;
+      registerStatus.textContent = '';
+      registerForm.reset();
+      document.getElementById('registerEventId').value = eventId;
+
+      const savedNumber = sessionStorage.getItem('iedc-last-register-number');
+      if (savedNumber) document.getElementById('registerNumber').value = savedNumber;
+
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.getElementById('studentName').focus();
+    }
+
+    function closeRegisterModal() {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    document.getElementById('modalClose').addEventListener('click', closeRegisterModal);
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) closeRegisterModal();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeRegisterModal();
+    });
+
+    registerForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const eventId = document.getElementById('registerEventId').value;
+      const event = EVENTS.find(function (ev) { return ev.id === eventId; });
+      const registerNumber = document.getElementById('registerNumber').value.trim();
+
+      if (!event) return;
+
+      if (isRegistered(eventId, registerNumber)) {
+        registerStatus.style.color = '#E05A5A';
+        registerStatus.textContent = 'This register number is already signed up for this event.';
+        return;
+      }
+
+      saveRegistration({
+        eventId: eventId,
+        eventTitle: event.title,
+        name: document.getElementById('studentName').value.trim(),
+        email: document.getElementById('studentEmail').value.trim(),
+        registerNumber: registerNumber,
+        department: document.getElementById('department').value,
+        year: document.getElementById('year').value,
+        registeredAt: new Date().toISOString()
+      });
+
+      sessionStorage.setItem('iedc-last-register-number', registerNumber);
+      registerStatus.style.color = '';
+      registerStatus.textContent = 'Registration confirmed for ' + event.title + '!';
+      renderEvents();
+
+      setTimeout(closeRegisterModal, 1800);
+    });
+
+    document.getElementById('contactForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      document.getElementById('formStatus').textContent = 'Message sent — we\'ll get back to you soon.';
+      this.reset();
+    });
+
+    document.querySelector('.podcast-card').addEventListener('click', function () {
+      alert('Podcast playback would launch here.');
+    });
+
+    document.getElementById('navToggle').addEventListener('click', function () {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+
+    document.querySelectorAll('.nav-links a[href^="#"]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        document.getElementById('navLinks').classList.remove('open');
+      });
+    });
+
+    renderEvents();
+    renderTeam();
+  </script>
+
+</body>
+
+</html>
