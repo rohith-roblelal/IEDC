@@ -45,6 +45,11 @@ class EventRepository:
         return event
 
     async def delete(self, event_id: uuid.UUID) -> bool:
+        from app.models.models import Registration, Gallery
+        # First delete associated child records to prevent foreign key IntegrityErrors
+        await self.session.execute(delete(Registration).where(Registration.event_id == event_id))
+        await self.session.execute(delete(Gallery).where(Gallery.event_id == event_id))
+        
         result = await self.session.execute(delete(Event).where(Event.id == event_id))
         await self.session.commit()
         return result.rowcount > 0

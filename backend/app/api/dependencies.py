@@ -1,10 +1,11 @@
 import uuid
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from typing import Optional
 
 from app.core.config import settings
 from app.database.session import get_db
@@ -12,7 +13,35 @@ from app.models.models import User
 from app.models.enums import Role
 from app.schemas.schemas import TokenData
 
-oauth2_scheme = OAuth2PasswordBearer(
+class OAuth2PasswordBearerWithCookie(OAuth2PasswordBearer):
+    async def __call__(self, request: Request) -> Optional[str]:
+        authorization: str = request.headers.get("Authorization")
+        if not authorization:
+            authorization = request.cookies.get("access_token")
+            
+        if not authorization:
+            if self.auto_error:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Not authenticated",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            else:
+                return None
+                
+        scheme, _, param = authorization.partition(" ")
+        if not authorization.startswith("Bearer "):
+            if self.auto_error:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid authentication credentials",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            else:
+                return None
+        return param
+
+oauth2_scheme = OAuth2PasswordBearerWithCookie(
     tokenUrl=f"{settings.API_V1_STR}/auth/login"
 )
 

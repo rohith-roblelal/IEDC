@@ -11,6 +11,7 @@ export default function EventsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
   const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
@@ -144,11 +145,17 @@ export default function EventsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this event? This action cannot be undone.")) return;
+  const handleDelete = (id: string) => {
+    setEventToDelete(id);
+  };
+
+  const confirmDelete = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (!eventToDelete) return;
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/events/${id}`, {
+      console.log("Deleting event:", eventToDelete);
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/events/${eventToDelete}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -161,6 +168,8 @@ export default function EventsPage() {
     } catch (err) {
       console.error(err);
       showToast("Network error", "error");
+    } finally {
+      setEventToDelete(null);
     }
   };
 
@@ -503,6 +512,52 @@ export default function EventsPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {eventToDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setEventToDelete(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#0A0E27] border border-white/10 rounded-2xl p-6 w-full max-w-sm relative z-10 shadow-2xl"
+            >
+              <div className="mb-6">
+                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mb-4 text-red-400 mx-auto">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-center text-white mb-2">Delete Event?</h2>
+                <p className="text-center text-[#C4C4D4] text-sm">Are you sure you want to delete this event? This action cannot be undone.</p>
+              </div>
+              <div className="flex justify-center gap-3 mt-6">
+                <button 
+                  onClick={() => setEventToDelete(null)}
+                  className="px-6 py-2 flex-1 bg-white/5 hover:bg-white/10 text-white rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  onClick={confirmDelete}
+                  className="px-6 py-2 flex-1 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

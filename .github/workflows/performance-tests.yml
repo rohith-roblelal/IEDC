@@ -1,0 +1,39 @@
+name: Performance Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' # Nightly endurance test
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+      - name: Run Smoke Test
+        run: ./performance/scripts/run-local.sh
+
+  load-test-staging:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+      - name: Run Load Test on Staging
+        run: ./performance/scripts/run-staging.sh
+
+  endurance-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+      - name: Run Endurance Test
+        run: k6 run ./performance/k6/tests/endurance/endurance-test.js

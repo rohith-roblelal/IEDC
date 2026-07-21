@@ -6,7 +6,8 @@ import { X } from "lucide-react";
 import { RegistrationForm } from "@/components/RegistrationForm";
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [pastEvents, setPastEvents] = useState<any[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -18,10 +19,10 @@ export default function EventsPage() {
         const res = await fetch("http://127.0.0.1:8000/api/v1/events/");
         if (res.ok) {
           const data = await res.json();
-          // Filter to show only published/open events, or as needed.
-          // For now let's just show events that aren't drafts or cancelled.
-          const visibleEvents = data.filter((e: any) => e.status !== "DRAFT" && e.status !== "CANCELLED");
-          setEvents(visibleEvents);
+          const upcoming = data.filter((e: any) => ["PUBLISHED", "REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(e.status));
+          const past = data.filter((e: any) => e.status === "COMPLETED");
+          setUpcomingEvents(upcoming);
+          setPastEvents(past);
         }
       } catch (err) {
         console.error(err);
@@ -39,57 +40,70 @@ export default function EventsPage() {
     return { text: "Coming Soon", color: "bg-blue-500/15 text-blue-400" };
   };
 
+  const renderEventCard = (event: any) => {
+    const statusDisplay = getStatusDisplay(event.status);
+    const isRegistrationOpen = event.status === "REGISTRATION_OPEN";
+    
+    return (
+      <motion.article 
+        key={event.id}
+        whileHover={{ y: -5 }}
+        className="bg-gradient-to-br from-[#3A2065]/55 to-[#0D1030]/90 border border-white/10 rounded-[18px] p-7 flex flex-col gap-3.5 shadow-xl cursor-pointer"
+        onClick={() => setSelectedEvent(event)}
+      >
+        {event.banner_url && (
+          <img src={event.banner_url} alt="" className="w-full h-40 object-cover rounded-xl mb-2 bg-black/20" />
+        )}
+        <span className={`self-start text-[0.72rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full ${statusDisplay.color}`}>
+          {statusDisplay.text}
+        </span>
+        <h3 className="text-[1.35rem] font-bold leading-tight line-clamp-2">{event.title}</h3>
+        
+        {event.registration_deadline && (
+          <div className="text-[#C4C4D4] text-[0.88rem] font-medium flex flex-col gap-1 mt-1">
+            <span>Deadline: {new Date(event.registration_deadline).toLocaleDateString()}</span>
+          </div>
+        )}
+        
+        <p className="text-[#C4C4D4] text-[0.92rem] flex-1 mt-2 line-clamp-3">{event.description}</p>
+        <button 
+          className={`mt-2 w-full font-bold py-3 px-6 rounded-full transition-transform ${isRegistrationOpen ? 'bg-[#22D46B] text-[#1A1A2E] hover:-translate-y-0.5' : 'bg-[#3A2065] text-white'}`}
+        >
+          {isRegistrationOpen ? 'View & Register' : 'View Details'}
+        </button>
+      </motion.article>
+    );
+  };
+
   return (
     <div className="py-24 px-6 relative">
-      <h2 className="text-center text-[clamp(1.8rem,4vw,2.4rem)] font-bold mb-5">Upcoming Events</h2>
-      <p className="max-w-[680px] mx-auto text-center text-[#C4C4D4] font-medium text-base mb-10">
-        Register for open events hosted by IEDC SNMIMT. Your spot is confirmed once you submit the form.
-      </p>
+      <div className="mb-20">
+        <h2 className="text-center text-[clamp(1.8rem,4vw,2.4rem)] font-bold mb-5">Upcoming Events</h2>
+        <p className="max-w-[680px] mx-auto text-center text-[#C4C4D4] font-medium text-base mb-10">
+          Register for open events hosted by IEDC SNMIMT. Your spot is confirmed once you submit the form.
+        </p>
 
-      {isLoading ? (
-        <div className="text-center text-[#C4C4D4] max-w-[480px] mx-auto p-8 border border-dashed border-white/10 rounded-[18px]">
-          Loading events...
-        </div>
-      ) : events.length === 0 ? (
-        <div className="text-center text-[#C4C4D4] max-w-[480px] mx-auto p-8 border border-dashed border-white/10 rounded-[18px]">
-          No events are open for registration right now. Check back soon or follow us on Instagram for updates.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1100px] mx-auto">
-          {events.map(event => {
-            const statusDisplay = getStatusDisplay(event.status);
-            const isRegistrationOpen = event.status === "REGISTRATION_OPEN";
-            
-            return (
-              <motion.article 
-                key={event.id}
-                whileHover={{ y: -5 }}
-                className="bg-gradient-to-br from-[#3A2065]/55 to-[#0D1030]/90 border border-white/10 rounded-[18px] p-7 flex flex-col gap-3.5 shadow-xl cursor-pointer"
-                onClick={() => setSelectedEvent(event)}
-              >
-                {event.banner_url && (
-                  <img src={event.banner_url} alt="" className="w-full h-40 object-cover rounded-xl mb-2 bg-black/20" />
-                )}
-                <span className={`self-start text-[0.72rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full ${statusDisplay.color}`}>
-                  {statusDisplay.text}
-                </span>
-                <h3 className="text-[1.35rem] font-bold leading-tight line-clamp-2">{event.title}</h3>
-                
-                {event.registration_deadline && (
-                  <div className="text-[#C4C4D4] text-[0.88rem] font-medium flex flex-col gap-1 mt-1">
-                    <span>Deadline: {new Date(event.registration_deadline).toLocaleDateString()}</span>
-                  </div>
-                )}
-                
-                <p className="text-[#C4C4D4] text-[0.92rem] flex-1 mt-2 line-clamp-3">{event.description}</p>
-                <button 
-                  className={`mt-2 w-full font-bold py-3 px-6 rounded-full transition-transform ${isRegistrationOpen ? 'bg-[#22D46B] text-[#1A1A2E] hover:-translate-y-0.5' : 'bg-[#3A2065] text-white'}`}
-                >
-                  {isRegistrationOpen ? 'View & Register' : 'View Details'}
-                </button>
-              </motion.article>
-            );
-          })}
+        {isLoading ? (
+          <div className="text-center text-[#C4C4D4] max-w-[480px] mx-auto p-8 border border-dashed border-white/10 rounded-[18px]">
+            Loading events...
+          </div>
+        ) : upcomingEvents.length === 0 ? (
+          <div className="text-center text-[#C4C4D4] max-w-[480px] mx-auto p-8 border border-dashed border-white/10 rounded-[18px]">
+            No upcoming events right now. Check back soon or follow us on Instagram for updates.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1100px] mx-auto">
+            {upcomingEvents.map(renderEventCard)}
+          </div>
+        )}
+      </div>
+
+      {!isLoading && pastEvents.length > 0 && (
+        <div className="mb-20">
+          <h2 className="text-center text-[clamp(1.8rem,4vw,2.4rem)] font-bold mb-10">Past Events</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1100px] mx-auto opacity-80 hover:opacity-100 transition-opacity">
+            {pastEvents.map(renderEventCard)}
+          </div>
         </div>
       )}
 

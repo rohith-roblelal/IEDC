@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, Field
 
 from app.models.enums import Role, EventStatus
 
@@ -79,9 +79,9 @@ class EventResponse(EventBase):
 # -----------------
 class RegistrationBase(SchemaBase):
     event_id: Optional[uuid.UUID] = None
-    name: str
+    name: str = Field(..., max_length=100)
     email: EmailStr
-    phone: str
+    phone: str = Field(..., max_length=20)
     gender: Optional[str] = None
     year: Optional[str] = None
     department: Optional[str] = None
@@ -164,9 +164,9 @@ class GalleryResponse(GalleryBase):
 # Contact Messages
 # -----------------
 class ContactMessageBase(BaseModel):
-    name: str
-    email: str
-    message: str
+    name: str = Field(..., max_length=100)
+    email: EmailStr
+    message: str = Field(..., max_length=2000)
 
 class ContactMessageCreate(ContactMessageBase):
     pass
