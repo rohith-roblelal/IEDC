@@ -1,0 +1,13 @@
+import enum
+
+class Role(str, enum.Enum):
+    SUPER_ADMIN = "SUPER_ADMIN"
+    ADMIN = "ADMIN"
+
+class EventStatus(str, enum.Enum):
+    DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
+    REGISTRATION_OPEN = "REGISTRATION_OPEN"
+    REGISTRATION_CLOSED = "REGISTRATION_CLOSED"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"

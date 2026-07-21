@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0A0E27;
+  --bg-footer: #0A0A0F;
+  --purple-deep: #3D1A5C;
+  --purple-navy: #0D1030;
+  --grad-blue: #3B82F6;
+  --grad-purple: #A855F7;
+  --grad-orange: #F97316;
+  --accent-green: #22D46B;
+  --accent-blue: #4F7DF9;
+  --accent-purple: #3A2065;
+  --heading-accent: #8B7FE8;
+  --text-body: #C4C4D4;
+  --white: #FFFFFF;
+  --dark-text: #1A1A2E;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-footer: var(--bg-footer);
+  --color-purple-deep: var(--purple-deep);
+  --color-purple-navy: var(--purple-navy);
+  --color-grad-blue: var(--grad-blue);
+  --color-grad-purple: var(--grad-purple);
+  --color-grad-orange: var(--grad-orange);
+  --color-accent-green: var(--accent-green);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-purple: var(--accent-purple);
+  --color-heading-accent: var(--heading-accent);
+  --color-text-body: var(--text-body);
+  --color-white: var(--white);
+  --color-dark-text: var(--dark-text);
+  
+  --font-sans: var(--font-poppins);
+}
+
+/* Hide scrollbar globally but allow scrolling */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
