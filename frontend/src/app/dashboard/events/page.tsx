@@ -167,11 +167,41 @@ export default function EventsPage() {
   const handleShare = (eventId: string) => {
     // Generate the public events link
     const url = `${window.location.origin}/events`; 
-    navigator.clipboard.writeText(url).then(() => {
-      showToast("Public event link copied to clipboard!", "success");
-    }).catch(() => {
-      showToast("Failed to copy link", "error");
-    });
+    
+    const fallbackCopyTextToClipboard = (text: string) => {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.top = "0";
+      textArea.style.left = "0";
+      textArea.style.position = "fixed";
+      
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showToast("Public event link copied to clipboard!", "success");
+        } else {
+          showToast("Failed to copy link", "error");
+        }
+      } catch (err) {
+        showToast("Failed to copy link", "error");
+      }
+      
+      document.body.removeChild(textArea);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast("Public event link copied to clipboard!", "success");
+      }).catch(() => {
+        fallbackCopyTextToClipboard(url);
+      });
+    } else {
+      fallbackCopyTextToClipboard(url);
+    }
   };
 
   const getStatusColor = (status: string) => {

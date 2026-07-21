@@ -21,8 +21,9 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-[#0A0E27]/80 backdrop-blur-md border-b border-white/10">
       <div className="max-w-[1100px] mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="font-bold text-lg text-white tracking-wide">
-          IEDC SNMIMT
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <img src="/logo.png" alt="IEDC SNMIMT Logo" className="h-[22px] w-auto transition-transform group-hover:scale-105" />
+          <span className="font-bold text-lg text-white tracking-wide">IEDC SNMIMT</span>
         </Link>
 
         {/* Desktop Links */}
