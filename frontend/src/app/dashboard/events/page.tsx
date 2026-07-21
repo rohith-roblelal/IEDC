@@ -25,6 +25,7 @@ export default function EventsPage() {
     banner_url: "",
     status: "DRAFT",
     registration_deadline: "",
+    max_participants: "",
     registration_link: "",
     google_form_enabled: false,
     google_form_url: "",

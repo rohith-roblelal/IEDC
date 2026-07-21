@@ -56,8 +56,8 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
       gender: z.enum(["Male", "Female"]),
       year: z.enum(["1", "2", "3", "4"]),
       department: z.enum(["ICE", "ECE", "EEE", "CIVIL", "MECH", "CSE (Ai)", "CSE (Cyber)", "CSE"]),
-      has_laptop: z.coerce.boolean(),
-      is_iedc_member: z.coerce.boolean(),
+      has_laptop: z.string().min(1, "Please select an option"),
+      is_iedc_member: z.string().min(1, "Please select an option"),
       custom_answers: z.object(customAnswersSchema).optional(),
     });
   };
@@ -74,8 +74,6 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
   } = useForm<RegistrationData>({
     resolver: zodResolver(dynamicSchema),
     defaultValues: {
-      has_laptop: false,
-      is_iedc_member: false,
       custom_answers: customFields.reduce((acc: any, f: any) => {
         if (f.type === "checkbox") acc[f.id] = [];
         else acc[f.id] = "";

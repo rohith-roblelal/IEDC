@@ -42,7 +42,7 @@ export default function TeamPage() {
     fetchTeam();
   }, []);
 
-  const openModal = (member = null) => {
+  const openModal = (member: any = null) => {
     setFormError(null);
     if (member) {
       setEditingMember(member);
