@@ -104,7 +104,7 @@ export default function PartnersPage() {
     
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`/api/v1/partners${id}`, {
+      const res = await fetch(`/api/v1/partners/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });

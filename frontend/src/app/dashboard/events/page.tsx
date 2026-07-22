@@ -128,7 +128,7 @@ export default function EventsPage() {
     if (!formData.google_form_url || !editingEvent) return showToast("Please save the event first before connecting a Google Form.", "error");
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`/api/v1/events${editingEvent.id}/google-form/connect`, {
+      const res = await fetch(`/api/v1/events/${editingEvent.id}/google-form/connect`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ url: formData.google_form_url })
@@ -156,7 +156,7 @@ export default function EventsPage() {
     const token = localStorage.getItem("access_token");
     try {
       console.log("Deleting event:", eventToDelete);
-      const res = await fetch(`/api/v1/events${eventToDelete}`, {
+      const res = await fetch(`/api/v1/events/${eventToDelete}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });

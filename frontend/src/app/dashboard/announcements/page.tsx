@@ -98,7 +98,7 @@ export default function AnnouncementsPage() {
     
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`/api/v1/announcements${id}`, {
+      const res = await fetch(`/api/v1/announcements/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });

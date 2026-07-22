@@ -114,7 +114,7 @@ export default function TeamPage() {
     if (!confirm("Are you sure you want to delete this team member?")) return;
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`/api/v1/team${id}`, {
+      const res = await fetch(`/api/v1/team/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });

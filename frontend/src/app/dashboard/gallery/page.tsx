@@ -74,7 +74,7 @@ export default function GalleryPage() {
     
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`/api/v1/gallery${id}`, {
+      const res = await fetch(`/api/v1/gallery/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
