@@ -97,7 +97,7 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
     setIsSubmitting(true);
     setErrorMsg("");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/events/${event.id}/register`, {
+      const res = await fetch(`/api/v1/events${event.id}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

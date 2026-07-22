@@ -12,7 +12,7 @@ export default function PublicGalleryPage() {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/gallery/");
+        const res = await fetch("/api/v1/gallery");
         if (res.ok) {
           const data = await res.json();
           setImages(data);

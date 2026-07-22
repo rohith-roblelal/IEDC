@@ -24,7 +24,7 @@ export default function PodcastsPage() {
   const fetchPodcasts = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/podcasts/");
+      const res = await fetch("/api/v1/podcasts");
       if (res.ok) {
         const data = await res.json();
         setPodcasts(data);
@@ -77,8 +77,8 @@ export default function PodcastsPage() {
     
     try {
       const url = editingPodcast 
-        ? `http://127.0.0.1:8000/api/v1/podcasts/${editingPodcast.id}` 
-        : "http://127.0.0.1:8000/api/v1/podcasts/";
+        ? `/api/v1/podcasts${editingPodcast.id}` 
+        : "/api/v1/podcasts";
       
       const payload = {
         ...formData,
@@ -114,7 +114,7 @@ export default function PodcastsPage() {
     
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/podcasts/${id}`, {
+      const res = await fetch(`/api/v1/podcasts${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -133,7 +133,7 @@ export default function PodcastsPage() {
   const setAsActive = async (id: string, podcast: any) => {
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/podcasts/${id}`, {
+      const res = await fetch(`/api/v1/podcasts${id}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",

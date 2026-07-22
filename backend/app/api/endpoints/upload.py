@@ -13,7 +13,7 @@ SUPABASE_URL = settings.SUPABASE_URL
 SUPABASE_KEY = settings.SUPABASE_SERVICE_ROLE_KEY
 SUPABASE_BUCKET = settings.SUPABASE_BUCKET
 
-@router.post("/")
+@router.post("")
 async def upload_image(
     file: UploadFile = File(...),
     folder: str = Form(...),
@@ -53,7 +53,7 @@ async def upload_image(
     
     return {"url": public_url, "path": path}
 
-@router.delete("/")
+@router.delete("")
 async def delete_image(
     path: str,
     current_user: User = Depends(get_current_active_admin)

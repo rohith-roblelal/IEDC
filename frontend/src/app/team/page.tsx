@@ -52,7 +52,7 @@ export default function TeamPage() {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/team/");
+        const res = await fetch("/api/v1/team");
         if (res.ok) {
           const data = await res.json();
           // Sort or arrange data if necessary, though backend should return it ordered

@@ -11,7 +11,7 @@ from app.services.user import UserService
 
 router = APIRouter()
 
-@router.post("/", response_model=UserResponse)
+@router.post("", response_model=UserResponse)
 async def create_admin(
     user_in: UserCreate,
     db: AsyncSession = Depends(get_db),
@@ -23,7 +23,7 @@ async def create_admin(
     user_service = UserService(db)
     return await user_service.create_admin(user_in)
 
-@router.get("/", response_model=List[UserResponse])
+@router.get("", response_model=List[UserResponse])
 async def read_admins(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_super_admin),

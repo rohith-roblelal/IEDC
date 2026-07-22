@@ -16,7 +16,7 @@ class GoogleFormConnectRequest(BaseModel):
 
 router = APIRouter()
 
-@router.get("/", response_model=List[EventResponse])
+@router.get("", response_model=List[EventResponse])
 async def read_events(db: AsyncSession = Depends(get_db)):
     """
     Retrieve all events. Public endpoint.
@@ -32,7 +32,7 @@ async def read_event(event_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     event_service = EventService(db)
     return await event_service.get_event(event_id)
 
-@router.post("/", response_model=EventResponse)
+@router.post("", response_model=EventResponse)
 async def create_event(
     event_in: EventCreate,
     db: AsyncSession = Depends(get_db),

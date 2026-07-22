@@ -11,7 +11,7 @@ from app.services.gallery import GalleryService
 
 router = APIRouter()
 
-@router.get("/", response_model=List[GalleryResponse])
+@router.get("", response_model=List[GalleryResponse])
 async def read_gallery(db: AsyncSession = Depends(get_db)):
     """
     Retrieve all images. Public endpoint.

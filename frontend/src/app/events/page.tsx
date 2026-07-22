@@ -16,7 +16,7 @@ export default function EventsPage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/events/");
+        const res = await fetch("/api/v1/events");
         if (res.ok) {
           const data = await res.json();
           const upcoming = data.filter((e: any) => ["PUBLISHED", "REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(e.status));

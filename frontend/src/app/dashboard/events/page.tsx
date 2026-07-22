@@ -36,7 +36,7 @@ export default function EventsPage() {
   const fetchEvents = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/events/");
+      const res = await fetch("/api/v1/events");
       if (res.ok) {
         const data = await res.json();
         setEvents(data);
@@ -92,8 +92,8 @@ export default function EventsPage() {
     const token = localStorage.getItem("access_token");
     const method = editingEvent ? "PUT" : "POST";
     const url = editingEvent 
-      ? `http://127.0.0.1:8000/api/v1/events/${editingEvent.id}` 
-      : "http://127.0.0.1:8000/api/v1/events/";
+      ? `/api/v1/events${editingEvent.id}` 
+      : "/api/v1/events";
 
     const payload = {
       ...formData,
@@ -128,7 +128,7 @@ export default function EventsPage() {
     if (!formData.google_form_url || !editingEvent) return showToast("Please save the event first before connecting a Google Form.", "error");
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/events/${editingEvent.id}/google-form/connect`, {
+      const res = await fetch(`/api/v1/events${editingEvent.id}/google-form/connect`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ url: formData.google_form_url })
@@ -156,7 +156,7 @@ export default function EventsPage() {
     const token = localStorage.getItem("access_token");
     try {
       console.log("Deleting event:", eventToDelete);
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/events/${eventToDelete}`, {
+      const res = await fetch(`/api/v1/events${eventToDelete}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });

@@ -28,7 +28,7 @@ export default function LoginPage() {
     formBody.append("password", formData.password);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+      const res = await fetch("/api/v1/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",

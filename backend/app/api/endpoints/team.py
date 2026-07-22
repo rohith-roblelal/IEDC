@@ -11,7 +11,7 @@ from app.services.team import TeamService
 
 router = APIRouter()
 
-@router.get("/", response_model=List[TeamMemberResponse])
+@router.get("", response_model=List[TeamMemberResponse])
 async def read_team_members(db: AsyncSession = Depends(get_db)):
     """
     Retrieve all team members. Public endpoint.
@@ -19,7 +19,7 @@ async def read_team_members(db: AsyncSession = Depends(get_db)):
     team_service = TeamService(db)
     return await team_service.get_all_members()
 
-@router.post("/", response_model=TeamMemberResponse)
+@router.post("", response_model=TeamMemberResponse)
 async def create_team_member(
     member_in: TeamMemberCreate,
     db: AsyncSession = Depends(get_db),

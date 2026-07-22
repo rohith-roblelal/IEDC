@@ -11,7 +11,7 @@ from app.services.podcast import PodcastService
 
 router = APIRouter()
 
-@router.get("/", response_model=List[PodcastResponse])
+@router.get("", response_model=List[PodcastResponse])
 async def read_podcasts(db: AsyncSession = Depends(get_db)):
     """
     Retrieve all podcasts. Public endpoint.
@@ -31,7 +31,7 @@ async def read_active_podcast(db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No active podcast found")
     return podcast
 
-@router.post("/", response_model=PodcastResponse)
+@router.post("", response_model=PodcastResponse)
 async def create_podcast(
     podcast_in: PodcastCreate,
     db: AsyncSession = Depends(get_db),

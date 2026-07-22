@@ -26,12 +26,12 @@ async def login_access_token(
         subject=user.email, role=user.role.value
     )
     
-    # Set HttpOnly, Secure cookie
+    # Set HttpOnly cookie (secure=False for local development over HTTP)
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         max_age=1800, # 30 mins
     )

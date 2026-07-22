@@ -14,7 +14,7 @@ export default function GalleryPage() {
 
   const fetchImages = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/gallery/");
+      const res = await fetch("/api/v1/gallery");
       if (res.ok) {
         const data = await res.json();
         setImages(data);
@@ -46,7 +46,7 @@ export default function GalleryPage() {
       formData.append("folder", "gallery");
 
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/gallery/upload", {
+      const res = await fetch("/api/v1/galleryupload", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -74,7 +74,7 @@ export default function GalleryPage() {
     
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/gallery/${id}`, {
+      const res = await fetch(`/api/v1/gallery${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });

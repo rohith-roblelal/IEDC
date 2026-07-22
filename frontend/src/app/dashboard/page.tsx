@@ -22,7 +22,7 @@ export default function DashboardOverview() {
 
     const fetchStats = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/dashboard/", {
+        const res = await fetch("/api/v1/dashboard", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

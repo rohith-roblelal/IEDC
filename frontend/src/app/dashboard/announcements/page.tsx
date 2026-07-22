@@ -20,7 +20,7 @@ export default function AnnouncementsPage() {
   const fetchAnnouncements = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/announcements/");
+      const res = await fetch("/api/v1/announcements");
       if (res.ok) {
         const data = await res.json();
         setAnnouncements(data);
@@ -67,8 +67,8 @@ export default function AnnouncementsPage() {
     
     try {
       const url = editingAnnouncement 
-        ? `http://127.0.0.1:8000/api/v1/announcements/${editingAnnouncement.id}` 
-        : "http://127.0.0.1:8000/api/v1/announcements/";
+        ? `/api/v1/announcements${editingAnnouncement.id}` 
+        : "/api/v1/announcements";
       
       const res = await fetch(url, {
         method: editingAnnouncement ? "PUT" : "POST",
@@ -98,7 +98,7 @@ export default function AnnouncementsPage() {
     
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/announcements/${id}`, {
+      const res = await fetch(`/api/v1/announcements${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });

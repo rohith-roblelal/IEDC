@@ -16,8 +16,11 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 engine = create_async_engine(DATABASE_URL)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-SUPER_ADMIN_EMAIL = "iedcsnmimt@gmail.com"
-SUPER_ADMIN_PASSWORD = os.environ.get('FIRST_SUPERADMIN_PASSWORD', "iedcsnmimt@2026")
+SUPER_ADMIN_EMAIL = os.environ.get('FIRST_SUPERADMIN_EMAIL')
+SUPER_ADMIN_PASSWORD = os.environ.get('FIRST_SUPERADMIN_PASSWORD')
+
+if not SUPER_ADMIN_EMAIL or not SUPER_ADMIN_PASSWORD:
+    raise ValueError("FIRST_SUPERADMIN_EMAIL and FIRST_SUPERADMIN_PASSWORD must be set in the environment.")
 
 async def set_super_admin():
     async with AsyncSessionLocal() as session:

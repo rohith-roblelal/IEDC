@@ -25,7 +25,7 @@ export default function Footer() {
             const message = (form.elements[2] as HTMLTextAreaElement).value;
             
             try {
-              const res = await fetch("http://127.0.0.1:8000/api/v1/contact/", {
+              const res = await fetch("/api/v1/contact", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, message })

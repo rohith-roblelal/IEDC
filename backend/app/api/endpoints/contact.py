@@ -11,7 +11,7 @@ from app.services.contact import ContactService
 
 router = APIRouter()
 
-@router.post("/", response_model=ContactMessageResponse)
+@router.post("", response_model=ContactMessageResponse)
 async def create_contact_message(
     message_in: ContactMessageCreate,
     db: AsyncSession = Depends(get_db),
@@ -22,7 +22,7 @@ async def create_contact_message(
     contact_service = ContactService(db)
     return await contact_service.create_message(message_in)
 
-@router.get("/", response_model=List[ContactMessageResponse])
+@router.get("", response_model=List[ContactMessageResponse])
 async def read_contact_messages(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_admin),

@@ -12,7 +12,7 @@ export default function MessagesPage() {
     const fetchMessages = async () => {
       const token = localStorage.getItem("access_token");
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/contact/", {
+        const res = await fetch("/api/v1/contact", {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

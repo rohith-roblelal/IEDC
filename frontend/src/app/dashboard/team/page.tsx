@@ -26,7 +26,7 @@ export default function TeamPage() {
   const fetchTeam = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/team/");
+      const res = await fetch("/api/v1/team");
       if (res.ok) {
         const data = await res.json();
         setTeam(data);
@@ -77,8 +77,8 @@ export default function TeamPage() {
     const token = localStorage.getItem("access_token");
     const method = editingMember ? "PUT" : "POST";
     const url = editingMember 
-      ? `http://127.0.0.1:8000/api/v1/team/${editingMember.id}` 
-      : "http://127.0.0.1:8000/api/v1/team/";
+      ? `/api/v1/team${editingMember.id}` 
+      : "/api/v1/team";
 
     // If email is empty string, send null so Pydantic EmailStr doesn't crash on ""
     const payload = {
@@ -114,7 +114,7 @@ export default function TeamPage() {
     if (!confirm("Are you sure you want to delete this team member?")) return;
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/team/${id}`, {
+      const res = await fetch(`/api/v1/team${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });

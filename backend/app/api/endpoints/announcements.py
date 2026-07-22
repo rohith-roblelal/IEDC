@@ -11,7 +11,7 @@ from app.services.announcement import AnnouncementService
 
 router = APIRouter()
 
-@router.get("/", response_model=List[AnnouncementResponse])
+@router.get("", response_model=List[AnnouncementResponse])
 async def read_announcements(db: AsyncSession = Depends(get_db)):
     """
     Retrieve all announcements. Public endpoint.
@@ -19,7 +19,7 @@ async def read_announcements(db: AsyncSession = Depends(get_db)):
     announcement_service = AnnouncementService(db)
     return await announcement_service.get_all_announcements()
 
-@router.post("/", response_model=AnnouncementResponse)
+@router.post("", response_model=AnnouncementResponse)
 async def create_announcement(
     announcement_in: AnnouncementCreate,
     db: AsyncSession = Depends(get_db),

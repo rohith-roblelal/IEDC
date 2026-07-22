@@ -11,7 +11,7 @@ from app.services.partner import PartnerService
 
 router = APIRouter()
 
-@router.get("/", response_model=List[PartnerResponse])
+@router.get("", response_model=List[PartnerResponse])
 async def read_partners(db: AsyncSession = Depends(get_db)):
     """
     Retrieve all partners. Public endpoint.
@@ -19,7 +19,7 @@ async def read_partners(db: AsyncSession = Depends(get_db)):
     partner_service = PartnerService(db)
     return await partner_service.get_all_partners()
 
-@router.post("/", response_model=PartnerResponse)
+@router.post("", response_model=PartnerResponse)
 async def create_partner(
     partner_in: PartnerCreate,
     db: AsyncSession = Depends(get_db),

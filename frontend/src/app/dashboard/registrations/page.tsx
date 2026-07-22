@@ -14,7 +14,7 @@ export default function RegistrationsPage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/events/");
+        const res = await fetch("/api/v1/events");
         if (res.ok) {
           const data = await res.json();
           setEvents(data);
@@ -34,7 +34,7 @@ export default function RegistrationsPage() {
     setParticipants([]);
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/events/${event.id}/participants`, {
+      const res = await fetch(`/api/v1/events${event.id}/participants`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {

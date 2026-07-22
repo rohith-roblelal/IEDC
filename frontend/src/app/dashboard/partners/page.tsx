@@ -21,7 +21,7 @@ export default function PartnersPage() {
   const fetchPartners = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/partners/");
+      const res = await fetch("/api/v1/partners");
       if (res.ok) {
         const data = await res.json();
         setPartners(data);
@@ -68,8 +68,8 @@ export default function PartnersPage() {
     
     try {
       const url = editingPartner 
-        ? `http://127.0.0.1:8000/api/v1/partners/${editingPartner.id}` 
-        : "http://127.0.0.1:8000/api/v1/partners/";
+        ? `/api/v1/partners${editingPartner.id}` 
+        : "/api/v1/partners";
       
       const payload = {
         ...formData,
@@ -104,7 +104,7 @@ export default function PartnersPage() {
     
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/partners/${id}`, {
+      const res = await fetch(`/api/v1/partners${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });

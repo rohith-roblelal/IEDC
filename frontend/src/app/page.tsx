@@ -13,7 +13,7 @@ export default function Home() {
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/announcements/");
+        const res = await fetch("/api/v1/announcements");
         if (res.ok) {
           const data = await res.json();
           setAnnouncements(data.slice(0, 3));
@@ -25,7 +25,7 @@ export default function Home() {
     
     const fetchPodcast = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/podcasts/active");
+        const res = await fetch("/api/v1/podcastsactive");
         if (res.ok) {
           const data = await res.json();
           setPodcast(data);
@@ -37,7 +37,7 @@ export default function Home() {
 
     const fetchPartners = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/partners/");
+        const res = await fetch("/api/v1/partners");
         if (res.ok) {
           const data = await res.json();
           setPartners(data);
