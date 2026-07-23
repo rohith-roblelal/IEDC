@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Rocket, Globe, User } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function StartupsPage() {
   const [startups, setStartups] = useState<any[]>([]);
