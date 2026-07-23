@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Handshake, X, Trash2, Edit } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function PartnersPage() {
+  const { toast } = useToast();
   const [partners, setPartners] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,11 +91,11 @@ export default function PartnersPage() {
         handleCloseModal();
         fetchPartners();
       } else {
-        alert("Failed to save partner");
+        toast("Failed to save partner", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred");
+      toast("An error occurred", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -112,11 +114,11 @@ export default function PartnersPage() {
       if (res.ok) {
         fetchPartners();
       } else {
-        alert("Failed to delete partner");
+        toast("Failed to delete partner", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred");
+      toast("An error occurred", "error");
     }
   };
 

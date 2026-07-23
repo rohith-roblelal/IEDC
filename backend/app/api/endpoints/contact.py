@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
 from app.models.models import User
-from app.schemas.schemas import ContactMessageResponse, ContactMessageCreate
+from app.schemas.schemas import ContactMessageResponse, ContactMessageCreate, ContactMessageReply
 from app.api.dependencies import get_current_active_admin
 from app.services.contact import ContactService
 
@@ -56,3 +56,17 @@ async def delete_contact_message(
     """
     contact_service = ContactService(db)
     await contact_service.delete_message(message_id)
+
+@router.post("/{message_id}/reply", response_model=ContactMessageResponse)
+async def reply_to_contact_message(
+    message_id: uuid.UUID,
+    reply: ContactMessageReply,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_admin),
+):
+    """
+    Reply to a contact message and send an email. Only accessible by Admin.
+    """
+    contact_service = ContactService(db)
+    return await contact_service.reply_to_message(message_id, reply.reply_message)
+

@@ -4,7 +4,7 @@ from sqlalchemy import Column, String, DateTime, Enum, ForeignKey, Integer, Bool
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from app.database.session import Base
-from app.models.enums import Role, EventStatus
+from app.models.enums import Role, EventStatus, StartupStatus
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -143,5 +143,20 @@ class Partner(Base):
     image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+class Startup(Base):
+    __tablename__ = "startups"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    founder: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    website: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    logo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    industry: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[StartupStatus] = mapped_column(Enum(StartupStatus), default=StartupStatus.ACTIVE, nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

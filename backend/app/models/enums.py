@@ -11,3 +11,8 @@ class EventStatus(str, enum.Enum):
     REGISTRATION_CLOSED = "REGISTRATION_CLOSED"
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
+
+class StartupStatus(str, enum.Enum):
+    ACTIVE = "ACTIVE"
+    ALUMNI = "ALUMNI"
+    INACTIVE = "INACTIVE"

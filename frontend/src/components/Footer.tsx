@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function Footer() {
+  const { toast } = useToast();
+
   return (
     <footer className="bg-[#0A0A0F] rounded-t-[28px] px-6 pt-16 pb-10 mt-10">
       <div className="max-w-[700px] mx-auto text-center">
@@ -32,14 +35,14 @@ export default function Footer() {
               });
               
               if (res.ok) {
-                alert("Message sent - we'll get back to you soon!");
+                toast("Message sent - we'll get back to you soon!", "success");
                 form.reset();
               } else {
-                alert("Failed to send message. Please try again.");
+                toast("Failed to send message. Please try again.", "error");
               }
             } catch (err) {
               console.error(err);
-              alert("An error occurred. Please try again later.");
+              toast("An error occurred. Please try again later.", "error");
             }
           }}
         >

@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Mic, X, Trash2, Edit, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function PodcastsPage() {
+  const { toast } = useToast();
   const [podcasts, setPodcasts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,11 +101,11 @@ export default function PodcastsPage() {
         handleCloseModal();
         fetchPodcasts();
       } else {
-        alert("Failed to save podcast");
+        toast("Failed to save podcast", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred");
+      toast("An error occurred", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -122,11 +124,11 @@ export default function PodcastsPage() {
       if (res.ok) {
         fetchPodcasts();
       } else {
-        alert("Failed to delete podcast");
+        toast("Failed to delete podcast", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred");
+      toast("An error occurred", "error");
     }
   };
 

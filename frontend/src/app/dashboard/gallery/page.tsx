@@ -3,8 +3,10 @@
 import { useEffect, useState, useRef } from "react";
 import { Image as ImageIcon, Trash2, X, UploadCloud, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function GalleryPage() {
+  const { toast } = useToast();
   const [images, setImages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,12 +83,13 @@ export default function GalleryPage() {
       
       if (res.ok) {
         fetchImages();
+        toast("Image deleted successfully", "success");
       } else {
-        alert("Failed to delete image");
+        toast("Failed to delete image", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred");
+      toast("An error occurred", "error");
     }
   };
 

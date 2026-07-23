@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { Megaphone, X, Trash2, Edit } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function AnnouncementsPage() {
+  const { toast } = useToast();
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -83,11 +85,11 @@ export default function AnnouncementsPage() {
         handleCloseModal();
         fetchAnnouncements();
       } else {
-        alert("Failed to save announcement");
+        toast("Failed to save announcement", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred");
+      toast("An error occurred", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -106,11 +108,11 @@ export default function AnnouncementsPage() {
       if (res.ok) {
         fetchAnnouncements();
       } else {
-        alert("Failed to delete announcement");
+        toast("Failed to delete announcement", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred");
+      toast("An error occurred", "error");
     }
   };
 

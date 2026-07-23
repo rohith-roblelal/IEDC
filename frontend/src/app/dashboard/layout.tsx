@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { 
   LogOut, LayoutDashboard, Calendar, Users, Megaphone, 
-  Image as ImageIcon, MessageSquare, UsersRound, Menu, X, Mic, Handshake 
+  Image as ImageIcon, MessageSquare, UsersRound, Menu, X, Mic, Handshake, Rocket 
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,6 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Registrations", icon: <Users size={20} />, href: "/dashboard/registrations" },
     { name: "Announcements", icon: <Megaphone size={20} />, href: "/dashboard/announcements" },
     { name: "Partners", icon: <Handshake size={20} />, href: "/dashboard/partners" },
+    { name: "Startups", icon: <Rocket size={20} />, href: "/dashboard/startups" },
     { name: "Podcasts", icon: <Mic size={20} />, href: "/dashboard/podcasts" },
     { name: "Event Poster", icon: <ImageIcon size={20} />, href: "/dashboard/gallery" },
     { name: "Team", icon: <UsersRound size={20} />, href: "/dashboard/team" },

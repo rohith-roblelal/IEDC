@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Play, Megaphone } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function Home() {
+  const { toast } = useToast();
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [podcast, setPodcast] = useState<any | null>(null);
   const [partners, setPartners] = useState<any[]>([]);
@@ -154,7 +156,7 @@ export default function Home() {
               if (podcast.video_url) {
                 window.open(podcast.video_url, "_blank");
               } else {
-                alert("No URL provided for this podcast.");
+                toast("No URL provided for this podcast.", "error");
               }
             }}
             className="block w-full max-w-[900px] mx-auto rounded-[28px] overflow-hidden relative shadow-xl text-left bg-[#0d1b3a]"
@@ -189,9 +191,11 @@ export default function Home() {
           Beta is an initiative by IEDC SNMIMT designed to empower startups and foster innovation. We provide resources, mentorship, and funding opportunities to help early-stage businesses succeed in the competitive market.
         </p>
         <div className="text-center mt-7">
-          <button className="inline-block bg-[#22D46B] text-[#1A1A2E] font-bold py-3.5 px-7 rounded-full hover:-translate-y-0.5 transition-transform">
-            View Startups
-          </button>
+          <Link href="/startups">
+            <button className="inline-block bg-[#22D46B] text-[#1A1A2E] font-bold py-3.5 px-7 rounded-full hover:-translate-y-0.5 transition-transform">
+              View Startups
+            </button>
+          </Link>
         </div>
       </section>
 

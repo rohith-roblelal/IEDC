@@ -32,3 +32,21 @@ class ContactService:
     async def delete_message(self, message_id: uuid.UUID) -> None:
         message = await self.get_message(message_id)
         await self.repo.delete(message_id)
+
+    async def reply_to_message(self, message_id: uuid.UUID, reply_text: str) -> ContactMessage:
+        from app.services.email import send_reply_email
+        message = await self.get_message(message_id)
+        
+        # Send the email
+        await send_reply_email(
+            to_email=message.email,
+            original_message=message.message,
+            reply_text=reply_text
+        )
+        
+        # Mark as read if not already
+        if not message.is_read:
+            message.is_read = True
+            await self.repo.update(message)
+            
+        return message

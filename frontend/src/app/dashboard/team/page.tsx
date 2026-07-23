@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Users, X, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function TeamPage() {
+  const { toast } = useToast();
   const [team, setTeam] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -121,7 +123,7 @@ export default function TeamPage() {
       if (res.ok) {
         fetchTeam();
       } else {
-        alert("Failed to delete");
+        toast("Failed to delete", "error");
       }
     } catch (err) {
       console.error(err);
