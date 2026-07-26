@@ -17,12 +17,15 @@ export default function TeamPage() {
 
   const [formData, setFormData] = useState({
     name: "",
-    position: "",
-    meta: "",
+    role_title: "",
+    category: "Core Team (Execom)",
+    department: "",
+    year: "",
+    linkedin_url: "",
     email: "",
-    image_url: "",
-    is_lead: false,
-    category: "Core Team",
+    photo_url: "",
+    display_order: 0,
+    is_published: true,
   });
 
   const fetchTeam = async () => {
@@ -31,7 +34,7 @@ export default function TeamPage() {
       const res = await fetch("/api/v1/team");
       if (res.ok) {
         const data = await res.json();
-        setTeam(data);
+        setTeam(data.items || (Array.isArray(data) ? data : []));
       }
     } catch (err) {
       console.error(err);
@@ -50,23 +53,29 @@ export default function TeamPage() {
       setEditingMember(member);
       setFormData({
         name: member.name,
-        position: member.position,
-        meta: member.meta || "",
+        role_title: member.role_title,
+        category: member.category,
+        department: member.department || "",
+        year: member.year || "",
+        linkedin_url: member.linkedin_url || "",
         email: member.email || "",
-        image_url: member.image_url || "",
-        is_lead: member.is_lead,
-        category: member.category || "Core Team",
+        photo_url: member.photo_url || "",
+        display_order: member.display_order || 0,
+        is_published: member.is_published ?? true,
       });
     } else {
       setEditingMember(null);
       setFormData({
         name: "",
-        position: "",
-        meta: "",
+        role_title: "",
+        category: "Core Team (Execom)",
+        department: "",
+        year: "",
+        linkedin_url: "",
         email: "",
-        image_url: "",
-        is_lead: false,
-        category: "Core Team",
+        photo_url: "",
+        display_order: 0,
+        is_published: true,
       });
     }
     setIsModalOpen(true);
@@ -79,13 +88,16 @@ export default function TeamPage() {
     const token = localStorage.getItem("access_token");
     const method = editingMember ? "PUT" : "POST";
     const url = editingMember 
-      ? `/api/v1/team${editingMember.id}` 
+      ? `/api/v1/team/${editingMember.id}` 
       : "/api/v1/team";
 
-    // If email is empty string, send null so Pydantic EmailStr doesn't crash on ""
     const payload = {
       ...formData,
-      email: formData.email.trim() === "" ? null : formData.email
+      email: formData.email.trim() === "" ? null : formData.email,
+      linkedin_url: formData.linkedin_url.trim() === "" ? null : formData.linkedin_url,
+      department: formData.department.trim() === "" ? null : formData.department,
+      year: formData.year.trim() === "" ? null : formData.year,
+      photo_url: formData.photo_url.trim() === "" ? null : formData.photo_url,
     };
 
     try {
@@ -157,10 +169,11 @@ export default function TeamPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-white/10 text-[#C4C4D4]">
+                  <th className="pb-3 font-medium">Order</th>
                   <th className="pb-3 font-medium">Name</th>
                   <th className="pb-3 font-medium">Role</th>
                   <th className="pb-3 font-medium">Category</th>
-                  <th className="pb-3 font-medium">Is Lead</th>
+                  <th className="pb-3 font-medium">Published</th>
                   <th className="pb-3 font-medium">Actions</th>
                 </tr>
               </thead>
@@ -173,9 +186,10 @@ export default function TeamPage() {
                     key={member.id} 
                     className="border-b border-white/5 hover:bg-white/5 transition-colors"
                   >
+                    <td className="py-4 text-[#C4C4D4]">{member.display_order}</td>
                     <td className="py-4 font-medium flex items-center gap-3">
-                      {member.image_url ? (
-                        <img src={member.image_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                      {member.photo_url ? (
+                        <img src={member.photo_url} alt="" className="w-8 h-8 rounded-full object-cover" />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs">
                           {member.name.charAt(0)}
@@ -183,13 +197,13 @@ export default function TeamPage() {
                       )}
                       {member.name}
                     </td>
-                    <td className="py-4 text-[#C4C4D4]">{member.position}</td>
-                    <td className="py-4 text-[#C4C4D4]">{member.category || "Core Team"}</td>
+                    <td className="py-4 text-[#C4C4D4]">{member.role_title}</td>
+                    <td className="py-4 text-[#C4C4D4]">{member.category}</td>
                     <td className="py-4">
-                      {member.is_lead ? (
-                        <span className="px-2 py-1 text-xs rounded-full bg-orange-500/20 text-orange-400">Yes</span>
+                      {member.is_published ? (
+                        <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">Yes</span>
                       ) : (
-                        <span className="text-[#C4C4D4]">-</span>
+                        <span className="px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-400">No</span>
                       )}
                     </td>
                     <td className="py-4 flex items-center gap-3">
@@ -232,78 +246,114 @@ export default function TeamPage() {
                 <div>
                   <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Profile Image</label>
                   <ImageUpload 
-                    value={formData.image_url}
-                    onChange={(url) => setFormData({ ...formData, image_url: url })}
+                    value={formData.photo_url}
+                    onChange={(url) => setFormData({ ...formData, photo_url: url })}
                     folder="team"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Name *</label>
-                  <input 
-                    required 
-                    type="text" 
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Name *</label>
+                    <input 
+                      required 
+                      type="text" 
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Role/Position *</label>
+                    <input 
+                      required 
+                      type="text" 
+                      value={formData.role_title}
+                      onChange={(e) => setFormData({...formData, role_title: e.target.value})}
+                      className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Role/Position *</label>
-                  <input 
-                    required 
-                    type="text" 
-                    value={formData.position}
-                    onChange={(e) => setFormData({...formData, position: e.target.value})}
-                    className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Meta Info (e.g. 4th Year · ECE)</label>
-                  <input 
-                    type="text" 
-                    value={formData.meta}
-                    onChange={(e) => setFormData({...formData, meta: e.target.value})}
-                    className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Email</label>
-                  <input 
-                    type="email" 
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Section / Category</label>
+                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Category *</label>
                   <select 
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
                     className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
                   >
-                    <option value="Faculty & Nodal Officers">Faculty & Nodal Officers</option>
+                    <option value="Nodal Officer">Nodal Officer</option>
+                    <option value="Assistant Nodal Officer">Assistant Nodal Officer</option>
                     <option value="Student Leadership">Student Leadership</option>
-                    <option value="Core Team">Core Team</option>
+                    <option value="Core Team (Execom)">Core Team (Execom)</option>
                     <option value="Assistant Leads">Assistant Leads</option>
-                    <option value="Members">Members</option>
                   </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Department</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. CSE"
+                      value={formData.department}
+                      onChange={(e) => setFormData({...formData, department: e.target.value})}
+                      className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Year / Semester</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. 4th Year"
+                      value={formData.year}
+                      onChange={(e) => setFormData({...formData, year: e.target.value})}
+                      className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Email</label>
+                    <input 
+                      type="email" 
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#C4C4D4] mb-1">LinkedIn URL</label>
+                    <input 
+                      type="url" 
+                      placeholder="https://linkedin.com/in/..."
+                      value={formData.linkedin_url}
+                      onChange={(e) => setFormData({...formData, linkedin_url: e.target.value})}
+                      className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Display Order (Sorting)</label>
+                  <input 
+                    type="number" 
+                    value={formData.display_order}
+                    onChange={(e) => setFormData({...formData, display_order: parseInt(e.target.value) || 0})}
+                    className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                  />
                 </div>
 
                 <div className="flex items-center gap-3 py-2">
                   <input 
                     type="checkbox" 
-                    id="is_lead"
-                    checked={formData.is_lead}
-                    onChange={(e) => setFormData({...formData, is_lead: e.target.checked})}
+                    id="is_published"
+                    checked={formData.is_published}
+                    onChange={(e) => setFormData({...formData, is_published: e.target.checked})}
                     className="w-5 h-5 rounded border-white/20 bg-[#111432] text-purple-500 focus:ring-purple-500 focus:ring-offset-[#0A0E27]"
                   />
-                  <label htmlFor="is_lead" className="text-sm font-medium text-white">Is Lead (Shows as featured)</label>
+                  <label htmlFor="is_published" className="text-sm font-medium text-white">Publish Profile</label>
                 </div>
 
                 {formError && (

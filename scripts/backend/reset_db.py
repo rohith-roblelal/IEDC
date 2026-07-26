@@ -1,0 +1,8 @@
+
+import psycopg
+conn = psycopg.connect('postgresql://postgres:postgres@localhost:5432/postgres', autocommit=True)
+conn.execute('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = ''iedc_test''')
+conn.execute('DROP DATABASE IF EXISTS iedc_test')
+conn.execute('CREATE DATABASE iedc_test')
+conn.close()
+

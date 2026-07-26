@@ -4,8 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ConditionalWrapper } from "@/components/ConditionalWrapper";
-
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import { SettingsProvider } from "@/lib/settings-context";
 
 const poppins = Poppins({ 
   subsets: ["latin"],
@@ -27,15 +27,17 @@ export default function RootLayout({
     <html lang="en">
       <body suppressHydrationWarning className={`${poppins.variable} font-sans bg-[radial-gradient(circle_at_75%_20%,#3D1A5C,#0D1030_70%)] bg-fixed bg-[#0D1030] text-white antialiased min-h-screen flex flex-col`}>
         <ToastProvider>
-          <ConditionalWrapper excludePaths={["/dashboard"]}>
-            <Navbar />
-          </ConditionalWrapper>
-          <main className="flex-1">
-            {children}
-          </main>
-          <ConditionalWrapper excludePaths={["/dashboard"]}>
-            <Footer />
-          </ConditionalWrapper>
+          <SettingsProvider>
+            <ConditionalWrapper excludePaths={["/dashboard"]}>
+              <Navbar />
+            </ConditionalWrapper>
+            <main className="flex-1">
+              {children}
+            </main>
+            <ConditionalWrapper excludePaths={["/dashboard"]}>
+              <Footer />
+            </ConditionalWrapper>
+          </SettingsProvider>
         </ToastProvider>
       </body>
     </html>

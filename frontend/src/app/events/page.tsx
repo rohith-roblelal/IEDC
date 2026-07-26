@@ -19,8 +19,9 @@ export default function EventsPage() {
         const res = await fetch("/api/v1/events");
         if (res.ok) {
           const data = await res.json();
-          const upcoming = data.filter((e: any) => ["PUBLISHED", "REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(e.status));
-          const past = data.filter((e: any) => e.status === "COMPLETED");
+          const items = data.items || [];
+          const upcoming = items.filter((e: any) => ["PUBLISHED", "REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(e.status));
+          const past = items.filter((e: any) => e.status === "COMPLETED");
           setUpcomingEvents(upcoming);
           setPastEvents(past);
         }

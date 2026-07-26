@@ -6,24 +6,31 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_db
 from app.models.models import User
 from app.schemas.schemas import PartnerResponse, PartnerCreate, PartnerUpdate
-from app.api.dependencies import get_current_active_admin
+from app.api.dependencies import get_current_super_admin
 from app.services.partner import PartnerService
 
 router = APIRouter()
 
-@router.get("", response_model=List[PartnerResponse])
-async def read_partners(db: AsyncSession = Depends(get_db)):
+from fastapi import APIRouter, Depends, HTTPException, Query
+from app.schemas.schemas import PaginatedResponse
+
+@router.get("", response_model=PaginatedResponse[PartnerResponse])
+async def read_partners(
+    page: int = Query(1, ge=1), 
+    page_size: int = Query(20, ge=1, le=100), 
+    db: AsyncSession = Depends(get_db)
+):
     """
     Retrieve all partners. Public endpoint.
     """
     partner_service = PartnerService(db)
-    return await partner_service.get_all_partners()
+    return await partner_service.get_all_partners(page=page, page_size=page_size)
 
 @router.post("", response_model=PartnerResponse)
 async def create_partner(
     partner_in: PartnerCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
     Create a new partner. Only accessible by Admin.
@@ -36,7 +43,7 @@ async def update_partner(
     partner_id: uuid.UUID,
     partner_in: PartnerUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
     Update a partner. Only accessible by Admin.
@@ -51,7 +58,7 @@ async def update_partner(
 async def delete_partner(
     partner_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
     Delete a partner. Only accessible by Admin.

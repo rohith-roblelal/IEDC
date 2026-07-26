@@ -17,7 +17,7 @@ export default function RegistrationsPage() {
         const res = await fetch("/api/v1/events");
         if (res.ok) {
           const data = await res.json();
-          setEvents(data);
+          setEvents(data.items || []);
         }
       } catch (err) {
         console.error(err);

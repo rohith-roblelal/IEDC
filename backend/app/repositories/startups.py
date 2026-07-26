@@ -1,36 +1,85 @@
-from typing import List, Optional
 import uuid
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
-from app.models.models import Startup
+import re
+from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy import update, delete
+from sqlalchemy.orm import selectinload
+
+from app.models.models import Startup, StartupGalleryImage, utcnow
 from app.schemas.startups import StartupCreate, StartupUpdate
 
 class StartupRepository:
-    def __init__(self, db: Session):
-        self.db = db
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> List[Startup]:
-        return self.db.query(Startup).order_by(desc(Startup.created_at)).offset(skip).limit(limit).all()
+    def _generate_slug(self, name: str) -> str:
+        slug = name.lower()
+        slug = re.sub(r'[^a-z0-9\s-]', '', slug)
+        slug = re.sub(r'[\s-]+', '-', slug).strip('-')
+        return slug
 
-    def get_by_id(self, startup_id: uuid.UUID) -> Optional[Startup]:
-        return self.db.query(Startup).filter(Startup.id == startup_id).first()
+    async def get_by_id(self, startup_id: uuid.UUID) -> Optional[Startup]:
+        query = select(Startup).options(selectinload(Startup.gallery_images)).where(Startup.id == startup_id, Startup.deleted_at.is_(None))
+        result = await self.session.execute(query)
+        return result.scalars().first()
 
-    def create(self, startup_data: StartupCreate) -> Startup:
-        db_startup = Startup(**startup_data.model_dump())
-        self.db.add(db_startup)
-        self.db.commit()
-        self.db.refresh(db_startup)
-        return db_startup
+    async def get_by_slug(self, slug: str) -> Optional[Startup]:
+        query = select(Startup).options(selectinload(Startup.gallery_images)).where(Startup.slug == slug, Startup.deleted_at.is_(None))
+        result = await self.session.execute(query)
+        return result.scalars().first()
 
-    def update(self, db_startup: Startup, update_data: StartupUpdate) -> Startup:
-        update_dict = update_data.model_dump(exclude_unset=True)
-        for key, value in update_dict.items():
-            setattr(db_startup, key, value)
+    async def get_all(self, page: int = 1, page_size: int = 20, published_only: bool = False, featured_only: bool = False) -> tuple[List[Startup], int]:
+        from app.database.pagination import paginate
+        query = select(Startup).where(Startup.deleted_at.is_(None))
         
-        self.db.commit()
-        self.db.refresh(db_startup)
-        return db_startup
+        if published_only:
+            query = query.where(Startup.is_published == True)
+        if featured_only:
+            query = query.where(Startup.is_featured == True)
+            
+        # Order by featured first, then newest
+        query = query.order_by(Startup.is_featured.desc(), Startup.created_at.desc())
+        
+        return await paginate(self.session, query, page, page_size)
 
-    def delete(self, db_startup: Startup) -> None:
-        self.db.delete(db_startup)
-        self.db.commit()
+    async def create(self, startup: Startup) -> Startup:
+        if not startup.slug:
+            startup.slug = self._generate_slug(startup.name)
+            
+        self.session.add(startup)
+        await self.session.commit()
+        await self.session.refresh(startup)
+        return startup
+
+    async def update(self, startup: Startup) -> Startup:
+        self.session.add(startup)
+        await self.session.commit()
+        await self.session.refresh(startup)
+        return startup
+
+    async def delete(self, startup_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+        result = await self.session.execute(
+            update(Startup).where(Startup.id == startup_id).values(deleted_at=utcnow(), deleted_by=user_id)
+        )
+        await self.session.commit()
+        return result.rowcount > 0
+
+    # --- Gallery Methods ---
+    
+    async def add_gallery_image(self, image: StartupGalleryImage) -> StartupGalleryImage:
+        self.session.add(image)
+        await self.session.commit()
+        await self.session.refresh(image)
+        return image
+        
+    async def get_gallery_image(self, image_id: uuid.UUID) -> Optional[StartupGalleryImage]:
+        result = await self.session.execute(select(StartupGalleryImage).where(StartupGalleryImage.id == image_id, StartupGalleryImage.deleted_at.is_(None)))
+        return result.scalars().first()
+        
+    async def delete_gallery_image(self, image_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+        result = await self.session.execute(
+            update(StartupGalleryImage).where(StartupGalleryImage.id == image_id).values(deleted_at=utcnow(), deleted_by=user_id)
+        )
+        await self.session.commit()
+        return result.rowcount > 0

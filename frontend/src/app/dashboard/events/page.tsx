@@ -39,7 +39,7 @@ export default function EventsPage() {
       const res = await fetch("/api/v1/events");
       if (res.ok) {
         const data = await res.json();
-        setEvents(data);
+        setEvents(data.items || []);
       }
     } catch (err) {
       console.error(err);
@@ -49,6 +49,7 @@ export default function EventsPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fetchEvents();
   }, []);
 
@@ -69,6 +70,7 @@ export default function EventsPage() {
         custom_fields: event.custom_fields || [],
       });
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setEditingEvent(null);
       setFormData({
         title: "",
@@ -86,6 +88,7 @@ export default function EventsPage() {
     }
     setIsModalOpen(true);
   };
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

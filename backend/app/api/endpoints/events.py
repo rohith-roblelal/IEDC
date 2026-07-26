@@ -1,58 +1,76 @@
-import uuid
-from typing import List
-from fastapi import APIRouter, Depends
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel
+import uuid
 
 from app.database.session import get_db
 from app.models.models import User
-from app.models.enums import EventStatus
-from app.schemas.schemas import EventResponse, EventCreate, EventUpdate
-from app.api.dependencies import get_current_active_admin
+from app.schemas.schemas import EventResponse, EventCreate, EventUpdate, PaginatedResponse
+from app.api.dependencies import get_current_super_admin
 from app.services.event import EventService
-from pydantic import BaseModel
+from app.core.rate_limit import limiter
 
 class GoogleFormConnectRequest(BaseModel):
     url: str
 
 router = APIRouter()
 
-@router.get("", response_model=List[EventResponse])
-async def read_events(db: AsyncSession = Depends(get_db)):
+@router.get("", response_model=PaginatedResponse[EventResponse])
+async def read_events(
+    page: int = Query(1, ge=1), 
+    page_size: int = Query(20, ge=1, le=100),
+    is_published: Optional[bool] = Query(None),
+    category: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
     """
     Retrieve all events. Public endpoint.
     """
     event_service = EventService(db)
-    return await event_service.get_all_events()
+    return await event_service.get_all_events(
+        page=page, 
+        page_size=page_size, 
+        is_published=is_published, 
+        category=category, 
+        search=search
+    )
 
-@router.get("/{event_id}", response_model=EventResponse)
-async def read_event(event_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+@router.get("/{slug}", response_model=EventResponse)
+async def read_event(slug: str, db: AsyncSession = Depends(get_db)):
     """
-    Retrieve a specific event. Public endpoint.
+    Retrieve a specific event by slug. Public endpoint.
     """
     event_service = EventService(db)
-    return await event_service.get_event(event_id)
+    # Check if slug is a UUID (in case dashboard calls by ID)
+    try:
+        event_id = uuid.UUID(slug)
+        return await event_service.get_event(event_id)
+    except ValueError:
+        return await event_service.get_event_by_slug(slug)
 
 @router.post("", response_model=EventResponse)
 async def create_event(
     event_in: EventCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
-    Create a new event. Only accessible by Admin.
+    Create a new event. Only accessible by Super Admin.
     """
     event_service = EventService(db)
-    return await event_service.create_event(event_in)
+    return await event_service.create_event(event_in, creator_id=current_user.id)
 
 @router.put("/{event_id}", response_model=EventResponse)
 async def update_event(
     event_id: uuid.UUID,
     event_in: EventUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
-    Update an event. Only accessible by Admin.
+    Update an event. Only accessible by Super Admin.
     """
     event_service = EventService(db)
     return await event_service.update_event(event_id, event_in)
@@ -61,44 +79,46 @@ async def update_event(
 async def delete_event(
     event_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
-    Delete an event. Only accessible by Admin.
+    Delete an event. Only accessible by Super Admin.
     """
     event_service = EventService(db)
     await event_service.delete_event(event_id)
 
-@router.patch("/{event_id}/open", response_model=EventResponse)
-async def open_event_registration(
+@router.patch("/{event_id}/publish", response_model=EventResponse)
+async def publish_event(
     event_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
-    Open registration for an event. Only accessible by Admin.
+    Publish an event. Only accessible by Super Admin.
     """
     event_service = EventService(db)
-    return await event_service.set_event_status(event_id, EventStatus.REGISTRATION_OPEN)
+    return await event_service.publish_event(event_id)
 
-@router.patch("/{event_id}/close", response_model=EventResponse)
-async def close_event_registration(
+@router.patch("/{event_id}/unpublish", response_model=EventResponse)
+async def unpublish_event(
     event_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
-    Close registration for an event. Only accessible by Admin.
+    Unpublish an event. Only accessible by Super Admin.
     """
     event_service = EventService(db)
-    return await event_service.set_event_status(event_id, EventStatus.REGISTRATION_CLOSED)
+    return await event_service.unpublish_event(event_id)
 
 @router.post("/{event_id}/google-form/connect")
+@limiter.limit("5/minute")
 async def connect_google_form(
+    request: Request,
     event_id: uuid.UUID,
     payload: GoogleFormConnectRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
     Connects a Google Form to an event by auto-detecting fields.

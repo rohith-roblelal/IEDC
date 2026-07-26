@@ -40,5 +40,9 @@ async def seed_super_admin():
         await db.refresh(new_super_admin)
         logger.info(f"SUPER_ADMIN created successfully with email: {email}")
 
+import sys
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 if __name__ == "__main__":
     asyncio.run(seed_super_admin())

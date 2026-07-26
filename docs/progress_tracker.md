@@ -54,6 +54,21 @@ This document tracks the ongoing development, features implemented, and upcoming
 - **Authentication Improvements**: Upgraded JWT handling to optionally issue and validate `HttpOnly` secure cookies.
 - **Security Documentation**: Authored a comprehensive suite of security governance documents in `docs/security/`, including incident response plans, architecture overviews, and Supabase RLS templates.
 
+### Production Deployment Readiness
+- **CI/CD Pipeline**: Built automated GitHub Actions workflows for backend testing and frontend Turbopack builds (linting and strict type-checking).
+- **Backend Stability**: Fixed DB-level caching bugs on Neon Serverless (handling `alembic` enum casting errors).
+- **Frontend Build Stability**: Patched edge-case implicit `any` TypeScript errors and dynamic icon imports (`lucide-react` ReferenceErrors) to ensure 100% successful production builds.
+- **Repository Cleanup**: Organized root directory by moving all utility and debugging Python scripts into dedicated `scripts/backend` and `scripts/frontend` directories.
+- **Production Audit**: Completed end-to-end security, performance, and functionality review resulting in a 'Go' for deployment.
+
+### Content & Website Settings Modules
+- **Dynamic Configuration**: Fully wired up the centralized Website Settings module to remove hardcoded values (Hero text, About text, SEO headers).
+- **Contact Page Cleanup**: Removed the dedicated `/contact` page and dashboard settings as requested, retaining only the minimal footer widget for lead capture.
+- **UI & Copy Refinements**: 
+  - Restyled the Home page welcome text for a bolder, professional look.
+  - Injected specific descriptive paragraphs for the About page ("About IEDC" and "Our Vision").
+  - Reordered the top navigation bar and updated "Nodal Officers" to "Nodal officer & Assistant Nodal officer" in the Team section.
+
 ## 🚧 In Progress / Next Steps
 - Finalize mobile responsiveness for the Admin Dashboard and any newly added sections.
 - Populate real content/images for the Team and About pages.

@@ -4,25 +4,25 @@ import { useEffect, useState, useRef } from "react";
 import { Image as ImageIcon, Trash2, X, UploadCloud, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
+import { galleryApi } from "@/lib/api/gallery";
 
 export default function GalleryPage() {
   const { toast } = useToast();
   const [images, setImages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchImages = async () => {
     try {
-      const res = await fetch("/api/v1/gallery");
-      if (res.ok) {
-        const data = await res.json();
-        setImages(data);
-      }
+      const res = await galleryApi.getImages();
+      setImages(res.items || (Array.isArray(res) ? res : []));
     } catch (err) {
       console.error(err);
+      toast("Failed to load images", "error");
     } finally {
       setIsLoading(false);
     }
@@ -43,26 +43,10 @@ export default function GalleryPage() {
 
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "gallery");
-
-      const token = localStorage.getItem("access_token");
-      const res = await fetch("/api/v1/galleryupload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text);
-      }
-
+      await galleryApi.uploadImage(file, { is_published: true });
       await fetchImages();
       setIsModalOpen(false);
+      toast("Image uploaded successfully", "success");
     } catch (err: any) {
       console.error(err);
       setError("Failed to upload image");
@@ -74,22 +58,13 @@ export default function GalleryPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this image?")) return;
     
-    const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`/api/v1/gallery/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      
-      if (res.ok) {
-        fetchImages();
-        toast("Image deleted successfully", "success");
-      } else {
-        toast("Failed to delete image", "error");
-      }
+      await galleryApi.deleteImage(id);
+      fetchImages();
+      toast("Image deleted successfully", "success");
     } catch (err) {
       console.error(err);
-      toast("An error occurred", "error");
+      toast("Failed to delete image", "error");
     }
   };
 
@@ -125,6 +100,7 @@ export default function GalleryPage() {
         {isLoading ? (
           <div className="text-center text-[#C4C4D4] py-8">Loading posters...</div>
         ) : images.length === 0 ? (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           <div className="text-center text-[#C4C4D4] py-8">No images found.</div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

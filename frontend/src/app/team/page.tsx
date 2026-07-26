@@ -18,29 +18,36 @@ function TeamCard({ member, featured }: { member: any, featured?: boolean }) {
     >
       <div className={`mx-auto mb-4 flex items-center justify-center font-bold text-white bg-gradient-to-br from-[#3B82F6] to-[#A855F7] rounded-full overflow-hidden ${featured ? "w-[88px] h-[88px] text-[1.6rem]" : "w-[72px] h-[72px] text-[1.35rem]"
         }`}>
-        {member.image_url ? (
-          <img src={member.image_url} alt={member.name} className="w-full h-full object-cover" />
+        {member.photo_url ? (
+          <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover" />
         ) : (
           getInitials(member.name)
         )}
       </div>
       <span className={`inline-block text-[0.72rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-2.5 ${featured ? "bg-[#22D46B]/15 text-[#22D46B]" : "bg-[#4F7DF9]/20 text-[#4F7DF9]"
         }`}>
-        {member.position}
+        {member.role_title}
       </span>
       <h3 className={`font-bold leading-tight ${featured ? "text-[1.2rem]" : "text-[1.05rem]"}`}>
         {member.name}
       </h3>
-      {member.meta && (
-        <p className="mt-2 text-[#C4C4D4] text-[0.85rem] font-medium">{member.meta}</p>
+      {(member.department || member.year) && (
+        <p className="mt-2 text-[#C4C4D4] text-[0.85rem] font-medium">
+          {[member.year, member.department].filter(Boolean).join(" · ")}
+        </p>
       )}
-      {member.email && (
-        <div className="mt-3 text-[0.82rem]">
-          <a href={`mailto:${member.email}`} className="text-[#8B7FE8] font-medium hover:text-white transition-colors">
-            {member.email}
+      <div className="mt-3 flex items-center justify-center gap-3">
+        {member.email && (
+          <a href={`mailto:${member.email}`} className="text-[#8B7FE8] text-[0.82rem] font-medium hover:text-white transition-colors">
+            Email
           </a>
-        </div>
-      )}
+        )}
+        {member.linkedin_url && (
+          <a href={member.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-[#8B7FE8] text-[0.82rem] font-medium hover:text-white transition-colors">
+            LinkedIn
+          </a>
+        )}
+      </div>
     </motion.article>
   );
 }
@@ -55,8 +62,7 @@ export default function TeamPage() {
         const res = await fetch("/api/v1/team");
         if (res.ok) {
           const data = await res.json();
-          // Sort or arrange data if necessary, though backend should return it ordered
-          setTeam(data);
+          setTeam(data.items || (Array.isArray(data) ? data : []));
         }
       } catch (err) {
         console.error(err);
@@ -67,12 +73,13 @@ export default function TeamPage() {
     fetchTeam();
   }, []);
 
-  // Group explicitly by the new Category field
-  const faculty = team.filter(m => m.category === "Faculty & Nodal Officers");
-  const leadership = team.filter(m => m.category === "Student Leadership");
-  const core = team.filter(m => m.category === "Core Team");
-  const assistantLeads = team.filter(m => m.category === "Assistant Leads");
-  const others = team.filter(m => m.category === "Members" || !m.category);
+  const nodalOfficers = team.filter(m => m.category === "Nodal Officer" && m.is_published);
+  const assistantNodalOfficers = team.filter(m => m.category === "Assistant Nodal Officer" && m.is_published);
+  const leadership = team.filter(m => m.category === "Student Leadership" && m.is_published);
+  const core = team.filter(m => m.category === "Core Team (Execom)" && m.is_published);
+  const assistantLeads = team.filter(m => m.category === "Assistant Leads" && m.is_published);
+
+  const allNodalOfficers = [...nodalOfficers, ...assistantNodalOfficers];
 
   return (
     <div className="py-24 px-6 relative max-w-[1100px] mx-auto">
@@ -87,11 +94,11 @@ export default function TeamPage() {
         </div>
       ) : (
         <div className="space-y-14">
-          {faculty.length > 0 && (
+          {allNodalOfficers.length > 0 && (
             <div>
-              <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Faculty & Nodal Officers</p>
+              <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Nodal officer & Assistant Nodal officer</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 justify-center max-w-[640px] mx-auto">
-                {faculty.map((m, i) => <TeamCard key={i} member={m} featured />)}
+                {allNodalOfficers.map((m, i) => <TeamCard key={i} member={m} featured />)}
               </div>
             </div>
           )}
@@ -107,7 +114,7 @@ export default function TeamPage() {
 
           {core.length > 0 && (
             <div>
-              <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Core Team</p>
+              <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Core Team (Execom)</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {core.map((m, i) => <TeamCard key={i} member={m} />)}
               </div>
@@ -119,15 +126,6 @@ export default function TeamPage() {
               <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Assistant Leads</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 justify-center max-w-[800px] mx-auto">
                 {assistantLeads.map((m, i) => <TeamCard key={i} member={m} />)}
-              </div>
-            </div>
-          )}
-
-          {others.length > 0 && (
-            <div>
-              <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Members</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 justify-center max-w-[800px] mx-auto">
-                {others.map((m, i) => <TeamCard key={i} member={m} />)}
               </div>
             </div>
           )}

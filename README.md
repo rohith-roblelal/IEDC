@@ -34,3 +34,19 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Production Scaling: Database Connection Pooling (PgBouncer)
+
+For high-concurrency production workloads (>1,000 users), the default direct async connection to Neon PostgreSQL will result in connection pool exhaustion.
+
+To mitigate this, you must configure **PgBouncer** (in transaction pooling mode) to sit between FastAPI and the database. Neon Serverless provides a built-in PgBouncer endpoint.
+
+### Steps to Enable:
+1. In your Neon Console, navigate to your Project Dashboard.
+2. Under "Connection Details", enable the **Pooled connection** toggle.
+3. Copy the pooled connection string (it will typically append `-pooler` to the endpoint host).
+4. Update your production `.env` file:
+   ```env
+   DATABASE_URL=postgresql+asyncpg://user:password@ep-withered-rain-123456-pooler.us-east-2.aws.neon.tech/neondb
+   ```
+5. Ensure `backend/app/database/session.py` maintains `pool_size=20` and `max_overflow=50` to gracefully handle the FastAPI application-side queue.

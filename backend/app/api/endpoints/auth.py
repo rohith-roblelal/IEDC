@@ -1,39 +1,253 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import Any
+from jose import jwt, JWTError
+from datetime import datetime, timezone, timedelta
 
 from app.database.session import get_db
-from app.auth.security import verify_password, create_access_token
+from app.auth.security import verify_password, create_access_token, needs_password_rehash, get_password_hash, generate_reset_token
 from app.repositories.user import UserRepository
-from app.schemas.schemas import Token
+from app.schemas.schemas import Token, ForgotPasswordRequest, ResetPasswordRequest
+from app.core.config import settings
+from app.core.rate_limit import limiter
+from app.api.dependencies import oauth2_scheme, get_current_user
+from app.models.models import TokenBlocklist, PasswordResetToken
+from app.services.audit import log_audit_event
+from app.services.email import email_service
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-@router.post("/login", response_model=Token)
+MAX_FAILED_ATTEMPTS = 5
+LOCKOUT_DURATION_MINUTES = 15
+
+@router.post("/login")
+@limiter.limit("5/minute")
 async def login_access_token(
-    response: Response, db: AsyncSession = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
+    request: Request, response: Response, db: AsyncSession = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """
     OAuth2 compatible token login, get an access token for future requests.
     """
     user_repo = UserRepository(db)
     user = await user_repo.get_by_email(email=form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    client_ip = request.client.host if request.client else None
+
+    if not user:
+        # Avoid user enumeration by taking roughly the same time as a real verification
+        # and returning a generic error message
+        get_password_hash("dummy_password_to_prevent_timing_attacks")
+        await log_audit_event(db, "LOGIN_FAILED", ip_address=client_ip, metadata_json={"reason": "User not found", "email": form_data.username})
         raise HTTPException(status_code=400, detail="Incorrect email or password")
+
+    # Check lockout
+    if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+        await log_audit_event(db, "LOGIN_LOCKED", user_id=user.id, ip_address=client_ip, metadata_json={"email": form_data.username})
+        raise HTTPException(status_code=400, detail="Account locked due to too many failed attempts. Try again later.")
+
+    # Verify password
+    if not verify_password(form_data.password, user.hashed_password):
+        user.failed_login_attempts += 1
+        if user.failed_login_attempts >= MAX_FAILED_ATTEMPTS:
+            user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+            await log_audit_event(db, "ACCOUNT_LOCKED", user_id=user.id, ip_address=client_ip)
+        
+        await db.commit()
+        await log_audit_event(db, "LOGIN_FAILED", user_id=user.id, ip_address=client_ip, metadata_json={"reason": "Incorrect password"})
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    
+    # Login successful, reset attempts and lockout
+    user.failed_login_attempts = 0
+    user.locked_until = None
+
+    # Transparently upgrade password hash if needed (e.g. bcrypt -> argon2)
+    if needs_password_rehash(user.hashed_password):
+        user.hashed_password = get_password_hash(form_data.password)
+        logger.info(f"Upgraded password hash for user {user.email}")
+    
+    await db.commit()
+
+    await log_audit_event(db, "LOGIN_SUCCESS", user_id=user.id, ip_address=client_ip)
     
     access_token = create_access_token(
         subject=user.email, role=user.role.value
     )
     
-    # Set HttpOnly cookie (secure=False for local development over HTTP)
+    # Set HttpOnly cookie
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
         httponly=True,
-        secure=False,
+        secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False,
         samesite="lax",
-        max_age=1800, # 30 mins
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "message": "Login successful",
+        "user": {
+            "email": user.email,
+            "role": user.role.value
+        }
+    }
+
+
+@router.get("/me")
+async def get_me(current_user=Depends(get_current_user)):
+    """
+    Get the currently authenticated user based on the HttpOnly cookie.
+    """
+    return {
+        "authenticated": True,
+        "user": {
+            "id": current_user.id,
+            "email": current_user.email,
+            "role": current_user.role.value
+        }
+    }
+@router.post("/logout")
+async def logout(
+    request: Request,
+    response: Response, 
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Logout the user by adding the token to the blocklist and clearing the cookie.
+    """
+    client_ip = request.client.host if request.client else None
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        jti = payload.get("jti")
+        email = payload.get("sub", "unknown")
+        
+        user_repo = UserRepository(db)
+        user = await user_repo.get_by_email(email=email)
+        user_id = user.id if user else None
+
+        if jti:
+            blocked_token = TokenBlocklist(jti=jti)
+            db.add(blocked_token)
+            await log_audit_event(db, "LOGOUT", user_id=user_id, ip_address=client_ip)
+            await db.commit()
+    except JWTError:
+        await log_audit_event(db, "LOGOUT_FAILED", ip_address=client_ip, metadata_json={"reason": "Invalid token"})
+        
+    response.delete_cookie(
+        key="access_token",
+        secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False,
+        samesite="lax",
+    )
+    return {"status": "success", "message": "Logged out successfully"}
+
+@router.post("/forgot-password")
+@limiter.limit("3/minute")
+async def forgot_password(
+    request: Request,
+    body: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Generate a password reset token and send it via email.
+    """
+    client_ip = request.client.host if request.client else None
+    user_repo = UserRepository(db)
+    user = await user_repo.get_by_email(email=body.email)
+    
+    if not user:
+        # Pretend we sent an email to prevent user enumeration
+        get_password_hash("dummy_password_to_prevent_timing_attacks")
+        return {"status": "success", "message": "If that email is registered, a password reset link has been sent."}
+    
+    reset_token = generate_reset_token()
+    token_hash = get_password_hash(reset_token)
+    
+    # Store token hash in db, valid for 15 minutes
+    db_token = PasswordResetToken(
+        user_id=user.id,
+        token_hash=token_hash,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=15)
+    )
+    db.add(db_token)
+    await db.commit()
+    
+    await log_audit_event(db, "PASSWORD_RESET_REQUESTED", user_id=user.id, ip_address=client_ip)
+    
+    # Send email
+    full_token = f"{user.id}:{reset_token}"
+    await email_service.send_password_reset_email(user.email, full_token)
+    
+    return {"status": "success", "message": "If that email is registered, a password reset link has been sent."}
+
+@router.post("/reset-password")
+@limiter.limit("5/minute")
+async def reset_password(
+    request: Request,
+    body: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Reset password using a valid reset token.
+    """
+    client_ip = request.client.host if request.client else None
+    
+    # We need to find a token that matches the hash.
+    # Since we can't easily lookup by plain text token (as it's hashed in DB),
+    # the frontend usually sends the user ID along with the token, OR we just 
+    # check all active tokens. For security and simplicity, we can fetch all valid
+    # unused tokens and verify the hash. However, if there are many, it's slow.
+    # A better pattern is returning `token_id:token_secret` in the email link,
+    # or just storing the token in DB as an HMAC rather than a slow password hash.
+    # BUT, since we used `get_password_hash` (argon2), checking all tokens is very slow.
+    
+    # Alternative: The token sent in email could be `user_id:secret`.
+    # Let's adjust: if the token is just a random string, finding it requires checking all hashes.
+    # Let's fix this by requiring the frontend to pass `email` or embedding `user_id` in the token.
+    # Actually, we can embed the user_id in the token: `user_id:random_string`.
+    
+    # Let's decode the token to get the user ID
+    try:
+        user_id_str, token_secret = body.token.split(":", 1)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid token format")
+        
+    # Get all active tokens for this user
+    stmt = select(PasswordResetToken).where(
+        PasswordResetToken.user_id == user_id_str,
+        PasswordResetToken.is_used == False,
+        PasswordResetToken.expires_at > datetime.now(timezone.utc)
+    )
+    result = await db.execute(stmt)
+    active_tokens = result.scalars().all()
+    
+    valid_token_obj = None
+    for t in active_tokens:
+        if verify_password(token_secret, t.token_hash):
+            valid_token_obj = t
+            break
+            
+    if not valid_token_obj:
+        await log_audit_event(db, "PASSWORD_RESET_FAILED", ip_address=client_ip, metadata_json={"reason": "Invalid or expired token"})
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        
+    # Valid token found, update password
+    user_repo = UserRepository(db)
+    user = await user_repo.get_by_id(valid_token_obj.user_id)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+        
+    user.hashed_password = get_password_hash(body.new_password)
+    user.failed_login_attempts = 0
+    user.locked_until = None
+    
+    # Invalidate token
+    valid_token_obj.is_used = True
+    
+    await db.commit()
+    await log_audit_event(db, "PASSWORD_RESET_COMPLETED", user_id=user.id, ip_address=client_ip)
+    
+    return {"status": "success", "message": "Password has been successfully reset"}

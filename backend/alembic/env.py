@@ -41,6 +41,9 @@ def run_migrations_offline() -> None:
 
     """
     url = config.get_main_option("sqlalchemy.url")
+    if not url or url == "driver://user:pass@localhost/dbname":
+        from app.core.config import settings
+        url = settings.DATABASE_URL
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -64,10 +67,13 @@ async def run_async_migrations() -> None:
     and associate a connection with the context.
 
     """
-    # Override sqlalchemy.url with the one from our config if it's set
+    # Override sqlalchemy.url with the one from our config
     from app.core.config import settings
     configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = settings.DATABASE_URL
+    
+    current_url = config.get_main_option("sqlalchemy.url")
+    if not current_url or current_url == "driver://user:pass@localhost/dbname":
+        configuration["sqlalchemy.url"] = settings.DATABASE_URL
 
     connectable = async_engine_from_config(
         configuration,

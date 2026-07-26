@@ -22,12 +22,19 @@ class UserService:
         user = User(
             email=user_in.email,
             hashed_password=hashed_password,
-            role=Role.ADMIN
+            role=Role.SUPER_ADMIN
         )
         return await self.repo.create(user)
 
-    async def get_all_admins(self) -> List[User]:
-        return await self.repo.get_all_admins()
+    async def get_all_admins(self, page: int = 1, page_size: int = 20) -> dict:
+        items, total = await self.repo.get_all_admins(page, page_size)
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "has_next": (page * page_size) < total
+        }
 
     async def delete_admin(self, user_id: uuid.UUID) -> None:
         user = await self.repo.get_by_id(user_id)

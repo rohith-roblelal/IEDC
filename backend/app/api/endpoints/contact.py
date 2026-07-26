@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_db
 from app.models.models import User
 from app.schemas.schemas import ContactMessageResponse, ContactMessageCreate, ContactMessageReply
-from app.api.dependencies import get_current_active_admin
+from app.api.dependencies import get_current_super_admin
 from app.services.contact import ContactService
 
 router = APIRouter()
@@ -22,22 +22,28 @@ async def create_contact_message(
     contact_service = ContactService(db)
     return await contact_service.create_message(message_in)
 
-@router.get("", response_model=List[ContactMessageResponse])
+from fastapi import APIRouter, Depends, Query
+from app.schemas.schemas import PaginatedResponse
+
+@router.get("", response_model=PaginatedResponse[ContactMessageResponse])
 async def read_contact_messages(
+    page: int = Query(1, ge=1), 
+    page_size: int = Query(20, ge=1, le=100),
+    is_archived: bool = Query(False),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
     Retrieve all contact messages. Only accessible by Admin.
     """
     contact_service = ContactService(db)
-    return await contact_service.get_all_messages()
+    return await contact_service.get_all_messages(page=page, page_size=page_size, is_archived=is_archived)
 
 @router.patch("/{message_id}/read", response_model=ContactMessageResponse)
 async def mark_message_as_read(
     message_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
     Mark a contact message as read. Only accessible by Admin.
@@ -45,11 +51,23 @@ async def mark_message_as_read(
     contact_service = ContactService(db)
     return await contact_service.mark_as_read(message_id)
 
+@router.patch("/{message_id}/archive", response_model=ContactMessageResponse)
+async def archive_message(
+    message_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_super_admin),
+):
+    """
+    Toggle archive status of a contact message. Only accessible by Admin.
+    """
+    contact_service = ContactService(db)
+    return await contact_service.archive_message(message_id)
+
 @router.delete("/{message_id}", status_code=204)
 async def delete_contact_message(
     message_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
     Delete a contact message. Only accessible by Admin.
@@ -62,7 +80,7 @@ async def reply_to_contact_message(
     message_id: uuid.UUID,
     reply: ContactMessageReply,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
     Reply to a contact message and send an email. Only accessible by Admin.

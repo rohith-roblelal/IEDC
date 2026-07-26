@@ -1,0 +1,96 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Calendar, Users, MessageSquare } from "lucide-react";
+
+interface DashboardStats {
+  total_events: number;
+  total_registrations: number;
+  unread_messages: number;
+  total_team_members: number;
+}
+
+const defaultStats: DashboardStats = {
+  total_events: 0,
+  total_registrations: 0,
+  unread_messages: 0,
+  total_team_members: 0,
+};
+
+export default function DashboardClientView({ stats }: { stats: DashboardStats }) {
+  const safeStats = { ...defaultStats, ...(stats || {}) };
+
+  return (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Dashboard Overview</h1>
+        <p className="text-[#C4C4D4] mt-2">Welcome back to the IEDC Admin Panel.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-[#111432] p-6 rounded-2xl border border-white/10"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-blue-500/20 text-blue-400 rounded-xl">
+              <Calendar size={24} />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold mb-1">{safeStats.total_events}</h3>
+          <p className="text-[#C4C4D4] text-sm">Total Events</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-[#111432] p-6 rounded-2xl border border-white/10"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-purple-500/20 text-purple-400 rounded-xl">
+              <Users size={24} />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold mb-1">{safeStats.total_registrations}</h3>
+          <p className="text-[#C4C4D4] text-sm">Active Registrations</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-[#111432] p-6 rounded-2xl border border-white/10 relative overflow-hidden"
+        >
+          <div className="flex items-center justify-between mb-4 relative z-10">
+            <div className="p-3 bg-orange-500/20 text-orange-400 rounded-xl">
+              <MessageSquare size={24} />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold mb-1 relative z-10">{safeStats.unread_messages}</h3>
+          <p className="text-[#C4C4D4] text-sm relative z-10">Unread Messages</p>
+          {safeStats.unread_messages > 0 && (
+            <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 rounded-full blur-xl transform translate-x-1/2 -translate-y-1/2" />
+          )}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-[#111432] p-6 rounded-2xl border border-white/10"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-green-500/20 text-green-400 rounded-xl">
+              <Users size={24} />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold mb-1">{safeStats.total_team_members}</h3>
+          <p className="text-[#C4C4D4] text-sm">Team Members</p>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

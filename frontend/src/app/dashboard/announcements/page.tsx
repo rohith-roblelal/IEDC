@@ -25,7 +25,7 @@ export default function AnnouncementsPage() {
       const res = await fetch("/api/v1/announcements");
       if (res.ok) {
         const data = await res.json();
-        setAnnouncements(data);
+        setAnnouncements(data.items || (Array.isArray(data) ? data : []));
       }
     } catch (err) {
       console.error(err);
@@ -76,6 +76,7 @@ export default function AnnouncementsPage() {
         method: editingAnnouncement ? "PUT" : "POST",
         headers: { 
           "Content-Type": "application/json",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           "Authorization": `Bearer ${token}` 
         },
         body: JSON.stringify(formData)
@@ -96,6 +97,7 @@ export default function AnnouncementsPage() {
   };
 
   const handleDelete = async (id: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!confirm("Are you sure you want to delete this announcement?")) return;
     
     const token = localStorage.getItem("access_token");
@@ -108,6 +110,7 @@ export default function AnnouncementsPage() {
       if (res.ok) {
         fetchAnnouncements();
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         toast("Failed to delete announcement", "error");
       }
     } catch (err) {

@@ -14,9 +14,10 @@ class GalleryRepository:
         result = await self.session.execute(select(Gallery).where(Gallery.id == gallery_id))
         return result.scalars().first()
 
-    async def get_all(self) -> List[Gallery]:
-        result = await self.session.execute(select(Gallery).order_by(Gallery.created_at.desc()))
-        return result.scalars().all()
+    async def get_all(self, page: int = 1, page_size: int = 20) -> tuple[List[Gallery], int]:
+        from app.database.pagination import paginate
+        query = select(Gallery).order_by(Gallery.created_at.desc())
+        return await paginate(self.session, query, page, page_size)
 
     async def get_by_event(self, event_id: uuid.UUID) -> List[Gallery]:
         result = await self.session.execute(

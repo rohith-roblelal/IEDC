@@ -11,8 +11,15 @@ class TeamService:
     def __init__(self, session: AsyncSession):
         self.repo = TeamMemberRepository(session)
 
-    async def get_all_members(self) -> List[TeamMember]:
-        return await self.repo.get_all()
+    async def get_all_members(self, page: int = 1, page_size: int = 20) -> dict:
+        items, total = await self.repo.get_all(page=page, page_size=page_size)
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "has_next": (page * page_size) < total
+        }
 
     async def get_member(self, member_id: uuid.UUID) -> TeamMember:
         member = await self.repo.get_by_id(member_id)

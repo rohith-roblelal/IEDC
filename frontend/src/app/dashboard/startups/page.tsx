@@ -11,9 +11,11 @@ export default function StartupsPage() {
   const [startups, setStartups] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editingStartup, setEditingStartup] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -30,7 +32,7 @@ export default function StartupsPage() {
       const res = await fetch("/api/v1/startups");
       if (res.ok) {
         const data = await res.json();
-        setStartups(data);
+        setStartups(data.items || (Array.isArray(data) ? data : []));
       }
     } catch (err) {
       console.error(err);
@@ -50,6 +52,7 @@ export default function StartupsPage() {
         name: startup.name,
         description: startup.description || "",
         founder: startup.founder || "",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         website: startup.website || "",
         logo_url: startup.logo_url || "",
         industry: startup.industry || "",

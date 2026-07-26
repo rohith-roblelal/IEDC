@@ -5,9 +5,11 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Play, Megaphone } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useSettings } from "@/lib/settings-context";
 
 export default function Home() {
   const { toast } = useToast();
+  const settings = useSettings();
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [podcast, setPodcast] = useState<any | null>(null);
   const [partners, setPartners] = useState<any[]>([]);
@@ -18,7 +20,8 @@ export default function Home() {
         const res = await fetch("/api/v1/announcements");
         if (res.ok) {
           const data = await res.json();
-          setAnnouncements(data.slice(0, 3));
+          const items = data.items || (Array.isArray(data) ? data : []);
+          setAnnouncements(items.slice(0, 3));
         }
       } catch (err) {
         console.error(err);
@@ -27,10 +30,10 @@ export default function Home() {
     
     const fetchPodcast = async () => {
       try {
-        const res = await fetch("/api/v1/podcastsactive");
+        const res = await fetch("/api/v1/podcasts");
         if (res.ok) {
           const data = await res.json();
-          setPodcast(data);
+          setPodcast(data.items || (Array.isArray(data) ? data : []));
         }
       } catch (err) {
         console.error(err);
@@ -42,7 +45,7 @@ export default function Home() {
         const res = await fetch("/api/v1/partners");
         if (res.ok) {
           const data = await res.json();
-          setPartners(data);
+          setPartners(data.items || (Array.isArray(data) ? data : []));
         }
       } catch (err) {
         console.error(err);
@@ -65,18 +68,30 @@ export default function Home() {
           className="max-w-[1100px] mx-auto py-14 px-8 text-center"
         >
           <h1 className="text-[clamp(1.8rem,5vw,2.6rem)] font-bold leading-tight">
-            Hi Everyone, Welcome To
-            <span className="block text-[#8B7FE8]">IEDC-SNMIMT</span>
+            {settings.hero_title?.includes('IEDC') ? (
+              <>
+                {settings.hero_title.split('IEDC')[0]}
+                <span className="block text-[#8B7FE8]">IEDC{settings.hero_title.split('IEDC')[1]}</span>
+              </>
+            ) : (
+              settings.hero_title
+            )}
           </h1>
           <p className="mt-5 max-w-[640px] mx-auto text-[#C4C4D4] text-[0.98rem]">
-            The Innovation and Entrepreneurship Development Cell at SNMIMT — workshops, hackathons, talks, and startup initiatives for students. Browse upcoming events below and register in a few clicks.
+            {settings.hero_subtitle}
           </p>
-          <div className="mt-7 flex justify-center gap-3.5 flex-wrap">
+          
+          <div className="mt-8 max-w-[700px] mx-auto text-[#C4C4D4] text-[1.05rem] leading-relaxed">
+            <h2 className="font-bold text-white text-2xl md:text-[1.75rem] mb-4 tracking-wide">Hi Everyone, Welcome To <span className="text-[#8B7FE8] font-extrabold">IEDC-SNMIMT</span></h2>
+            <p>Not only can you purchase tickets to the hottest events in town, but you can also create your own custom tickets with our easy-to-use platform. Say goodbye to generic tickets and hello to personalized and professional-looking ones that will make your event stand out from the rest.</p>
+          </div>
+
+          <div className="mt-8 flex justify-center gap-3.5 flex-wrap">
             <Link 
-              href="/events" 
+              href={settings.hero_cta_link || "/events"} 
               className="inline-block bg-[#22D46B] text-[#1A1A2E] font-bold py-3.5 px-7 rounded-full hover:-translate-y-0.5 transition-transform"
             >
-              View Events
+              {settings.hero_cta_text || "View Events"}
             </Link>
             <Link 
               href="/about" 

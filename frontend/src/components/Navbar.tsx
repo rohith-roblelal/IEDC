@@ -5,15 +5,18 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { useSettings } from "@/lib/settings-context";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const settings = useSettings();
 
   const links = [
     { name: "Home", href: "/" },
-    { name: "Events", href: "/events" },
     { name: "About", href: "/about" },
+    { name: "Events", href: "/events" },
+    { name: "Startups", href: "/startups" },
     { name: "Team", href: "/team" },
     { name: "Poster", href: "/gallery" },
   ];
@@ -22,8 +25,8 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-[#0A0E27]/80 backdrop-blur-md border-b border-white/10">
       <div className="max-w-[1100px] mx-auto px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <img src="/logo.png" alt="IEDC SNMIMT Logo" className="h-[22px] w-auto transition-transform group-hover:scale-105" />
-          <span className="font-bold text-lg text-white tracking-wide">IEDC SNMIMT</span>
+          <img src={settings.logo_url || "/logo.png"} alt={`${settings.site_name} Logo`} className="h-[22px] w-auto transition-transform group-hover:scale-105" />
+          <span className="font-bold text-lg text-white tracking-wide">{settings.site_name}</span>
         </Link>
 
         {/* Desktop Links */}

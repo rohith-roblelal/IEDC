@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.models import Event, Registration
 from app.schemas.schemas import RegistrationCreate
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,15 @@ class GoogleFormService:
         Returns (success, form_id, mapping_dict, response_url, error_msg)
         """
         try:
+            # Strict URL Validation (SSRF Protection)
+            parsed_url = urlparse(url)
+            
+            if parsed_url.scheme != "https":
+                return False, "", {}, "", "URL must use HTTPS"
+                
+            if parsed_url.netloc not in ["docs.google.com", "forms.gle"]:
+                return False, "", {}, "", "URL must be a valid Google Forms domain"
+                
             # Clean URL
             url = url.split("?")[0]
             if "/viewform" not in url:
@@ -37,8 +47,15 @@ class GoogleFormService:
             form_id = form_id_match.group(1)
             response_url = url.replace("viewform", "formResponse")
 
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(follow_redirects=True) as client:
                 res = await client.get(url, timeout=10.0)
+                
+                # Check where we got redirected
+                final_url = str(res.url)
+                final_parsed = urlparse(final_url)
+                if final_parsed.netloc not in ["docs.google.com", "forms.gle"]:
+                    return False, "", {}, "", "URL redirects to an unauthorized domain"
+
                 if res.status_code != 200:
                     return False, "", {}, "", f"Failed to fetch form. Status: {res.status_code}"
 
@@ -125,7 +142,13 @@ class GoogleFormService:
                     payload[entry_id] = str(value)
 
         try:
-            async with httpx.AsyncClient() as client:
+            # Revalidate the URL before submitting, just in case the database was tampered with
+            parsed_response_url = urlparse(event.google_form_response_url)
+            if parsed_response_url.scheme != "https" or parsed_response_url.netloc not in ["docs.google.com", "forms.gle"]:
+                logger.error("Blocked submission to unauthorized Google Form URL")
+                return False
+
+            async with httpx.AsyncClient(follow_redirects=True) as client:
                 res = await client.post(
                     event.google_form_response_url, 
                     data=payload,

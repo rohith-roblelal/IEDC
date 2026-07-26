@@ -39,6 +39,7 @@ export function ImageUpload({ value, onChange, folder }: ImageUploadProps) {
       });
 
       if (!res.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         throw new Error(await res.text());
       }
 

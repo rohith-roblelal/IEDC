@@ -1,5 +1,6 @@
 import uuid
 import os
+import magic
 from typing import List
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,11 +30,19 @@ class GalleryService:
             raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
 
         # 2. Generate unique filename
+        if ".." in folder or folder.startswith("/") or "\\" in folder:
+            raise HTTPException(status_code=400, detail="Invalid folder path")
+
         unique_filename = f"{folder}/{uuid.uuid4()}{ext}"
         unique_filename = unique_filename.replace("//", "/")
         
-        # 3. Upload to Supabase using httpx
+        # 3. Read file and validate magic bytes
         file_bytes = await file.read()
+        mime = magic.from_buffer(file_bytes[:2048], mime=True)
+        if mime not in ["image/jpeg", "image/png", "image/webp"]:
+            raise HTTPException(status_code=400, detail="Malicious or unsupported file type detected.")
+        
+        # Upload to Supabase using httpx
         
         supabase_url = settings.SUPABASE_URL
         supabase_key = settings.SUPABASE_SERVICE_ROLE_KEY
@@ -62,8 +71,15 @@ class GalleryService:
         )
         return await self.repo.create(gallery_item)
 
-    async def get_all_images(self) -> List[Gallery]:
-        return await self.repo.get_all()
+    async def get_all_images(self, page: int = 1, page_size: int = 20) -> dict:
+        items, total = await self.repo.get_all(page=page, page_size=page_size)
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "has_next": (page * page_size) < total
+        }
 
     async def get_event_images(self, event_id: uuid.UUID) -> List[Gallery]:
         return await self.repo.get_by_event(event_id)

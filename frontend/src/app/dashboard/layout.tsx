@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { 
   LogOut, LayoutDashboard, Calendar, Users, Megaphone, 
-  Image as ImageIcon, MessageSquare, UsersRound, Menu, X, Mic, Handshake, Rocket 
+  Image as ImageIcon, MessageSquare, UsersRound, Menu, X, Mic, Handshake, Rocket, Settings
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,25 +17,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-    // In a real app we'd decode the JWT to check role or let API reject, 
-    // but having a token is our basic check for now.
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      setUserRole(payload.role || "");
-    } catch (e) {
-      console.error(e);
-    }
-    setIsAuthorized(true);
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/v1/auth/me", { credentials: "include" });
+        if (!res.ok) {
+          throw new Error("Not authenticated");
+        }
+        const data = await res.json();
+        setUserRole(data.user.role);
+        setIsAuthorized(true);
+      } catch (e) {
+        console.error("Auth check failed", e);
+        setIsAuthorized(false);
+        router.replace("/login");
+      }
+    };
+    checkAuth();
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/v1/auth/logout', { 
+        method: 'POST',
+        credentials: "include"
+      });
+    } catch (e) {
+      console.error("Logout API failed", e);
+    }
+    setIsAuthorized(false);
+    router.replace("/login");
   };
 
   const menuItems = [
@@ -49,6 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Event Poster", icon: <ImageIcon size={20} />, href: "/dashboard/gallery" },
     { name: "Team", icon: <UsersRound size={20} />, href: "/dashboard/team" },
     { name: "Messages", icon: <MessageSquare size={20} />, href: "/dashboard/messages" },
+    { name: "Settings", icon: <Settings size={20} />, href: "/dashboard/settings" },
   ];
 
   if (!isAuthorized) {

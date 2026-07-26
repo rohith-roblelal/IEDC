@@ -6,7 +6,7 @@ from app.models.enums import Role
 from app.auth.security import get_password_hash
 from sqlalchemy.future import select
 
-async def create_admin(email, password, role=Role.ADMIN):
+async def create_admin(email, password, role=Role.SUPER_ADMIN):
     engine = create_async_engine(str(settings.DATABASE_URL))
     async_session = async_sessionmaker(engine, expire_on_commit=False)
     
@@ -32,6 +32,10 @@ async def create_admin(email, password, role=Role.ADMIN):
         print(f"Success! {email} can now login.")
 
 if __name__ == "__main__":
+    import sys
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        
     print("=== Create Student Lead Admins ===")
-    asyncio.run(create_admin("studentlead1@snmimt.edu.in", "studentlead123", Role.ADMIN))
-    asyncio.run(create_admin("studentlead2@snmimt.edu.in", "studentlead123", Role.ADMIN))
+    asyncio.run(create_admin("iedcsnmimt@gamil.com", "iedcsnmimt@2026", Role.SUPER_ADMIN))
+    asyncio.run(create_admin("iedcsnmimt@gmail.com", "iedcsnmimt@2026", Role.SUPER_ADMIN))

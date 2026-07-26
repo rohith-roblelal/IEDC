@@ -64,11 +64,25 @@ class RegistrationService:
 
         return reg
 
-    async def get_all_registrations(self) -> List[Registration]:
-        return await self.repo.get_all()
+    async def get_all_registrations(self, page: int = 1, page_size: int = 20) -> dict:
+        items, total = await self.repo.get_all(page=page, page_size=page_size)
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "has_next": (page * page_size) < total
+        }
 
-    async def get_event_participants(self, event_id: uuid.UUID) -> List[Registration]:
-        return await self.repo.get_by_event(event_id)
+    async def get_event_participants(self, event_id: uuid.UUID, page: int = 1, page_size: int = 20) -> dict:
+        items, total = await self.repo.get_by_event(event_id, page=page, page_size=page_size)
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "has_next": (page * page_size) < total
+        }
 
     async def delete_registration(self, registration_id: uuid.UUID) -> None:
         reg = await self.repo.get_by_id(registration_id)

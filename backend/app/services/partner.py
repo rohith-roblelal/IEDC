@@ -11,9 +11,17 @@ class PartnerService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_all_partners(self) -> List[Partner]:
-        result = await self.session.execute(select(Partner).order_by(Partner.sort_order.asc(), Partner.created_at.desc()))
-        return list(result.scalars().all())
+    async def get_all_partners(self, page: int = 1, page_size: int = 20) -> dict:
+        from app.database.pagination import paginate
+        query = select(Partner).order_by(Partner.sort_order.asc(), Partner.created_at.desc())
+        items, total = await paginate(self.session, query, page, page_size)
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "has_next": (page * page_size) < total
+        }
 
     async def get_partner(self, partner_id: uuid.UUID) -> Optional[Partner]:
         result = await self.session.execute(select(Partner).where(Partner.id == partner_id))

@@ -1,9 +1,18 @@
 import uuid
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Generic, TypeVar
 from pydantic import BaseModel, EmailStr, ConfigDict, Field
 
-from app.models.enums import Role, EventStatus
+from app.models.enums import Role, TeamCategory
+
+T = TypeVar('T')
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    items: List[T]
+    total: int
+    page: int
+    page_size: int
+    has_next: bool
 
 # Base config for all schemas
 class SchemaBase(BaseModel):
@@ -14,10 +23,24 @@ class SchemaBase(BaseModel):
 # -----------------
 class UserBase(SchemaBase):
     email: EmailStr
-    role: Role = Role.ADMIN
+    role: Role = Role.SUPER_ADMIN
+
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
+import re
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(
+        ..., 
+        min_length=8,
+        description="Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+    )
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not re.match(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$', v):
+            raise ValueError("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.")
+        return v
 
 class UserResponse(UserBase):
     id: uuid.UUID
@@ -29,10 +52,16 @@ class UserResponse(UserBase):
 # -----------------
 class EventBase(SchemaBase):
     title: str
+    short_description: Optional[str] = None
     description: str
+    category: Optional[str] = None
+    venue: Optional[str] = None
+    start_datetime: Optional[datetime] = None
+    end_datetime: Optional[datetime] = None
+    is_published: bool = False
+    
     banner_url: Optional[str] = None
     registration_link: Optional[str] = None
-    status: EventStatus = EventStatus.DRAFT
     registration_deadline: Optional[datetime] = None
     max_participants: Optional[int] = None
     
@@ -48,14 +77,21 @@ class EventBase(SchemaBase):
     custom_fields: Optional[List[dict]] = None
 
 class EventCreate(EventBase):
-    pass
+    slug: Optional[str] = None
 
 class EventUpdate(SchemaBase):
+    slug: Optional[str] = None
     title: Optional[str] = None
+    short_description: Optional[str] = None
     description: Optional[str] = None
+    category: Optional[str] = None
+    venue: Optional[str] = None
+    start_datetime: Optional[datetime] = None
+    end_datetime: Optional[datetime] = None
+    is_published: Optional[bool] = None
+    
     banner_url: Optional[str] = None
     registration_link: Optional[str] = None
-    status: Optional[EventStatus] = None
     registration_deadline: Optional[datetime] = None
     max_participants: Optional[int] = None
     
@@ -70,8 +106,11 @@ class EventUpdate(SchemaBase):
 
 class EventResponse(EventBase):
     id: uuid.UUID
+    slug: str
     created_at: datetime
     updated_at: datetime
+    created_by: Optional[uuid.UUID] = None
+    computed_status: str
     registrations_count: int = 0
 
 # -----------------
@@ -101,24 +140,30 @@ class RegistrationResponse(RegistrationBase):
 # -----------------
 class TeamMemberBase(SchemaBase):
     name: str
-    position: str
-    image_url: Optional[str] = None
-    meta: Optional[str] = None
-    email: Optional[str] = None
-    is_lead: bool = False
-    category: Optional[str] = "Core Team"
+    role_title: str
+    category: TeamCategory
+    department: Optional[str] = None
+    year: Optional[str] = None
+    photo_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    email: Optional[EmailStr] = None
+    display_order: int = 0
+    is_published: bool = True
 
 class TeamMemberCreate(TeamMemberBase):
     pass
 
 class TeamMemberUpdate(SchemaBase):
     name: Optional[str] = None
-    position: Optional[str] = None
-    image_url: Optional[str] = None
-    meta: Optional[str] = None
-    email: Optional[str] = None
-    is_lead: Optional[bool] = None
-    category: Optional[str] = None
+    role_title: Optional[str] = None
+    category: Optional[TeamCategory] = None
+    department: Optional[str] = None
+    year: Optional[str] = None
+    photo_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    email: Optional[EmailStr] = None
+    display_order: Optional[int] = None
+    is_published: Optional[bool] = None
 
 class TeamMemberResponse(TeamMemberBase):
     id: uuid.UUID
@@ -129,20 +174,30 @@ class TeamMemberResponse(TeamMemberBase):
 # Announcements
 # -----------------
 class AnnouncementBase(SchemaBase):
-    title: str
+    title: str = Field(..., max_length=255)
     content: str
     is_pinned: bool = False
+    is_published: bool = False
+    expires_at: Optional[datetime] = None
 
 class AnnouncementCreate(AnnouncementBase):
-    pass
+    slug: Optional[str] = Field(None, max_length=255)
 
 class AnnouncementUpdate(SchemaBase):
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=255)
+    slug: Optional[str] = Field(None, max_length=255)
     content: Optional[str] = None
     is_pinned: Optional[bool] = None
+    is_published: Optional[bool] = None
+    expires_at: Optional[datetime] = None
+
+class AnnouncementPublish(SchemaBase):
+    is_published: bool
 
 class AnnouncementResponse(AnnouncementBase):
     id: uuid.UUID
+    slug: str
+    created_by: Optional[uuid.UUID] = None
     created_at: datetime
     updated_at: datetime
 
@@ -166,6 +221,7 @@ class GalleryResponse(GalleryBase):
 class ContactMessageBase(BaseModel):
     name: str = Field(..., max_length=100)
     email: EmailStr
+    subject: Optional[str] = Field(None, max_length=255)
     message: str = Field(..., max_length=2000)
 
 class ContactMessageCreate(ContactMessageBase):
@@ -174,6 +230,7 @@ class ContactMessageCreate(ContactMessageBase):
 class ContactMessageResponse(ContactMessageBase):
     id: uuid.UUID
     is_read: bool
+    is_archived: bool = False
     created_at: datetime
 
     class Config:
@@ -244,3 +301,24 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
     role: Optional[Role] = None
+
+# -----------------
+# Password Reset
+# -----------------
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(
+        ..., 
+        min_length=8,
+        description="Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+    )
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not re.match(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$', v):
+            raise ValueError("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.")
+        return v

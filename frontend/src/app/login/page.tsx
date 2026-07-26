@@ -42,11 +42,10 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
-      // Store token in localStorage (in a real app, prefer HttpOnly cookies for security if possible, but localstorage is standard for SPAs)
-      localStorage.setItem("access_token", data.access_token);
+      // The backend sets the HttpOnly cookie in the response.
       
-      // Redirect to dashboard (which we will build later)
-      router.push("/dashboard");
+      // Redirect to dashboard
+      router.replace("/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {

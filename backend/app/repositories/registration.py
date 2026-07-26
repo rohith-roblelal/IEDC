@@ -28,15 +28,15 @@ class RegistrationRepository:
         result = await self.session.execute(select(Registration).where(Registration.event_id == event_id))
         return len(result.scalars().all())
 
-    async def get_all(self) -> List[Registration]:
-        result = await self.session.execute(select(Registration).order_by(Registration.created_at.desc()))
-        return result.scalars().all()
+    async def get_all(self, page: int = 1, page_size: int = 20) -> tuple[List[Registration], int]:
+        from app.database.pagination import paginate
+        query = select(Registration).order_by(Registration.created_at.desc())
+        return await paginate(self.session, query, page, page_size)
 
-    async def get_by_event(self, event_id: uuid.UUID) -> List[Registration]:
-        result = await self.session.execute(
-            select(Registration).where(Registration.event_id == event_id).order_by(Registration.created_at.desc())
-        )
-        return result.scalars().all()
+    async def get_by_event(self, event_id: uuid.UUID, page: int = 1, page_size: int = 20) -> tuple[List[Registration], int]:
+        from app.database.pagination import paginate
+        query = select(Registration).where(Registration.event_id == event_id).order_by(Registration.created_at.desc())
+        return await paginate(self.session, query, page, page_size)
 
     async def create(self, registration: Registration) -> Registration:
         self.session.add(registration)

@@ -7,14 +7,14 @@ from sqlalchemy import func
 
 from app.database.session import get_db
 from app.models.models import User, Event, Registration, ContactMessage, TeamMember
-from app.api.dependencies import get_current_active_admin
+from app.api.dependencies import get_current_super_admin
 
 router = APIRouter()
 
 @router.get("", response_model=Dict[str, Any])
 async def get_dashboard_stats(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_admin),
+    current_user: User = Depends(get_current_super_admin),
 ):
     """
     Retrieve aggregated statistics for the admin dashboard. Only accessible by Admin.

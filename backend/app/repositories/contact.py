@@ -14,12 +14,14 @@ class ContactMessageRepository:
         result = await self.session.execute(select(ContactMessage).where(ContactMessage.id == message_id))
         return result.scalars().first()
 
-    async def get_all(self) -> List[ContactMessage]:
-        # Unread messages first, then by date descending
-        result = await self.session.execute(
-            select(ContactMessage).order_by(ContactMessage.is_read.asc(), ContactMessage.created_at.desc())
+    async def get_all(self, page: int = 1, page_size: int = 20, is_archived: bool = False) -> tuple[list, int]:
+        from app.database.pagination import paginate
+        query = (
+            select(ContactMessage)
+            .where(ContactMessage.is_archived == is_archived)
+            .order_by(ContactMessage.is_read.asc(), ContactMessage.created_at.desc())
         )
-        return result.scalars().all()
+        return await paginate(self.session, query, page, page_size)
 
     async def create(self, message: ContactMessage) -> ContactMessage:
         self.session.add(message)

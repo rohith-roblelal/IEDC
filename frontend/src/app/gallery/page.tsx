@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Image as ImageIcon, X } from "lucide-react";
+import { galleryApi } from "@/lib/api/gallery";
 
 export default function PublicGalleryPage() {
   const [images, setImages] = useState<any[]>([]);
@@ -12,11 +13,8 @@ export default function PublicGalleryPage() {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const res = await fetch("/api/v1/gallery");
-        if (res.ok) {
-          const data = await res.json();
-          setImages(data);
-        }
+        const res = await galleryApi.getImages({ is_published: true });
+        setImages(res || []);
       } catch (err) {
         console.error(err);
       } finally {

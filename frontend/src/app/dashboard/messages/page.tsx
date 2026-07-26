@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MessageSquare, CheckCircle, Trash2, Mail, User, Send, X, Loader2 } from "lucide-react";
+import { MessageSquare, CheckCircle, Trash2, Mail, User, Send, X, Loader2, Archive, Inbox } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
 
@@ -9,22 +9,23 @@ export default function MessagesPage() {
   const { toast } = useToast();
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [tab, setTab] = useState<"inbox" | "archived">("inbox");
 
-  // Reply Modal State
   const [replyModalOpen, setReplyModalOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
   const [replyText, setReplyText] = useState("");
   const [isSending, setIsSending] = useState(false);
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (archived = false) => {
     const token = localStorage.getItem("access_token");
+    setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/contact", {
+      const res = await fetch(`/api/v1/contact?is_archived=${archived}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
-        setMessages(data);
+        setMessages(data.items || (Array.isArray(data) ? data : []));
       }
     } catch (err) {
       console.error(err);
@@ -34,8 +35,8 @@ export default function MessagesPage() {
   };
 
   useEffect(() => {
-    fetchMessages();
-  }, []);
+    fetchMessages(tab === "archived");
+  }, [tab]);
 
   const handleMarkAsRead = async (id: string) => {
     const token = localStorage.getItem("access_token");
@@ -48,9 +49,24 @@ export default function MessagesPage() {
         setMessages(messages.map((m) => (m.id === id ? { ...m, is_read: true } : m)));
         toast("Message marked as read", "success");
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast("Failed to mark as read", "error");
+    }
+  };
+
+  const handleArchive = async (id: string, currentlyArchived: boolean) => {
+    const token = localStorage.getItem("access_token");
+    try {
+      const res = await fetch(`/api/v1/contact/${id}/archive`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setMessages(messages.filter((m) => m.id !== id));
+        toast(currentlyArchived ? "Moved to Inbox" : "Archived", "success");
+      }
+    } catch {
+      toast("Failed to archive message", "error");
     }
   };
 
@@ -66,8 +82,7 @@ export default function MessagesPage() {
         setMessages(messages.filter((m) => m.id !== id));
         toast("Message deleted", "success");
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast("Failed to delete message", "error");
     }
   };
@@ -86,34 +101,29 @@ export default function MessagesPage() {
 
   const handleSendReply = async () => {
     if (!replyText.trim() || !selectedMessage) return;
-
     setIsSending(true);
     const token = localStorage.getItem("access_token");
     try {
       const res = await fetch(`/api/v1/contact/${selectedMessage.id}/reply`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ reply_message: replyText })
       });
-      
       if (res.ok) {
         toast("Reply sent successfully!", "success");
-        // Update local state to mark as read automatically
         setMessages(messages.map((m) => (m.id === selectedMessage.id ? { ...m, is_read: true } : m)));
         closeReplyModal();
       } else {
         toast("Failed to send reply.", "error");
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast("An error occurred while sending.", "error");
     } finally {
       setIsSending(false);
     }
   };
+
+  const unreadCount = messages.filter(m => !m.is_read).length;
 
   return (
     <div className="space-y-6">
@@ -124,6 +134,29 @@ export default function MessagesPage() {
         <p className="text-[#C4C4D4] mt-2">View and reply to messages submitted from the public contact form.</p>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setTab("inbox")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            tab === "inbox" ? "bg-orange-500 text-white shadow-lg" : "bg-white/5 text-[#C4C4D4] hover:bg-white/10"
+          }`}
+        >
+          <Inbox size={16} /> Inbox
+          {tab === "inbox" && unreadCount > 0 && (
+            <span className="ml-1 bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">{unreadCount}</span>
+          )}
+        </button>
+        <button
+          onClick={() => setTab("archived")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            tab === "archived" ? "bg-gray-600 text-white shadow-lg" : "bg-white/5 text-[#C4C4D4] hover:bg-white/10"
+          }`}
+        >
+          <Archive size={16} /> Archived
+        </button>
+      </div>
+
       <div className="bg-[#111432] rounded-2xl border border-white/10 p-6 min-h-[60vh]">
         {isLoading ? (
           <div className="text-center text-[#C4C4D4] py-8 flex justify-center items-center">
@@ -132,20 +165,20 @@ export default function MessagesPage() {
         ) : messages.length === 0 ? (
           <div className="text-center text-[#C4C4D4] py-8 flex flex-col items-center">
             <MessageSquare size={48} className="opacity-20 mb-4" />
-            <p>No messages found.</p>
+            <p>{tab === "archived" ? "No archived messages." : "No messages in your inbox."}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <AnimatePresence>
               {messages.map((msg: any, idx) => (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: idx * 0.05 }}
-                  key={msg.id} 
+                  key={msg.id}
                   className={`border border-white/10 rounded-xl p-5 flex flex-col transition-colors ${
-                    !msg.is_read ? 'bg-orange-500/10 border-orange-500/30' : 'bg-white/5'
+                    !msg.is_read ? "bg-orange-500/10 border-orange-500/30" : "bg-white/5"
                   }`}
                 >
                   <div className="flex justify-between items-start mb-4">
@@ -158,6 +191,9 @@ export default function MessagesPage() {
                         <Mail size={16} className="text-gray-400" />
                         <span className="text-gray-300">{msg.email}</span>
                       </div>
+                      {msg.subject && (
+                        <p className="text-xs text-white/50 mt-1 italic">Re: {msg.subject}</p>
+                      )}
                     </div>
                     <div className="flex items-center space-x-2">
                       {!msg.is_read ? (
@@ -167,35 +203,42 @@ export default function MessagesPage() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="bg-black/20 rounded-lg p-4 text-[#C4C4D4] text-sm whitespace-pre-wrap flex-grow mb-4 border border-white/5">
                     {msg.message}
                   </div>
-                  
+
                   <div className="flex justify-between items-center pt-3 border-t border-white/10 mt-auto">
                     <div className="text-xs text-gray-500">
                       {new Date(msg.created_at).toLocaleString()}
                     </div>
                     <div className="flex space-x-2">
-                      <button 
+                      <button
                         onClick={() => openReplyModal(msg)}
-                        title="Reply to message" 
+                        title="Reply"
                         className="flex items-center text-sm text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 px-3 py-1.5 rounded-lg"
                       >
                         <Send size={16} className="mr-1.5" /> Reply
                       </button>
                       {!msg.is_read && (
-                        <button 
+                        <button
                           onClick={() => handleMarkAsRead(msg.id)}
-                          title="Mark as read" 
+                          title="Mark as read"
                           className="flex items-center text-sm text-green-400 hover:text-green-300 transition-colors bg-green-500/10 px-3 py-1.5 rounded-lg"
                         >
                           <CheckCircle size={16} />
                         </button>
                       )}
-                      <button 
+                      <button
+                        onClick={() => handleArchive(msg.id, tab === "archived")}
+                        title={tab === "archived" ? "Move to Inbox" : "Archive"}
+                        className="flex items-center text-sm text-yellow-400 hover:text-yellow-300 transition-colors bg-yellow-500/10 px-3 py-1.5 rounded-lg"
+                      >
+                        <Archive size={16} />
+                      </button>
+                      <button
                         onClick={() => handleDelete(msg.id)}
-                        title="Delete message" 
+                        title="Delete"
                         className="flex items-center text-sm text-red-400 hover:text-red-300 transition-colors hover:bg-red-500/10 px-3 py-1.5 rounded-lg"
                       >
                         <Trash2 size={16} />
@@ -213,31 +256,28 @@ export default function MessagesPage() {
       <AnimatePresence>
         {replyModalOpen && selectedMessage && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={closeReplyModal}
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="relative w-full max-w-xl bg-[#1A1A2E] border border-white/10 rounded-2xl p-6 shadow-2xl"
             >
-              <button 
-                onClick={closeReplyModal}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-              >
+              <button onClick={closeReplyModal} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
                 <X size={20} />
               </button>
-              
+
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 <Send className="mr-2 text-blue-400" />
                 Reply to {selectedMessage.name}
               </h2>
-              
+
               <div className="bg-black/30 p-4 rounded-xl mb-4 text-sm text-[#C4C4D4] border border-white/5">
                 <p className="font-semibold text-gray-300 mb-1">Original Message:</p>
                 <p className="italic">"{selectedMessage.message}"</p>
@@ -251,10 +291,7 @@ export default function MessagesPage() {
               />
 
               <div className="flex justify-end space-x-3">
-                <button
-                  onClick={closeReplyModal}
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
-                >
+                <button onClick={closeReplyModal} className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors">
                   Cancel
                 </button>
                 <button
