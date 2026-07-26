@@ -81,10 +81,7 @@ export default function Home() {
             {settings.hero_subtitle}
           </p>
           
-          <div className="mt-8 max-w-[700px] mx-auto text-[#C4C4D4] text-[1.05rem] leading-relaxed">
-            <h2 className="font-bold text-white text-2xl md:text-[1.75rem] mb-4 tracking-wide">Hi Everyone, Welcome To <span className="text-[#8B7FE8] font-extrabold">IEDC-SNMIMT</span></h2>
-            <p>Not only can you purchase tickets to the hottest events in town, but you can also create your own custom tickets with our easy-to-use platform. Say goodbye to generic tickets and hello to personalized and professional-looking ones that will make your event stand out from the rest.</p>
-          </div>
+
 
           <div className="mt-8 flex justify-center gap-3.5 flex-wrap">
             <Link 
