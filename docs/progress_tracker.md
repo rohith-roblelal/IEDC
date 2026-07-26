@@ -72,12 +72,35 @@ This document tracks the ongoing development, features implemented, and upcoming
 ### Recent Architectural Enhancements
 - **Auth Security Migration**: Migrated the entire authentication flow from vulnerable `localStorage` JWT storage to robust `HttpOnly` secure cookies, eliminating XSS risks.
 - **Frontend Navigation Smoothness**: Refactored dashboard auth guards to use Next.js `router.replace()` and state-clearing instead of full page reloads (`window.location.href`), making login/logout instantaneous.
-- **Email Infrastructure Modernization**: Completely ripped out the legacy SMTP email system (`fastapi-mail`, `aiosmtplib`) and standardized all application-generated emails (like password resets) onto the modern **Resend API**.
+- **Email Infrastructure Cleanup**: Completely removed the Resend email SDK and all associated `RESEND_API_KEY` configuration. Password reset links are now logged to the server console. No external email service is required or configured.
 - **Contact Module Alignment**: Removed the defunct in-app email reply feature (API endpoints, schemas, and UI components) from the Contact module, correctly aligning the system with the manual-reply workflow.
 - **Dependency Reliability**: Swapped out the brittle `python-magic-bin` library for the lightweight, pure-Python `filetype` library to fix fatal installation failures on Linux-based Render deployments.
 - **Frontend Type Safety**: Patched a series of cascading TypeScript errors caused by mismatched Zod form schemas and API interfaces to guarantee successful Vercel production builds.
 
+### Production Hardening Sprint (Current)
+
+#### Sprint 1 — Responsive Design ✅
+- Verified all dashboard pages on smaller screens.
+- Fixed table overflow, sidebar behavior, and modal responsiveness.
+
+#### Sprint 2 — Frontend Error Handling ✅
+- Created `errorHandler.ts` and `clientFetch` wrapper for consistent API error handling.
+- Standardized all 10 dashboard pages to use global `useToast` and `handleApiError`.
+- Verified with successful production build (`npm run build`).
+
+#### Sprint 3 — Real Content ✅
+- Replaced all placeholder hero and about text in the `website_settings` database table.
+- Seeded production-ready team members, startups, and events with realistic data and Unsplash images.
+- Removed hardcoded placeholder text from `page.tsx` and `HomeClient.tsx` ("Hi Everyone, Welcome To IEDC-SNMIMT" and the generic subtitle).
+
+#### Render Deployment Fixes ✅
+- Fixed detached HEAD git state that was preventing changes from reaching `origin/main`.
+- Removed `RESEND_API_KEY` as a required field from `Settings()` — Render now deploys without it.
+- Added missing `email-validator==2.2.0` dependency to `requirements.txt` (required by Pydantic `EmailStr`).
+
 ## 🚧 In Progress / Next Steps
-- Finalize mobile responsiveness for the Admin Dashboard and any newly added sections.
-- Populate real content/images for the Team and About pages.
-- Add comprehensive error handling for form submissions on the frontend.
+- **Sprint 4 — Authentication & Security**: Verify `/auth/me` flow, test session expiry and password reset end-to-end.
+- **Sprint 5 — Accessibility (A11y)**: Keyboard navigation, ARIA labels, image alt text, color contrast.
+- **Sprint 6 — SEO**: Page titles, meta descriptions, Open Graph tags, sitemap, `robots.txt`.
+- **Sprint 7 — Performance**: Optimize images, lazy-load media, reduce bundle size.
+- Upload final real Team photos and About page images when provided.
