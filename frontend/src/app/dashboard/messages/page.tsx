@@ -11,10 +11,7 @@ export default function MessagesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [tab, setTab] = useState<"inbox" | "archived">("inbox");
 
-  const [replyModalOpen, setReplyModalOpen] = useState(false);
-  const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
-  const [replyText, setReplyText] = useState("");
-  const [isSending, setIsSending] = useState(false);
+
 
   const fetchMessages = async (archived = false) => {
     const token = localStorage.getItem("access_token");
@@ -87,41 +84,6 @@ export default function MessagesPage() {
     }
   };
 
-  const openReplyModal = (msg: any) => {
-    setSelectedMessage(msg);
-    setReplyText("");
-    setReplyModalOpen(true);
-  };
-
-  const closeReplyModal = () => {
-    setReplyModalOpen(false);
-    setSelectedMessage(null);
-    setReplyText("");
-  };
-
-  const handleSendReply = async () => {
-    if (!replyText.trim() || !selectedMessage) return;
-    setIsSending(true);
-    const token = localStorage.getItem("access_token");
-    try {
-      const res = await fetch(`/api/v1/contact/${selectedMessage.id}/reply`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ reply_message: replyText })
-      });
-      if (res.ok) {
-        toast("Reply sent successfully!", "success");
-        setMessages(messages.map((m) => (m.id === selectedMessage.id ? { ...m, is_read: true } : m)));
-        closeReplyModal();
-      } else {
-        toast("Failed to send reply.", "error");
-      }
-    } catch {
-      toast("An error occurred while sending.", "error");
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   const unreadCount = messages.filter(m => !m.is_read).length;
 
@@ -131,7 +93,7 @@ export default function MessagesPage() {
         <h1 className="text-3xl font-bold flex items-center gap-3">
           <MessageSquare className="text-orange-400" /> Contact Messages
         </h1>
-        <p className="text-[#C4C4D4] mt-2">View and reply to messages submitted from the public contact form.</p>
+        <p className="text-[#C4C4D4] mt-2">View messages submitted from the public contact form.</p>
       </div>
 
       {/* Tabs */}
@@ -213,13 +175,7 @@ export default function MessagesPage() {
                       {new Date(msg.created_at).toLocaleString()}
                     </div>
                     <div className="flex space-x-2">
-                      <button
-                        onClick={() => openReplyModal(msg)}
-                        title="Reply"
-                        className="flex items-center text-sm text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 px-3 py-1.5 rounded-lg"
-                      >
-                        <Send size={16} className="mr-1.5" /> Reply
-                      </button>
+
                       {!msg.is_read && (
                         <button
                           onClick={() => handleMarkAsRead(msg.id)}
@@ -252,64 +208,7 @@ export default function MessagesPage() {
         )}
       </div>
 
-      {/* Reply Modal */}
-      <AnimatePresence>
-        {replyModalOpen && selectedMessage && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={closeReplyModal}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-xl bg-[#1A1A2E] border border-white/10 rounded-2xl p-6 shadow-2xl"
-            >
-              <button onClick={closeReplyModal} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-                <X size={20} />
-              </button>
 
-              <h2 className="text-xl font-bold mb-4 flex items-center">
-                <Send className="mr-2 text-blue-400" />
-                Reply to {selectedMessage.name}
-              </h2>
-
-              <div className="bg-black/30 p-4 rounded-xl mb-4 text-sm text-[#C4C4D4] border border-white/5">
-                <p className="font-semibold text-gray-300 mb-1">Original Message:</p>
-                <p className="italic">"{selectedMessage.message}"</p>
-              </div>
-
-              <textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Type your reply here..."
-                className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-[150px] resize-y mb-4"
-              />
-
-              <div className="flex justify-end space-x-3">
-                <button onClick={closeReplyModal} className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-colors">
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSendReply}
-                  disabled={isSending || !replyText.trim()}
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSending ? (
-                    <><Loader2 size={16} className="mr-2 animate-spin" /> Sending...</>
-                  ) : (
-                    <><Send size={16} className="mr-2" /> Send Reply</>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

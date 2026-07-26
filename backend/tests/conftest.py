@@ -278,7 +278,7 @@ def mock_smtp_email():
         yield
         return
         
-    with patch("app.services.email.send_reply_email") as mock_email:
+    with patch("app.services.email.EmailService.send_password_reset_email") as mock_email:
         mock_email.return_value = True
         yield mock_email
 

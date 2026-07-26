@@ -289,9 +289,6 @@ class PartnerResponse(PartnerBase):
     class Config:
         from_attributes = True
 
-class ContactMessageReply(BaseModel):
-    reply_message: str = Field(..., min_length=1)
-
 # -----------------
 # Tokens
 # -----------------

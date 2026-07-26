@@ -69,6 +69,14 @@ This document tracks the ongoing development, features implemented, and upcoming
   - Injected specific descriptive paragraphs for the About page ("About IEDC" and "Our Vision").
   - Reordered the top navigation bar and updated "Nodal Officers" to "Nodal officer & Assistant Nodal officer" in the Team section.
 
+### Recent Architectural Enhancements
+- **Auth Security Migration**: Migrated the entire authentication flow from vulnerable `localStorage` JWT storage to robust `HttpOnly` secure cookies, eliminating XSS risks.
+- **Frontend Navigation Smoothness**: Refactored dashboard auth guards to use Next.js `router.replace()` and state-clearing instead of full page reloads (`window.location.href`), making login/logout instantaneous.
+- **Email Infrastructure Modernization**: Completely ripped out the legacy SMTP email system (`fastapi-mail`, `aiosmtplib`) and standardized all application-generated emails (like password resets) onto the modern **Resend API**.
+- **Contact Module Alignment**: Removed the defunct in-app email reply feature (API endpoints, schemas, and UI components) from the Contact module, correctly aligning the system with the manual-reply workflow.
+- **Dependency Reliability**: Swapped out the brittle `python-magic-bin` library for the lightweight, pure-Python `filetype` library to fix fatal installation failures on Linux-based Render deployments.
+- **Frontend Type Safety**: Patched a series of cascading TypeScript errors caused by mismatched Zod form schemas and API interfaces to guarantee successful Vercel production builds.
+
 ## 🚧 In Progress / Next Steps
 - Finalize mobile responsiveness for the Admin Dashboard and any newly added sections.
 - Populate real content/images for the Team and About pages.

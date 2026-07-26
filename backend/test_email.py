@@ -1,14 +1,13 @@
 import asyncio
-from app.services.email import send_reply_email
+from app.services.email import email_service
 from app.core.config import settings
 
 async def main():
-    print("SMTP USER:", settings.SMTP_USER)
+    print("RESEND API KEY configured:", bool(settings.RESEND_API_KEY))
     try:
-        await send_reply_email(
+        await email_service.send_password_reset_email(
             to_email="test@example.com",
-            original_message="haiii",
-            reply_text="helo"
+            reset_token="test-token-123"
         )
         print("Success")
     except Exception as e:

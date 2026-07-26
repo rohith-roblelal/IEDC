@@ -22,11 +22,10 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str
     SUPABASE_BUCKET: str = "IEDC gallary"
 
-    # SMTP Configuration (Optional to allow booting without email service)
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
-    SMTP_HOST: Optional[str] = None
-    SMTP_PORT: Optional[int] = None
+    # Email Configuration (Resend)
+    RESEND_API_KEY: str
+    EMAIL_FROM: str = "IEDC SNMIMT <noreply@iedcsnmimt.com>"
+    EMAIL_FROM_NAME: str = "IEDC SNMIMT"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 

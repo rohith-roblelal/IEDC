@@ -117,3 +117,8 @@
                   │ Logging & Monitoring                │
                   │ Database Backups                    │
                   └─────────────────────────────────────┘
+
+## Email / Communications
+- **Provider:** Resend Email API
+- **Usage:** System-generated emails (e.g. Password Resets).
+- **Contact Module:** Stores messages in the DB for admin review. Replies are handled manually via the admin's personal email client, not through the application.
