@@ -38,12 +38,40 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled exception on {request.url.path}: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal Server Error"},
-    )
+async def generic_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled exception", exc_info=exc)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
+# -------------------------------------------------
+# Automatic DB migration on startup (ensures schema is up‑to‑date
+# for any environment – local dev, test, or Render production).
+# -------------------------------------------------
+@app.on_event("startup")
+async def run_migrations_on_startup():
+    """Run Alembic migrations to the latest revision.
+    This is safe to call repeatedly; Alembic will skip already‑applied
+    migrations. It guarantees that the database schema matches the code.
+    """
+    from alembic import command
+    from alembic.config import Config
+    import sys
+    from pathlib import Path
+
+    # Resolve alembic.ini relative to the project root (backend/..)
+    alembic_cfg_path = Path(__file__).resolve().parents[2] / "alembic.ini"
+    if not alembic_cfg_path.is_file():
+        logger.error(f"Alembic config not found at {alembic_cfg_path}")
+        return
+
+    cfg = Config(str(alembic_cfg_path))
+    # Use the same DATABASE_URL that the app uses via settings
+    cfg.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+    try:
+        command.upgrade(cfg, "head")
+        logger.info("Database migrations applied successfully.")
+    except Exception as e:
+        logger.error("Failed to apply migrations", exc_info=e)
+        # Let the app continue – the error will surface when DB is accessed.
 
 # Rate Limiting
 app.state.limiter = limiter
