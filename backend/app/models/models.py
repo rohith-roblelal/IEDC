@@ -126,6 +126,9 @@ class Event(Base, SoftDeleteMixin):
             else:
                 return "COMPLETED"
         return "PUBLISHED"
+    @property
+    def status(self) -> str:
+        return self.computed_status
 
 class Registration(Base):
     __tablename__ = "registrations"

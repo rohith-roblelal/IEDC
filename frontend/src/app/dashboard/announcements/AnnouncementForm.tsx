@@ -14,8 +14,8 @@ const announcementSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(255, "Title is too long"),
   slug: z.string().min(3, "Slug is required").regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid slug format. Use lowercase letters, numbers, and hyphens."),
   content: z.string().min(10, "Content must be at least 10 characters"),
-  is_pinned: z.boolean().default(false),
-  is_published: z.boolean().default(false),
+  is_pinned: z.boolean(),
+  is_published: z.boolean(),
   expires_at: z.string().optional().or(z.literal("")),
 });
 

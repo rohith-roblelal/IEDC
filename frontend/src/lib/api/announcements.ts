@@ -1,4 +1,33 @@
 import { clientFetch } from "./client";
+export interface AnnouncementResponse {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  is_pinned: boolean;
+  is_published: boolean;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AnnouncementCreate {
+  title: string;
+  slug: string;
+  content: string;
+  is_pinned?: boolean;
+  is_published?: boolean;
+  expires_at?: string | null;
+}
+
+export interface AnnouncementUpdate {
+  title?: string;
+  slug?: string;
+  content?: string;
+  is_pinned?: boolean;
+  is_published?: boolean;
+  expires_at?: string | null;
+}
 
 export const AnnouncementsAPI = {
   getAnnouncements: async (params: any = {}, publicOnly: boolean = false, options: any = {}) => {

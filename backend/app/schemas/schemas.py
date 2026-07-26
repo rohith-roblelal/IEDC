@@ -111,6 +111,7 @@ class EventResponse(EventBase):
     updated_at: datetime
     created_by: Optional[uuid.UUID] = None
     computed_status: str
+    status: Optional[str] = None
     registrations_count: int = 0
 
 # -----------------

@@ -1,6 +1,6 @@
 import uuid
 import os
-import magic
+import filetype
 from typing import List
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,7 +38,8 @@ class GalleryService:
         
         # 3. Read file and validate magic bytes
         file_bytes = await file.read()
-        mime = magic.from_buffer(file_bytes[:2048], mime=True)
+        kind = filetype.guess(file_bytes[:2048])
+        mime = kind.mime if kind else None
         if mime not in ["image/jpeg", "image/png", "image/webp"]:
             raise HTTPException(status_code=400, detail="Malicious or unsupported file type detected.")
         

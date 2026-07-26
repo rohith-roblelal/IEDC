@@ -44,8 +44,8 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
 
         <div className="p-8 md:p-12 relative z-10 -mt-20 md:-mt-32">
           <div className="flex flex-wrap gap-3 mb-6">
-            <span className={`text-sm font-bold uppercase tracking-widest px-4 py-2 rounded-full backdrop-blur-md ${getStatusDisplay(event.status).color}`}>
-              {getStatusDisplay(event.status).text}
+            <span className={`text-sm font-bold uppercase tracking-widest px-4 py-2 rounded-full backdrop-blur-md ${getStatusDisplay(event.status || "").color}`}>
+              {getStatusDisplay(event.status || "").text}
             </span>
             <span className="text-sm font-bold uppercase tracking-widest px-4 py-2 rounded-full bg-white/10 text-white backdrop-blur-md">
               {event.category}

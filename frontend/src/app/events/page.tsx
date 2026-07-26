@@ -42,7 +42,7 @@ export default function EventsPage() {
   };
 
   const renderEventCard = (event: any) => {
-    const statusDisplay = getStatusDisplay(event.status);
+    const statusDisplay = getStatusDisplay(event.status || "");
     const isRegistrationOpen = event.status === "REGISTRATION_OPEN";
     
     return (

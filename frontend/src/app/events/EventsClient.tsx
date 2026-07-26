@@ -19,7 +19,7 @@ export default function EventsClient({ upcomingEvents, pastEvents }: EventsClien
   };
 
   const renderEventCard = (event: EventResponse) => {
-    const statusDisplay = getStatusDisplay(event.status);
+    const statusDisplay = getStatusDisplay(event.status || "");
     const isRegistrationOpen = event.status === "REGISTRATION_OPEN";
     
     return (

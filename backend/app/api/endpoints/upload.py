@@ -1,6 +1,6 @@
 import os
 import uuid
-import magic
+import filetype
 from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request
 from app.core.config import settings
 from app.models.models import User
@@ -35,7 +35,8 @@ async def upload_image(
     
     # Read first 2KB to verify magic bytes
     chunk = await file.read(2048)
-    mime = magic.from_buffer(chunk, mime=True)
+    kind = filetype.guess(chunk)
+    mime = kind.mime if kind else None
     if mime not in ["image/jpeg", "image/png", "image/webp"]:
         raise HTTPException(status_code=400, detail="Malicious or unsupported file type detected.")
     

@@ -1,4 +1,57 @@
 import { clientFetch } from "./client";
+export interface EventResponse {
+  id: string;
+  title: string;
+  slug: string;
+  short_description?: string;
+  description: string;
+  category: "WORKSHOP" | "HACKATHON" | "SEMINAR" | "COMPETITION" | "EXHIBITION" | "OTHER";
+  venue?: string;
+  start_datetime: string;
+  end_datetime: string;
+  is_published: boolean;
+  banner_image_url?: string;
+  registration_deadline?: string;
+  max_participants?: number;
+  registration_link?: string;
+  created_at: string;
+  updated_at: string;
+  status: string;
+  computed_status?: string;
+  registrations_count?: number;
+}
+
+export interface EventCreate {
+  title: string;
+  slug: string;
+  short_description?: string;
+  description: string;
+  category: "WORKSHOP" | "HACKATHON" | "SEMINAR" | "COMPETITION" | "EXHIBITION" | "OTHER";
+  venue?: string;
+  start_datetime: string;
+  end_datetime: string;
+  is_published?: boolean;
+  banner_image_url?: string;
+  registration_deadline?: string;
+  max_participants?: number;
+  registration_link?: string;
+}
+
+export interface EventUpdate {
+  title?: string;
+  slug?: string;
+  short_description?: string;
+  description?: string;
+  category?: "WORKSHOP" | "HACKATHON" | "SEMINAR" | "COMPETITION" | "EXHIBITION" | "OTHER";
+  venue?: string;
+  start_datetime?: string;
+  end_datetime?: string;
+  is_published?: boolean;
+  banner_image_url?: string;
+  registration_deadline?: string;
+  max_participants?: number;
+  registration_link?: string;
+}
 
 export const EventsAPI = {
   getEvents: async (params: any = {}, publicOnly: boolean = false, options: any = {}) => {

@@ -43,7 +43,11 @@ export default function GalleryPage() {
 
     setIsUploading(true);
     try {
-      await galleryApi.uploadImage(file, { is_published: true });
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("is_published", "true");
+      
+      await galleryApi.uploadImage(formData);
       await fetchImages();
       setIsModalOpen(false);
       toast("Image uploaded successfully", "success");

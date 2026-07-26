@@ -20,7 +20,7 @@ const eventSchema = z.object({
   venue: z.string().optional().or(z.literal("")),
   start_datetime: z.string().min(1, "Start date is required"),
   end_datetime: z.string().min(1, "End date is required"),
-  is_published: z.boolean().default(false),
+  is_published: z.boolean(),
   banner_image_url: z.string().optional().or(z.literal("")),
   registration_deadline: z.string().optional().or(z.literal("")),
   max_participants: z.coerce.number().min(1).optional().or(z.literal("").transform(() => undefined)),
@@ -49,7 +49,7 @@ export function EventForm({ initialData, onClose, onSaved, showToast }: EventFor
 
   // Initialize React Hook Form
   const { register, handleSubmit, watch, setValue, formState: { errors, isDirty } } = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema),
+    resolver: zodResolver(eventSchema as any),
     defaultValues: initialData ? {
       title: initialData.title,
       slug: initialData.slug,
