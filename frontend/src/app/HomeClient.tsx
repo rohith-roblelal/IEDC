@@ -27,13 +27,7 @@ export default function HomeClient({ announcements, podcast, partners }: HomeCli
           transition={{ duration: 0.6 }}
           className="max-w-[1100px] mx-auto py-14 px-8 text-center"
         >
-          <h1 className="text-[clamp(1.8rem,5vw,2.6rem)] font-bold leading-tight">
-            Hi Everyone, Welcome To
-            <span className="block text-[#8B7FE8]">IEDC-SNMIMT</span>
-          </h1>
-          <p className="mt-5 max-w-[640px] mx-auto text-[#C4C4D4] text-[0.98rem]">
-            The Innovation and Entrepreneurship Development Cell at SNMIMT — workshops, hackathons, talks, and startup initiatives for students. Browse upcoming events below and register in a few clicks.
-          </p>
+
           <div className="mt-7 flex justify-center gap-3.5 flex-wrap">
             <Link 
               href="/events" 
