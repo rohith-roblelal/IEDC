@@ -1,6 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import AnyHttpUrl, EmailStr, validator
-from typing import List, Optional, Union
+from typing import Optional
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "IEDC SNMIMT Platform"
@@ -22,8 +21,7 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str
     SUPABASE_BUCKET: str = "IEDC gallary"
 
-    # Email Configuration (Resend)
-    RESEND_API_KEY: str
+    # Email (console logging only — no external provider required)
     EMAIL_FROM: str = "IEDC SNMIMT <noreply@iedcsnmimt.com>"
     EMAIL_FROM_NAME: str = "IEDC SNMIMT"
 
