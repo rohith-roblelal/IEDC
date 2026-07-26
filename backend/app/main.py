@@ -48,30 +48,41 @@ async def generic_exception_handler(request: Request, exc: Exception):
 # -------------------------------------------------
 @app.on_event("startup")
 async def run_migrations_on_startup():
-    """Run Alembic migrations to the latest revision.
-    This is safe to call repeatedly; Alembic will skip already‑applied
-    migrations. It guarantees that the database schema matches the code.
+    """Run Alembic migrations via subprocess to avoid event-loop conflicts.
+
+    Alembic's async env.py calls asyncio.run(), which cannot run inside
+    FastAPI's already-running loop. Spawning a subprocess gives Alembic
+    its own Python process and event loop — works on Windows, Linux, and Render.
     """
-    from alembic import command
-    from alembic.config import Config
+    import asyncio
     import sys
     from pathlib import Path
 
-    # Resolve alembic.ini relative to the project root (backend/..)
-    alembic_cfg_path = Path(__file__).resolve().parents[2] / "alembic.ini"
-    if not alembic_cfg_path.is_file():
-        logger.error(f"Alembic config not found at {alembic_cfg_path}")
+    # Find the backend directory (where alembic.ini lives)
+    backend_dir = Path(__file__).resolve().parents[1]
+    alembic_ini = backend_dir / "alembic.ini"
+    if not alembic_ini.is_file():
+        logger.warning(f"alembic.ini not found at {alembic_ini}, skipping auto-migration.")
         return
 
-    cfg = Config(str(alembic_cfg_path))
-    # Use the same DATABASE_URL that the app uses via settings
-    cfg.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
     try:
-        command.upgrade(cfg, "head")
-        logger.info("Database migrations applied successfully.")
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable, "-m", "alembic", "upgrade", "head",
+            cwd=str(backend_dir),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
+
+        if proc.returncode == 0:
+            logger.info("Database migrations applied successfully.")
+        else:
+            logger.error(
+                f"Alembic migration failed (exit {proc.returncode}):\n"
+                f"{stderr.decode().strip()}"
+            )
     except Exception as e:
-        logger.error("Failed to apply migrations", exc_info=e)
-        # Let the app continue – the error will surface when DB is accessed.
+        logger.error("Failed to run migration subprocess", exc_info=e)
 
 # Rate Limiting
 app.state.limiter = limiter
