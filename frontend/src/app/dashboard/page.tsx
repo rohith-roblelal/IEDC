@@ -17,15 +17,17 @@ export default function DashboardOverview() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
-
     const fetchStats = async () => {
       try {
-        const res = await fetch("/api/v1/dashboard", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const headers: Record<string, string> = {};
+        const token = localStorage.getItem("access_token");
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        const res = await fetch(`${apiUrl}/api/v1/dashboard`, {
+          headers,
+          credentials: "include",
         });
         if (!res.ok) throw new Error("Failed to fetch dashboard statistics");
         const data = await res.json();
