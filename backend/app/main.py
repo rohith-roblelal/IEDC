@@ -50,36 +50,38 @@ async def generic_exception_handler(request: Request, exc: Exception):
 async def run_migrations_on_startup():
     """Run Alembic migrations via subprocess to avoid event-loop conflicts.
 
-    Alembic's async env.py calls asyncio.run(), which cannot run inside
-    FastAPI's already-running loop. Spawning a subprocess gives Alembic
-    its own Python process and event loop — works on Windows, Linux, and Render.
+    Uses synchronous subprocess.run() offloaded to a thread, because:
+    - Alembic's env.py calls asyncio.run() (can't nest inside FastAPI's loop)
+    - asyncio.create_subprocess_exec() fails on Windows under uvicorn
     """
     import asyncio
+    import subprocess
     import sys
     from pathlib import Path
 
-    # Find the backend directory (where alembic.ini lives)
     backend_dir = Path(__file__).resolve().parents[1]
     alembic_ini = backend_dir / "alembic.ini"
     if not alembic_ini.is_file():
         logger.warning(f"alembic.ini not found at {alembic_ini}, skipping auto-migration.")
         return
 
-    try:
-        proc = await asyncio.create_subprocess_exec(
-            sys.executable, "-m", "alembic", "upgrade", "head",
+    def _run():
+        result = subprocess.run(
+            [sys.executable, "-m", "alembic", "upgrade", "head"],
             cwd=str(backend_dir),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+            capture_output=True,
+            text=True,
         )
-        stdout, stderr = await proc.communicate()
+        return result
 
-        if proc.returncode == 0:
+    try:
+        result = await asyncio.to_thread(_run)
+        if result.returncode == 0:
             logger.info("Database migrations applied successfully.")
         else:
             logger.error(
-                f"Alembic migration failed (exit {proc.returncode}):\n"
-                f"{stderr.decode().strip()}"
+                f"Alembic migration failed (exit {result.returncode}):\n"
+                f"{result.stderr.strip()}"
             )
     except Exception as e:
         logger.error("Failed to run migration subprocess", exc_info=e)
