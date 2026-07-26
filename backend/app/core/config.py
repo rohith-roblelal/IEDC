@@ -22,11 +22,11 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str
     SUPABASE_BUCKET: str = "IEDC gallary"
 
-    # SMTP Configuration
-    SMTP_USER: str
-    SMTP_PASSWORD: str
-    SMTP_HOST: str
-    SMTP_PORT: int
+    # SMTP Configuration (Optional to allow booting without email service)
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: Optional[int] = None
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 

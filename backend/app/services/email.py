@@ -15,11 +15,11 @@ class EmailProvider(Protocol):
 class FastMailProvider(EmailProvider):
     def __init__(self):
         self.conf = ConnectionConfig(
-            MAIL_USERNAME=settings.SMTP_USER,
-            MAIL_PASSWORD=settings.SMTP_PASSWORD,
-            MAIL_FROM=settings.SMTP_USER,
-            MAIL_PORT=settings.SMTP_PORT,
-            MAIL_SERVER=settings.SMTP_HOST,
+            MAIL_USERNAME=settings.SMTP_USER or "dummy_user",
+            MAIL_PASSWORD=settings.SMTP_PASSWORD or "dummy_pass",
+            MAIL_FROM=settings.SMTP_USER or "noreply@iedc.com",
+            MAIL_PORT=settings.SMTP_PORT or 587,
+            MAIL_SERVER=settings.SMTP_HOST or "smtp.dummy.com",
             MAIL_FROM_NAME="IEDC SNMIMT",
             MAIL_STARTTLS=True,
             MAIL_SSL_TLS=False,
