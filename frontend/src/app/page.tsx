@@ -80,7 +80,9 @@ export default function Home() {
           <p className="mt-5 max-w-[640px] mx-auto text-[#C4C4D4] text-[0.98rem]">
             {settings.hero_subtitle}
           </p>
-          
+          <p className="mt-5 max-w-[760px] mx-auto text-[#C4C4D4] text-[0.95rem] leading-relaxed">
+            The Innovation and Entrepreneurship Development Centre (IEDC) at SNMIMT is a vibrant student-run community. We provide mentorship, funding opportunities, and hands-on workshops to help students transform their groundbreaking ideas into successful startups. Our mission is to cultivate a culture of innovation and empower the next generation of leaders.
+          </p>
 
 
           <div className="mt-8 flex justify-center gap-3.5 flex-wrap">

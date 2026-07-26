@@ -15,9 +15,7 @@ export default function AboutPage() {
         <p className="max-w-[680px] mx-auto text-center text-[#C4C4D4] font-medium text-base mb-4">
           IEDC has been developed to foster and nurture innovations combined with entrepreneurship amongst young minds, there is growth potential to be untapped and IEDC aims to fill this abyss.
         </p>
-        <p className="max-w-[680px] mx-auto text-center text-[#C4C4D4] font-medium text-base">
-          {settings.about_description}
-        </p>
+
         <div className="text-center mt-7">
           <Link href="/events" className="inline-block bg-[#3A2065] text-white font-bold py-3.5 px-7 rounded-full hover:-translate-y-0.5 transition-transform">
             See Upcoming Events
