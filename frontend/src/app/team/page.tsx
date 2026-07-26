@@ -47,6 +47,11 @@ function TeamCard({ member, featured }: { member: any, featured?: boolean }) {
             LinkedIn
           </a>
         )}
+        {member.instagram_url && (
+          <a href={member.instagram_url} target="_blank" rel="noopener noreferrer" className="text-[#8B7FE8] text-[0.82rem] font-medium hover:text-white transition-colors">
+            Instagram
+          </a>
+        )}
       </div>
     </motion.article>
   );

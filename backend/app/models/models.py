@@ -166,6 +166,7 @@ class TeamMember(Base, SoftDeleteMixin):
     
     photo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     linkedin_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    instagram_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     
     display_order: Mapped[int] = mapped_column(Integer, default=0)

@@ -22,6 +22,7 @@ export default function TeamPage() {
     department: "",
     year: "",
     linkedin_url: "",
+    instagram_url: "",
     email: "",
     photo_url: "",
     display_order: 0,
@@ -58,6 +59,7 @@ export default function TeamPage() {
         department: member.department || "",
         year: member.year || "",
         linkedin_url: member.linkedin_url || "",
+        instagram_url: member.instagram_url || "",
         email: member.email || "",
         photo_url: member.photo_url || "",
         display_order: member.display_order || 0,
@@ -72,6 +74,7 @@ export default function TeamPage() {
         department: "",
         year: "",
         linkedin_url: "",
+        instagram_url: "",
         email: "",
         photo_url: "",
         display_order: 0,
@@ -95,6 +98,7 @@ export default function TeamPage() {
       ...formData,
       email: formData.email.trim() === "" ? null : formData.email,
       linkedin_url: formData.linkedin_url.trim() === "" ? null : formData.linkedin_url,
+      instagram_url: formData.instagram_url.trim() === "" ? null : formData.instagram_url,
       department: formData.department.trim() === "" ? null : formData.department,
       year: formData.year.trim() === "" ? null : formData.year,
       photo_url: formData.photo_url.trim() === "" ? null : formData.photo_url,
@@ -330,6 +334,16 @@ export default function TeamPage() {
                       placeholder="https://linkedin.com/in/..."
                       value={formData.linkedin_url}
                       onChange={(e) => setFormData({...formData, linkedin_url: e.target.value})}
+                      className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Instagram URL</label>
+                    <input 
+                      type="url" 
+                      placeholder="https://instagram.com/..."
+                      value={formData.instagram_url}
+                      onChange={(e) => setFormData({...formData, instagram_url: e.target.value})}
                       className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
                     />
                   </div>

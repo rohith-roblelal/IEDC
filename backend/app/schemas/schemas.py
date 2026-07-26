@@ -147,6 +147,7 @@ class TeamMemberBase(SchemaBase):
     year: Optional[str] = None
     photo_url: Optional[str] = None
     linkedin_url: Optional[str] = None
+    instagram_url: Optional[str] = None
     email: Optional[EmailStr] = None
     display_order: int = 0
     is_published: bool = True
@@ -162,6 +163,7 @@ class TeamMemberUpdate(SchemaBase):
     year: Optional[str] = None
     photo_url: Optional[str] = None
     linkedin_url: Optional[str] = None
+    instagram_url: Optional[str] = None
     email: Optional[EmailStr] = None
     display_order: Optional[int] = None
     is_published: Optional[bool] = None
