@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, HttpUrl, ConfigDict, Field
+from pydantic import BaseModel, HttpUrl, ConfigDict, Field, field_validator
 
 from app.models.enums import StartupStage
 
@@ -29,6 +29,8 @@ class StartupBase(BaseModel):
     short_description: str
     full_description: str
     
+    logo_url: Optional[str] = None
+    
     founders: Optional[List[TeamMemberBase]] = None
     team_members: Optional[List[TeamMemberBase]] = None
     
@@ -43,6 +45,21 @@ class StartupBase(BaseModel):
     is_published: bool = False
     is_featured: bool = False
     
+    @field_validator('founders', 'team_members', mode='before')
+    @classmethod
+    def parse_team_members(cls, v):
+        if not v:
+            return v
+        if isinstance(v, list):
+            parsed = []
+            for item in v:
+                if isinstance(item, str):
+                    parsed.append({"name": item, "role": "Founder" if cls.__name__ == 'StartupBase' else "Member"})
+                else:
+                    parsed.append(item)
+            return parsed
+        return v
+    
     model_config = ConfigDict(from_attributes=True)
 
 class StartupCreate(StartupBase):
@@ -53,6 +70,8 @@ class StartupUpdate(BaseModel):
     slug: Optional[str] = None
     short_description: Optional[str] = None
     full_description: Optional[str] = None
+    
+    logo_url: Optional[str] = None
     
     founders: Optional[List[TeamMemberBase]] = None
     team_members: Optional[List[TeamMemberBase]] = None

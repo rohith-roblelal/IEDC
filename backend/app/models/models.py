@@ -268,6 +268,7 @@ class WebsiteSettings(Base):
     # Hero / Homepage
     hero_title: Mapped[str | None] = mapped_column(String(512), nullable=True)
     hero_subtitle: Mapped[str | None] = mapped_column(Text, nullable=True)
+    hero_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     hero_cta_text: Mapped[str | None] = mapped_column(String(100), nullable=True)
     hero_cta_link: Mapped[str | None] = mapped_column(String(512), nullable=True)
     hero_image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)

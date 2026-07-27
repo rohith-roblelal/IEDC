@@ -29,6 +29,10 @@ class OAuth2PasswordBearerWithCookie(OAuth2PasswordBearer):
             else:
                 return None
                 
+        # If the authorization came from a cookie and doesn't have Bearer, add it
+        if not authorization.startswith("Bearer ") and not request.headers.get("Authorization"):
+            authorization = f"Bearer {authorization}"
+                
         scheme, _, param = authorization.partition(" ")
         if not authorization.startswith("Bearer "):
             if self.auto_error:

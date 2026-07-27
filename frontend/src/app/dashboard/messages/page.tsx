@@ -14,11 +14,10 @@ export default function MessagesPage() {
 
 
   const fetchMessages = async (archived = false) => {
-    const token = localStorage.getItem("access_token");
     setIsLoading(true);
     try {
       const res = await fetch(`/api/v1/contact?is_archived=${archived}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        cache: "no-store"
       });
       if (res.ok) {
         const data = await res.json();
@@ -36,11 +35,9 @@ export default function MessagesPage() {
   }, [tab]);
 
   const handleMarkAsRead = async (id: string) => {
-    const token = localStorage.getItem("access_token");
     try {
       const res = await fetch(`/api/v1/contact/${id}/read`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
+        method: "PATCH"
       });
       if (res.ok) {
         setMessages(messages.map((m) => (m.id === id ? { ...m, is_read: true } : m)));
@@ -52,11 +49,9 @@ export default function MessagesPage() {
   };
 
   const handleArchive = async (id: string, currentlyArchived: boolean) => {
-    const token = localStorage.getItem("access_token");
     try {
       const res = await fetch(`/api/v1/contact/${id}/archive`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
+        method: "PATCH"
       });
       if (res.ok) {
         setMessages(messages.filter((m) => m.id !== id));
@@ -69,11 +64,9 @@ export default function MessagesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this message?")) return;
-    const token = localStorage.getItem("access_token");
     try {
       const res = await fetch(`/api/v1/contact/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
+        method: "DELETE"
       });
       if (res.ok) {
         setMessages(messages.filter((m) => m.id !== id));

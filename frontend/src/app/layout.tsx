@@ -13,21 +13,30 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
+import { clientFetch } from "@/lib/api/client";
+
 export const metadata: Metadata = {
   title: "IEDC SNMIMT",
   description: "Innovation and Entrepreneurship Development Cell at SNMIMT",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let initialSettings = null;
+  try {
+    initialSettings = await clientFetch("api/v1/settings", { cache: "no-store" });
+  } catch (error) {
+    console.error("Failed to fetch initial settings:", error);
+  }
+
   return (
     <html lang="en">
       <body suppressHydrationWarning className={`${poppins.variable} font-sans bg-[radial-gradient(circle_at_75%_20%,#3D1A5C,#0D1030_70%)] bg-fixed bg-[#0D1030] text-white antialiased min-h-screen flex flex-col`}>
         <ToastProvider>
-          <SettingsProvider>
+          <SettingsProvider initialSettings={initialSettings}>
             <ConditionalWrapper excludePaths={["/dashboard"]}>
               <Navbar />
             </ConditionalWrapper>

@@ -5,6 +5,7 @@ import { Handshake, X, Trash2, Edit } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useToast } from "@/components/ui/ToastProvider";
+import { clientFetch } from "@/lib/api/client";
 
 export default function PartnersPage() {
   const { toast } = useToast();
@@ -25,13 +26,11 @@ export default function PartnersPage() {
   const fetchPartners = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/partners");
-      if (res.ok) {
-        const data = await res.json();
-        setPartners(data.items || (Array.isArray(data) ? data : []));
-      }
+      const data = await clientFetch("api/v1/partners");
+      setPartners(data.items || (Array.isArray(data) ? data : []));
     } catch (err) {
       console.error(err);
+      toast("Failed to fetch partners", "error");
     } finally {
       setIsLoading(false);
     }
@@ -69,36 +68,28 @@ export default function PartnersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const token = localStorage.getItem("access_token");
-    
-    try {
+try {
       const url = editingPartner 
-        ? `/api/v1/partners${editingPartner.id}` 
-        : "/api/v1/partners";
+        ? `api/v1/partners/${editingPartner.id}` 
+        : "api/v1/partners";
       
       const payload = {
         ...formData,
         image_url: formData.image_url || null,
       };
 
-      const res = await fetch(url, {
+
+      await clientFetch(url, {
         method: editingPartner ? "PUT" : "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
-        },
         body: JSON.stringify(payload)
       });
       
-      if (res.ok) {
-        handleCloseModal();
-        fetchPartners();
-      } else {
-        toast("Failed to save partner", "error");
-      }
+      handleCloseModal();
+      fetchPartners();
+      toast(editingPartner ? "Partner updated successfully" : "Partner created successfully", "success");
     } catch (err) {
       console.error(err);
-      toast("An error occurred", "error");
+      toast("Failed to save partner", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -106,22 +97,17 @@ export default function PartnersPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this partner?")) return;
-    
-    const token = localStorage.getItem("access_token");
+
     try {
-      const res = await fetch(`/api/v1/partners/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
+      await clientFetch(`api/v1/partners/${id}`, {
+        method: "DELETE"
       });
       
-      if (res.ok) {
-        fetchPartners();
-      } else {
-        toast("Failed to delete partner", "error");
-      }
+      fetchPartners();
+      toast("Partner deleted successfully", "success");
     } catch (err) {
       console.error(err);
-      toast("An error occurred", "error");
+      toast("Failed to delete partner", "error");
     }
   };
 

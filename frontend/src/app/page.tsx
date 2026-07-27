@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Play, Megaphone } from "lucide-react";
+import { Play, Megaphone, Settings } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useSettings } from "@/lib/settings-context";
 
@@ -57,6 +57,27 @@ export default function Home() {
     fetchPartners();
   }, []);
 
+  if (settings.maintenance_mode) {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="w-24 h-24 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Settings size={48} className="animate-[spin_4s_linear_infinite]" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Under Maintenance</h1>
+          <p className="text-[#C4C4D4] text-lg max-w-[500px] mx-auto">
+            We're currently updating our website to bring you a better experience. 
+            Please check back soon!
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="pb-24">
       {/* Hero Section */}
@@ -77,12 +98,16 @@ export default function Home() {
               settings.hero_title
             )}
           </h1>
-          <p className="mt-5 max-w-[640px] mx-auto text-[#C4C4D4] text-[0.98rem]">
-            {settings.hero_subtitle}
-          </p>
-          <p className="mt-5 max-w-[760px] mx-auto text-[#C4C4D4] text-[0.95rem] leading-relaxed">
-            The Innovation and Entrepreneurship Development Centre (IEDC) at SNMIMT is a vibrant student-run community. We provide mentorship, funding opportunities, and hands-on workshops to help students transform their groundbreaking ideas into successful startups. Our mission is to cultivate a culture of innovation and empower the next generation of leaders.
-          </p>
+          {settings.hero_subtitle?.trim() && (
+            <p className="mt-5 max-w-[640px] mx-auto text-[#C4C4D4] text-[0.98rem]">
+              {settings.hero_subtitle}
+            </p>
+          )}
+          {settings.hero_description?.trim() && (
+            <p className="mt-5 max-w-[760px] mx-auto text-[#C4C4D4] text-[0.95rem] leading-relaxed">
+              {settings.hero_description}
+            </p>
+          )}
 
 
           <div className="mt-8 flex justify-center gap-3.5 flex-wrap">
@@ -218,10 +243,10 @@ export default function Home() {
         <h2 className="text-center text-[clamp(2.2rem,8vw,3.4rem)] font-light text-white/90 my-10 uppercase tracking-widest">
           Collaborative
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-[900px] mx-auto">
+        <div className="flex flex-wrap justify-center gap-4 max-w-[900px] mx-auto">
           {partners.length > 0 ? (
             partners.map((partner) => (
-              <div key={partner.id} className="bg-white rounded-xl h-[90px] flex items-center justify-center text-[#1A1A2E] font-bold text-sm text-center p-2 shadow-lg overflow-hidden">
+              <div key={partner.id} className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] bg-white rounded-xl h-[90px] flex items-center justify-center text-[#1A1A2E] font-bold text-sm text-center p-2 shadow-lg overflow-hidden">
                 {partner.image_url ? (
                   <img src={partner.image_url} alt={partner.name} className="max-w-full max-h-full object-contain p-2" />
                 ) : (
@@ -244,7 +269,7 @@ export default function Home() {
               { name: "TinkerHub", content: "TinkerHub" },
               { name: "y1p", content: "y1p" }
             ].map((partner) => (
-              <div key={partner.name} className="bg-white rounded-xl h-[90px] flex items-center justify-center text-[#1A1A2E] font-bold text-sm text-center p-2 shadow-lg">
+              <div key={partner.name} className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] bg-white rounded-xl h-[90px] flex items-center justify-center text-[#1A1A2E] font-bold text-sm text-center p-2 shadow-lg">
                 {partner.content}
               </div>
             ))

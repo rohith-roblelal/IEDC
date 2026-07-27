@@ -88,8 +88,7 @@ export default function TeamPage() {
     e.preventDefault();
     setFormError(null);
     setIsSubmitting(true);
-    const token = localStorage.getItem("access_token");
-    const method = editingMember ? "PUT" : "POST";
+const method = editingMember ? "PUT" : "POST";
     const url = editingMember 
       ? `/api/v1/team/${editingMember.id}` 
       : "/api/v1/team";
@@ -109,8 +108,7 @@ export default function TeamPage() {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
+          },
         body: JSON.stringify(payload)
       });
       if (res.ok) {
@@ -130,12 +128,10 @@ export default function TeamPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this team member?")) return;
-    const token = localStorage.getItem("access_token");
-    try {
+try {
       const res = await fetch(`/api/v1/team/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
+        });
       if (res.ok) {
         fetchTeam();
       } else {

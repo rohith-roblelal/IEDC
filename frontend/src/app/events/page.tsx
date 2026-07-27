@@ -20,8 +20,8 @@ export default function EventsPage() {
         if (res.ok) {
           const data = await res.json();
           const items = data.items || [];
-          const upcoming = items.filter((e: any) => ["PUBLISHED", "REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(e.status));
-          const past = items.filter((e: any) => e.status === "COMPLETED");
+          const upcoming = items.filter((e: any) => ["UPCOMING", "ONGOING", "PUBLISHED", "REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(e.status || e.computed_status));
+          const past = items.filter((e: any) => e.status === "COMPLETED" || e.computed_status === "COMPLETED" || e.status === "PAST");
           setUpcomingEvents(upcoming);
           setPastEvents(past);
         }
@@ -42,8 +42,11 @@ export default function EventsPage() {
   };
 
   const renderEventCard = (event: any) => {
-    const statusDisplay = getStatusDisplay(event.status || "");
-    const isRegistrationOpen = event.status === "REGISTRATION_OPEN";
+    const statusDisplay = getStatusDisplay(event.status || event.computed_status || "");
+    const now = new Date();
+    const isRegistrationOpen = event.registration_deadline 
+      ? new Date(event.registration_deadline) > now && (event.status !== "COMPLETED" && event.status !== "PAST")
+      : (event.status === "UPCOMING" || event.status === "ONGOING" || event.status === "PUBLISHED");
     
     return (
       <motion.article 
@@ -221,7 +224,7 @@ export default function EventsPage() {
                     {selectedEvent.description}
                   </div>
 
-                  {selectedEvent.status === "REGISTRATION_OPEN" ? (
+                  {(selectedEvent.registration_deadline ? new Date(selectedEvent.registration_deadline) > new Date() && (selectedEvent.status !== "COMPLETED" && selectedEvent.status !== "PAST") : (selectedEvent.status === "UPCOMING" || selectedEvent.status === "ONGOING" || selectedEvent.status === "PUBLISHED")) ? (
                     <button 
                       onClick={() => setIsRegistering(true)}
                       className="block text-center w-full bg-[#4F7DF9] text-white font-bold py-3.5 rounded-[10px] mt-2 hover:-translate-y-0.5 transition-transform"

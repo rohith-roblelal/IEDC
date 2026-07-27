@@ -65,9 +65,7 @@ export default function AnnouncementsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const token = localStorage.getItem("access_token");
-    
-    try {
+try {
       const url = editingAnnouncement 
         ? `/api/v1/announcements${editingAnnouncement.id}` 
         : "/api/v1/announcements";
@@ -77,8 +75,7 @@ export default function AnnouncementsPage() {
         headers: { 
           "Content-Type": "application/json",
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          "Authorization": `Bearer ${token}` 
-        },
+          },
         body: JSON.stringify(formData)
       });
       
@@ -99,13 +96,10 @@ export default function AnnouncementsPage() {
   const handleDelete = async (id: string) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!confirm("Are you sure you want to delete this announcement?")) return;
-    
-    const token = localStorage.getItem("access_token");
-    try {
+try {
       const res = await fetch(`/api/v1/announcements/${id}`, {
         method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
+        });
       
       if (res.ok) {
         fetchAnnouncements();

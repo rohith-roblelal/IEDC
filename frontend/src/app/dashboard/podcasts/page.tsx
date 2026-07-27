@@ -78,9 +78,7 @@ export default function PodcastsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const token = localStorage.getItem("access_token");
-    
-    try {
+try {
       const url = editingPodcast 
         ? `/api/v1/podcasts${editingPodcast.id}` 
         : "/api/v1/podcasts";
@@ -95,8 +93,7 @@ export default function PodcastsPage() {
         method: editingPodcast ? "PUT" : "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
-        },
+          },
         body: JSON.stringify(payload)
       });
       
@@ -116,13 +113,10 @@ export default function PodcastsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this podcast?")) return;
-    
-    const token = localStorage.getItem("access_token");
-    try {
+try {
       const res = await fetch(`/api/v1/podcasts/${id}`, {
         method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
+        });
       
       if (res.ok) {
         fetchPodcasts();
@@ -136,15 +130,13 @@ export default function PodcastsPage() {
   };
 
   const setAsActive = async (id: string, podcast: any) => {
-    const token = localStorage.getItem("access_token");
-    try {
+try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const res = await fetch(`/api/v1/podcasts/${id}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
-        },
+          },
         body: JSON.stringify({ is_active: true })
       });
       

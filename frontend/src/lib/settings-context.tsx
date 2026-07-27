@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { clientFetch } from "@/lib/api/client";
 
 export interface SiteSettings {
   id: number;
@@ -10,6 +11,7 @@ export interface SiteSettings {
   favicon_url: string | null;
   hero_title: string | null;
   hero_subtitle: string | null;
+  hero_description: string | null;
   hero_cta_text: string | null;
   hero_cta_link: string | null;
   hero_image_url: string | null;
@@ -44,8 +46,8 @@ const DEFAULTS: SiteSettings = {
   logo_url: null,
   favicon_url: null,
   hero_title: "Hi Everyone, Welcome To IEDC-SNMIMT",
-  hero_subtitle:
-    "The Innovation and Entrepreneurship Development Cell at SNMIMT — workshops, hackathons, talks, and startup initiatives for students.",
+  hero_subtitle: null,
+  hero_description: null,
   hero_cta_text: "View Events",
   hero_cta_link: "/events",
   hero_image_url: null,
@@ -76,22 +78,33 @@ const DEFAULTS: SiteSettings = {
 
 const SettingsContext = createContext<SiteSettings>(DEFAULTS);
 
-export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULTS);
+export function SettingsProvider({ children, initialSettings }: { children: ReactNode; initialSettings?: any }) {
+  const [settings, setSettings] = useState<SiteSettings>(() => {
+    if (!initialSettings) return DEFAULTS;
+    const cleanData = Object.fromEntries(
+      Object.entries(initialSettings).filter(([_, v]) => v !== null)
+    );
+    return { ...DEFAULTS, ...cleanData };
+  });
 
   useEffect(() => {
+    // Only fetch on demand (e.g. after a dashboard save)
     const fetchSettings = async () => {
       try {
-        const res = await fetch("/api/v1/settings");
-        if (res.ok) {
-          const data = await res.json();
-          setSettings({ ...DEFAULTS, ...data });
-        }
+        const data = await clientFetch("api/v1/settings", { cache: "no-store" });
+        const cleanData = Object.fromEntries(
+          Object.entries(data).filter(([_, v]) => v !== null)
+        );
+        setSettings({ ...DEFAULTS, ...cleanData });
       } catch {
-        // Silently fall back to defaults
+        // Silently fall back
       }
     };
-    fetchSettings();
+
+    // Listen for updates from the dashboard settings page
+    const handleUpdate = () => fetchSettings();
+    window.addEventListener("settings-updated", handleUpdate);
+    return () => window.removeEventListener("settings-updated", handleUpdate);
   }, []);
 
   return (

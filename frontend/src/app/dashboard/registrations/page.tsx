@@ -32,11 +32,9 @@ export default function RegistrationsPage() {
     setSelectedEvent(event);
     setIsLoadingParticipants(true);
     setParticipants([]);
-    const token = localStorage.getItem("access_token");
-    try {
+try {
       const res = await fetch(`/api/v1/events/${event.id}/participants`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+        });
       if (res.ok) {
         const data = await res.json();
         setParticipants(data);

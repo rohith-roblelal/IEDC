@@ -7,6 +7,7 @@ import {
   Save, Upload, Loader2, CheckCircle, Plus, Trash2, Image
 } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
+import { clientFetch } from "@/lib/api/client";
 
 const TABS = [
   { id: "branding", label: "Branding", icon: <Palette size={18} /> },
@@ -16,6 +17,67 @@ const TABS = [
   { id: "seo", label: "SEO & OG", icon: <Search size={18} /> },
   { id: "advanced", label: "Advanced", icon: <Sliders size={18} /> },
 ];
+
+const SaveButton = ({ keys, isSaving, onSave }: any) => (
+  <button
+    onClick={() => onSave(keys)}
+    disabled={isSaving}
+    className="mt-6 flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-colors disabled:opacity-50"
+  >
+    {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+    Save Changes
+  </button>
+);
+
+const Field = ({ label, name, type = "text", placeholder = "", settings, onChange }: any) => (
+  <div>
+    <label className="block text-sm font-medium text-[#C4C4D4] mb-1.5">{label}</label>
+    {type === "textarea" ? (
+      <textarea
+        value={settings?.[name] ?? ""}
+        onChange={e => onChange(name, e.target.value)}
+        placeholder={placeholder}
+        rows={4}
+        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-y"
+      />
+    ) : (
+      <input
+        type={type}
+        value={settings?.[name] ?? ""}
+        onChange={e => onChange(name, e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+      />
+    )}
+  </div>
+);
+
+const ImageUploadField = ({ label, urlKey, inputRef, endpoint, settings, onUpload }: any) => (
+  <div>
+    <label className="block text-sm font-medium text-[#C4C4D4] mb-1.5">{label}</label>
+    <div className="flex items-center gap-4">
+      {settings?.[urlKey] ? (
+        <img src={settings[urlKey]} alt={label} className="w-16 h-16 rounded-lg object-contain bg-white/10 p-1" />
+      ) : (
+        <div className="w-16 h-16 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/30">
+          <Image size={24} />
+        </div>
+      )}
+      <div className="flex-1">
+        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={() => onUpload(endpoint, inputRef)} />
+        <button
+          onClick={() => inputRef.current?.click()}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm text-white transition-colors"
+        >
+          <Upload size={14} /> {settings?.[urlKey] ? "Replace" : "Upload"}
+        </button>
+        {settings?.[urlKey] && (
+          <p className="text-xs text-white/40 mt-1 truncate max-w-[200px]">{settings[urlKey]}</p>
+        )}
+      </div>
+    </div>
+  </div>
+);
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -35,12 +97,9 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch("/api/v1/settings");
-        if (res.ok) {
-          const data = await res.json();
-          setSettings(data);
-          setStatsJson(data.about_stats_json || []);
-        }
+        const data = await clientFetch("api/v1/settings");
+        setSettings(data);
+        setStatsJson(data.about_stats_json || []);
       } catch {
         toast("Failed to load settings", "error");
       } finally {
@@ -62,18 +121,14 @@ export default function SettingsPage() {
       else payload[k] = settings[k];
     });
     try {
-      const res = await fetch("/api/v1/settings", {
+      const data = await clientFetch("api/v1/settings", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: token ? { } : {},
         body: JSON.stringify(payload),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setSettings(data);
-        toast("Settings saved!", "success");
-      } else {
-        toast("Failed to save settings", "error");
-      }
+      setSettings(data);
+      window.dispatchEvent(new Event("settings-updated"));
+      toast("Settings saved!", "success");
     } catch {
       toast("Error saving settings", "error");
     } finally {
@@ -87,18 +142,14 @@ export default function SettingsPage() {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const res = await fetch(`/api/v1/settings/${endpoint}`, {
+      const data = await clientFetch(`api/v1/settings/${endpoint}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { } : {},
         body: formData,
       });
-      if (res.ok) {
-        const data = await res.json();
-        setSettings(data);
-        toast("Image uploaded!", "success");
-      } else {
-        toast("Upload failed", "error");
-      }
+      setSettings(data);
+      window.dispatchEvent(new Event("settings-updated"));
+      toast("Image uploaded!", "success");
     } catch {
       toast("Upload error", "error");
     }
@@ -111,69 +162,6 @@ export default function SettingsPage() {
       </div>
     );
   }
-
-  const SaveButton = ({ keys }: { keys: string[] }) => (
-    <button
-      onClick={() => handleSave(keys)}
-      disabled={isSaving}
-      className="mt-6 flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-colors disabled:opacity-50"
-    >
-      {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-      Save Changes
-    </button>
-  );
-
-  const Field = ({ label, name, type = "text", placeholder = "" }: { label: string; name: string; type?: string; placeholder?: string }) => (
-    <div>
-      <label className="block text-sm font-medium text-[#C4C4D4] mb-1.5">{label}</label>
-      {type === "textarea" ? (
-        <textarea
-          value={settings?.[name] ?? ""}
-          onChange={e => handleChange(name, e.target.value)}
-          placeholder={placeholder}
-          rows={4}
-          className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-y"
-        />
-      ) : (
-        <input
-          type={type}
-          value={settings?.[name] ?? ""}
-          onChange={e => handleChange(name, e.target.value)}
-          placeholder={placeholder}
-          className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        />
-      )}
-    </div>
-  );
-
-  const ImageUploadField = ({ label, field, urlKey, inputRef, endpoint }: {
-    label: string; field: string; urlKey: string; inputRef: React.RefObject<HTMLInputElement | null>; endpoint: string;
-  }) => (
-    <div>
-      <label className="block text-sm font-medium text-[#C4C4D4] mb-1.5">{label}</label>
-      <div className="flex items-center gap-4">
-        {settings?.[urlKey] ? (
-          <img src={settings[urlKey]} alt={label} className="w-16 h-16 rounded-lg object-contain bg-white/10 p-1" />
-        ) : (
-          <div className="w-16 h-16 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/30">
-            <Image size={24} />
-          </div>
-        )}
-        <div className="flex-1">
-          <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={() => handleFileUpload(endpoint, inputRef)} />
-          <button
-            onClick={() => inputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm text-white transition-colors"
-          >
-            <Upload size={14} /> {settings?.[urlKey] ? "Replace" : "Upload"}
-          </button>
-          {settings?.[urlKey] && (
-            <p className="text-xs text-white/40 mt-1 truncate max-w-[200px]">{settings[urlKey]}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -228,13 +216,13 @@ export default function SettingsPage() {
           {activeTab === "branding" && (
             <>
               <h2 className="text-lg font-bold">Branding</h2>
-              <Field label="Site Name" name="site_name" placeholder="IEDC SNMIMT" />
-              <Field label="Site Tagline" name="site_tagline" placeholder="Innovation and Entrepreneurship..." />
+              <Field settings={settings} onChange={handleChange} label="Site Name" name="site_name" placeholder="IEDC SNMIMT" />
+              <Field settings={settings} onChange={handleChange} label="Site Tagline" name="site_tagline" placeholder="Innovation and Entrepreneurship..." />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <ImageUploadField label="Logo" field="logo_url" urlKey="logo_url" inputRef={logoRef} endpoint="logo" />
-                <ImageUploadField label="Favicon" field="favicon_url" urlKey="favicon_url" inputRef={faviconRef} endpoint="favicon" />
+                <ImageUploadField settings={settings} onUpload={handleFileUpload} label="Logo" field="logo_url" urlKey="logo_url" inputRef={logoRef} endpoint="logo" />
+                <ImageUploadField settings={settings} onUpload={handleFileUpload} label="Favicon" field="favicon_url" urlKey="favicon_url" inputRef={faviconRef} endpoint="favicon" />
               </div>
-              <SaveButton keys={["site_name", "site_tagline"]} />
+              <SaveButton isSaving={isSaving} onSave={handleSave} keys={["site_name", "site_tagline"]} />
             </>
           )}
 
@@ -242,14 +230,15 @@ export default function SettingsPage() {
           {activeTab === "hero" && (
             <>
               <h2 className="text-lg font-bold">Hero / Homepage</h2>
-              <Field label="Hero Title" name="hero_title" placeholder="Hi Everyone, Welcome To IEDC-SNMIMT" />
-              <Field label="Hero Subtitle" name="hero_subtitle" type="textarea" placeholder="The Innovation and Entrepreneurship Development Cell..." />
+              <Field settings={settings} onChange={handleChange} label="Hero Title" name="hero_title" placeholder="Hi Everyone, Welcome To IEDC-SNMIMT" />
+              <Field settings={settings} onChange={handleChange} label="Hero Subtitle" name="hero_subtitle" type="textarea" placeholder="The Innovation and Entrepreneurship Development Cell..." />
+              <Field settings={settings} onChange={handleChange} label="Hero Description" name="hero_description" type="textarea" placeholder="The Innovation and Entrepreneurship Development Centre (IEDC) at SNMIMT is a vibrant student-run community..." />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <Field label="CTA Button Text" name="hero_cta_text" placeholder="View Events" />
-                <Field label="CTA Button Link" name="hero_cta_link" placeholder="/events" />
+                <Field settings={settings} onChange={handleChange} label="CTA Button Text" name="hero_cta_text" placeholder="View Events" />
+                <Field settings={settings} onChange={handleChange} label="CTA Button Link" name="hero_cta_link" placeholder="/events" />
               </div>
-              <ImageUploadField label="Hero Banner Image (optional)" field="hero_image_url" urlKey="hero_image_url" inputRef={heroImageRef} endpoint="hero-image" />
-              <SaveButton keys={["hero_title", "hero_subtitle", "hero_cta_text", "hero_cta_link"]} />
+              <ImageUploadField settings={settings} onUpload={handleFileUpload} label="Hero Banner Image (optional)" field="hero_image_url" urlKey="hero_image_url" inputRef={heroImageRef} endpoint="hero-image" />
+              <SaveButton isSaving={isSaving} onSave={handleSave} keys={["hero_title", "hero_subtitle", "hero_description", "hero_cta_text", "hero_cta_link"]} />
             </>
           )}
 
@@ -257,8 +246,8 @@ export default function SettingsPage() {
           {activeTab === "about" && (
             <>
               <h2 className="text-lg font-bold">About Section</h2>
-              <Field label="About Description" name="about_description" type="textarea" />
-              <Field label="Vision Statement" name="about_vision" type="textarea" />
+              <Field settings={settings} onChange={handleChange} label="About Description" name="about_description" type="textarea" />
+              <Field settings={settings} onChange={handleChange} label="Vision Statement" name="about_vision" type="textarea" />
               <div>
                 <label className="block text-sm font-medium text-[#C4C4D4] mb-2">Stats / Highlights</label>
                 <div className="space-y-3">
@@ -294,7 +283,7 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
-              <SaveButton keys={["about_description", "about_vision", "about_stats_json"]} />
+              <SaveButton isSaving={isSaving} onSave={handleSave} keys={["about_description", "about_vision", "about_stats_json"]} />
             </>
           )}
 
@@ -302,14 +291,14 @@ export default function SettingsPage() {
           {activeTab === "social" && (
             <>
               <h2 className="text-lg font-bold">Social Media Links</h2>
-              <Field label="Facebook URL" name="facebook_url" placeholder="https://facebook.com/..." />
-              <Field label="Instagram URL" name="instagram_url" placeholder="https://instagram.com/..." />
-              <Field label="Twitter / X URL" name="twitter_url" placeholder="https://twitter.com/..." />
-              <Field label="LinkedIn URL" name="linkedin_url" placeholder="https://linkedin.com/..." />
-              <Field label="YouTube URL" name="youtube_url" placeholder="https://youtube.com/..." />
-              <Field label="GitHub URL" name="github_url" placeholder="https://github.com/..." />
-              <Field label="Footer Tagline" name="footer_tagline" placeholder="Building the future, one idea at a time." />
-              <SaveButton keys={["facebook_url", "instagram_url", "twitter_url", "linkedin_url", "youtube_url", "github_url", "footer_tagline"]} />
+              <Field settings={settings} onChange={handleChange} label="Facebook URL" name="facebook_url" placeholder="https://facebook.com/..." />
+              <Field settings={settings} onChange={handleChange} label="Instagram URL" name="instagram_url" placeholder="https://instagram.com/..." />
+              <Field settings={settings} onChange={handleChange} label="Twitter / X URL" name="twitter_url" placeholder="https://twitter.com/..." />
+              <Field settings={settings} onChange={handleChange} label="LinkedIn URL" name="linkedin_url" placeholder="https://linkedin.com/..." />
+              <Field settings={settings} onChange={handleChange} label="YouTube URL" name="youtube_url" placeholder="https://youtube.com/..." />
+              <Field settings={settings} onChange={handleChange} label="GitHub URL" name="github_url" placeholder="https://github.com/..." />
+              <Field settings={settings} onChange={handleChange} label="Footer Tagline" name="footer_tagline" placeholder="Building the future, one idea at a time." />
+              <SaveButton isSaving={isSaving} onSave={handleSave} keys={["facebook_url", "instagram_url", "twitter_url", "linkedin_url", "youtube_url", "github_url", "footer_tagline"]} />
             </>
           )}
 
@@ -317,10 +306,10 @@ export default function SettingsPage() {
           {activeTab === "seo" && (
             <>
               <h2 className="text-lg font-bold">SEO & Open Graph</h2>
-              <Field label="SEO Title" name="seo_title" placeholder="IEDC SNMIMT" />
-              <Field label="SEO Description" name="seo_description" type="textarea" placeholder="Innovation and Entrepreneurship Development Cell..." />
-              <ImageUploadField label="Open Graph Image (1200×630 recommended)" field="og_image_url" urlKey="og_image_url" inputRef={ogImageRef} endpoint="og-image" />
-              <SaveButton keys={["seo_title", "seo_description"]} />
+              <Field settings={settings} onChange={handleChange} label="SEO Title" name="seo_title" placeholder="IEDC SNMIMT" />
+              <Field settings={settings} onChange={handleChange} label="SEO Description" name="seo_description" type="textarea" placeholder="Innovation and Entrepreneurship Development Cell..." />
+              <ImageUploadField settings={settings} onUpload={handleFileUpload} label="Open Graph Image (1200×630 recommended)" field="og_image_url" urlKey="og_image_url" inputRef={ogImageRef} endpoint="og-image" />
+              <SaveButton isSaving={isSaving} onSave={handleSave} keys={["seo_title", "seo_description"]} />
             </>
           )}
 
@@ -328,9 +317,9 @@ export default function SettingsPage() {
           {activeTab === "advanced" && (
             <>
               <h2 className="text-lg font-bold">Advanced Settings</h2>
-              <Field label="Email From Name" name="email_from_name" placeholder="IEDC SNMIMT" />
-              <Field label="Email Reply-To" name="email_reply_to" placeholder="iedcsnmimt@gmail.com" />
-              <Field label="Google Analytics ID" name="google_analytics_id" placeholder="G-XXXXXXXXXX" />
+              <Field settings={settings} onChange={handleChange} label="Email From Name" name="email_from_name" placeholder="IEDC SNMIMT" />
+              <Field settings={settings} onChange={handleChange} label="Email Reply-To" name="email_reply_to" placeholder="iedcsnmimt@gmail.com" />
+              <Field settings={settings} onChange={handleChange} label="Google Analytics ID" name="google_analytics_id" placeholder="G-XXXXXXXXXX" />
               <div>
                 <label className="block text-sm font-medium text-[#C4C4D4] mb-3">Maintenance Mode</label>
                 <div className="flex items-center gap-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
@@ -346,7 +335,7 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
-              <SaveButton keys={["email_from_name", "email_reply_to", "google_analytics_id", "maintenance_mode"]} />
+              <SaveButton isSaving={isSaving} onSave={handleSave} keys={["email_from_name", "email_reply_to", "google_analytics_id", "maintenance_mode"]} />
             </>
           )}
         </motion.div>

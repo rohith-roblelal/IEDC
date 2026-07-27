@@ -32,7 +32,16 @@ export default function StartupsPage() {
       const res = await fetch("/api/v1/startups");
       if (res.ok) {
         const data = await res.json();
-        setStartups(data.items || (Array.isArray(data) ? data : []));
+        const items = data.items || (Array.isArray(data) ? data : []);
+        // Map backend schema to frontend expected fields
+        const mappedStartups = items.map((s: any) => ({
+          ...s,
+          description: s.short_description || s.full_description || "",
+          founder: s.founders && s.founders.length > 0 ? s.founders[0].name : "",
+          website: s.website_url || "",
+          status: s.is_published ? "ACTIVE" : "INACTIVE", // simplified
+        }));
+        setStartups(mappedStartups);
       }
     } catch (err) {
       console.error(err);
@@ -90,27 +99,49 @@ export default function StartupsPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const url = editingStartup ? `/api/v1/startups/${editingStartup.id}` : "/api/v1/startups";
+const url = editingStartup ? `/api/v1/startups/${editingStartup.id}` : "/api/v1/startups";
       const method = editingStartup ? "PUT" : "POST";
+
+      const payload = {
+        name: formData.name,
+        slug: formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        short_description: formData.description.slice(0, 300) || "No description",
+        full_description: formData.description || "No description",
+        logo_url: formData.logo_url || null,
+        founders: formData.founder ? [{ name: formData.founder, role: "Founder" }] : null,
+        industry: formData.industry || null,
+        website_url: formData.website || null,
+        stage: "IDEA", // default or mapped if needed
+        is_published: formData.status === "ACTIVE",
+      };
 
       const res = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
         await fetchStartups();
         handleCloseModal();
+        toast(editingStartup ? "Startup updated successfully" : "Startup created successfully", "success");
       } else {
-        console.error("Failed to save startup");
+        const errorText = await res.text();
+        console.error("Failed to save startup:", res.status, errorText);
+        
+        let errorMessage = "Failed to save startup";
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed.detail) errorMessage = parsed.detail;
+        } catch (e) {}
+        
+        toast(errorMessage, "error");
       }
     } catch (err) {
       console.error(err);
+      toast("An unexpected error occurred", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -120,13 +151,9 @@ export default function StartupsPage() {
     if (!confirm("Are you sure you want to delete this startup?")) return;
     
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`/api/v1/startups/${id}`, {
+const res = await fetch(`/api/v1/startups/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        });
       if (res.ok) {
         setStartups(startups.filter((s) => s.id !== id));
       }

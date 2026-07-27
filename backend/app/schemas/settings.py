@@ -16,6 +16,7 @@ class WebsiteSettingsUpdate(BaseModel):
     # Hero
     hero_title: Optional[str] = None
     hero_subtitle: Optional[str] = None
+    hero_description: Optional[str] = None
     hero_cta_text: Optional[str] = None
     hero_cta_link: Optional[str] = None
 

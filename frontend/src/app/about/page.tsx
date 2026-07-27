@@ -12,9 +12,11 @@ export default function AboutPage() {
     <div className="py-24 px-6 relative">
       <section className="mb-24">
         <h2 className="text-center text-[clamp(1.8rem,4vw,2.4rem)] font-bold mb-5">About IEDC</h2>
-        <p className="max-w-[680px] mx-auto text-center text-[#C4C4D4] font-medium text-base mb-4">
-          IEDC has been developed to foster and nurture innovations combined with entrepreneurship amongst young minds, there is growth potential to be untapped and IEDC aims to fill this abyss.
-        </p>
+        {settings.about_description?.trim() && (
+          <p className="max-w-[680px] mx-auto text-center text-[#C4C4D4] font-medium text-base mb-4">
+            {settings.about_description}
+          </p>
+        )}
 
         <div className="text-center mt-7">
           <Link href="/events" className="inline-block bg-[#3A2065] text-white font-bold py-3.5 px-7 rounded-full hover:-translate-y-0.5 transition-transform">
@@ -22,7 +24,9 @@ export default function AboutPage() {
           </Link>
         </div>
         <div className="flex flex-wrap justify-center gap-6 mt-11">
-          {stats.map((stat, i) => (
+          {stats
+            .filter((stat) => stat.value?.trim() || stat.label?.trim())
+            .map((stat, i) => (
             <motion.div 
               key={i}
               whileHover={{ y: -5 }}
@@ -53,12 +57,11 @@ export default function AboutPage() {
         </motion.div>
         
         <h2 className="text-center text-[clamp(1.8rem,4vw,2.4rem)] font-bold mb-5">Our Vision</h2>
-        <p className="max-w-[680px] mx-auto text-center font-semibold text-white text-[1.05rem] italic mb-4">
-          "To dive into the inner potential and to promote technological disruptions when proffering the nurturing mind to think laterally and divergently, IEDC is a body to develop entrepreneurial skills and to foster innovations to start up."
-        </p>
-        <p className="max-w-[680px] mx-auto text-center font-semibold text-white text-[1.05rem] italic">
-          {settings.about_vision ? `"${settings.about_vision}"` : ""}
-        </p>
+        {settings.about_vision?.trim() && (
+          <p className="max-w-[680px] mx-auto text-center font-semibold text-white text-[1.05rem] italic">
+            "{settings.about_vision}"
+          </p>
+        )}
       </section>
     </div>
   );

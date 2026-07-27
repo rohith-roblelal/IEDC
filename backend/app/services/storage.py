@@ -13,9 +13,14 @@ class StorageService:
     async def validate_file(self, file: UploadFile, max_size_mb: int = 5, allowed_types: List[str] = None) -> bool:
         """Validate file size and MIME type."""
         if allowed_types is None:
-            allowed_types = ["image/jpeg", "image/png", "image/webp"]
+            allowed_types = [
+                "image/jpeg", "image/png", "image/webp", 
+                "image/gif", "image/svg+xml", "image/x-icon", 
+                "image/vnd.microsoft.icon", "image/ico", "application/octet-stream"
+            ]
             
-        if file.content_type not in allowed_types:
+        if not (file.content_type in allowed_types or file.content_type.startswith("image/")):
+            print(f"Rejected file upload. Content-Type: {file.content_type}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid file type: {file.content_type}. Allowed types: {', '.join(allowed_types)}"

@@ -60,7 +60,7 @@ export default function EventsPage() {
         title: event.title,
         description: event.description,
         banner_url: event.banner_url || "",
-        status: event.status,
+        status: event.is_published ? "PUBLISHED" : "DRAFT",
         registration_deadline: event.registration_deadline ? new Date(event.registration_deadline).toISOString().slice(0, 16) : "",
         max_participants: event.max_participants || "",
         registration_link: event.registration_link || "",
@@ -92,14 +92,14 @@ export default function EventsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem("access_token");
-    const method = editingEvent ? "PUT" : "POST";
+const method = editingEvent ? "PUT" : "POST";
     const url = editingEvent 
       ? `/api/v1/events${editingEvent.id}` 
       : "/api/v1/events";
 
     const payload = {
       ...formData,
+      is_published: formData.status !== "DRAFT" && formData.status !== "CANCELLED",
       max_participants: formData.max_participants ? parseInt(formData.max_participants) : null,
       registration_deadline: formData.registration_deadline ? new Date(formData.registration_deadline).toISOString() : null,
     };
@@ -109,8 +109,7 @@ export default function EventsPage() {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
+          },
         body: JSON.stringify(payload)
       });
       if (res.ok) {
@@ -130,10 +129,9 @@ export default function EventsPage() {
   const handleConnectGoogleForm = async () => {
     if (!formData.google_form_url || !editingEvent) return showToast("Please save the event first before connecting a Google Form.", "error");
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`/api/v1/events/${editingEvent.id}/google-form/connect`, {
+const res = await fetch(`/api/v1/events/${editingEvent.id}/google-form/connect`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", },
         body: JSON.stringify({ url: formData.google_form_url })
       });
       const data = await res.json();
@@ -156,13 +154,11 @@ export default function EventsPage() {
   const confirmDelete = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     if (!eventToDelete) return;
-    const token = localStorage.getItem("access_token");
-    try {
+try {
       console.log("Deleting event:", eventToDelete);
       const res = await fetch(`/api/v1/events/${eventToDelete}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
+        });
       if (res.ok) {
         fetchEvents();
         showToast("Event deleted", "success");
