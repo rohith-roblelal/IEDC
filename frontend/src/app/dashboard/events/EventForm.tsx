@@ -8,6 +8,7 @@ import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { LoadingButton } from "@/components/ui/LoadingButton";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { EventsAPI, EventCreate, EventUpdate, EventResponse } from "@/lib/api/events";
 
 // Zod Schema for validation
@@ -44,6 +45,7 @@ interface EventFormProps {
 }
 
 export function EventForm({ initialData, onClose, onSaved, showToast }: EventFormProps) {
+  const confirm = useConfirm();
   const [isAutoSlug, setIsAutoSlug] = useState(!initialData);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -133,8 +135,8 @@ export function EventForm({ initialData, onClose, onSaved, showToast }: EventFor
     }
   };
 
-  const handleClose = () => {
-    if (isDirty && !window.confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+  const handleClose = async () => {
+    if (isDirty && !(await confirm("You have unsaved changes. Are you sure you want to discard them?"))) {
       return;
     }
     onClose();

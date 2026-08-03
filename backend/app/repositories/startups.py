@@ -6,7 +6,10 @@ from sqlalchemy.future import select
 from sqlalchemy import update, delete
 from sqlalchemy.orm import selectinload
 
-from app.models.models import Startup, StartupGalleryImage, utcnow
+from app.models.models import (
+    Startup, StartupGalleryImage, Batch, Technology,
+    StartupFounder, StartupAward, StartupFunding, StartupPressLink, utcnow
+)
 from app.schemas.startups import StartupCreate, StartupUpdate
 
 class StartupRepository:
@@ -20,18 +23,47 @@ class StartupRepository:
         return slug
 
     async def get_by_id(self, startup_id: uuid.UUID) -> Optional[Startup]:
-        query = select(Startup).options(selectinload(Startup.gallery_images)).where(Startup.id == startup_id, Startup.deleted_at.is_(None))
+        query = select(Startup).options(
+            selectinload(Startup.batch),
+            selectinload(Startup.gallery_images),
+            selectinload(Startup.founders),
+            selectinload(Startup.awards),
+            selectinload(Startup.funding),
+            selectinload(Startup.press_links),
+            selectinload(Startup.technologies)
+        ).where(Startup.id == startup_id, Startup.deleted_at.is_(None))
         result = await self.session.execute(query)
         return result.scalars().first()
 
     async def get_by_slug(self, slug: str) -> Optional[Startup]:
-        query = select(Startup).options(selectinload(Startup.gallery_images)).where(Startup.slug == slug, Startup.deleted_at.is_(None))
+        query = select(Startup).options(
+            selectinload(Startup.batch),
+            selectinload(Startup.gallery_images),
+            selectinload(Startup.founders),
+            selectinload(Startup.awards),
+            selectinload(Startup.funding),
+            selectinload(Startup.press_links),
+            selectinload(Startup.technologies)
+        ).where(Startup.slug == slug, Startup.deleted_at.is_(None))
+        result = await self.session.execute(query)
+        return result.scalars().first()
+
+    async def get_by_name(self, name: str) -> Optional[Startup]:
+        query = select(Startup).where(Startup.name == name, Startup.deleted_at.is_(None))
         result = await self.session.execute(query)
         return result.scalars().first()
 
     async def get_all(self, page: int = 1, page_size: int = 20, published_only: bool = False, featured_only: bool = False) -> tuple[List[Startup], int]:
         from app.database.pagination import paginate
-        query = select(Startup).where(Startup.deleted_at.is_(None))
+        query = select(Startup).options(
+            selectinload(Startup.batch),
+            selectinload(Startup.gallery_images),
+            selectinload(Startup.founders),
+            selectinload(Startup.awards),
+            selectinload(Startup.funding),
+            selectinload(Startup.press_links),
+            selectinload(Startup.technologies)
+        ).where(Startup.deleted_at.is_(None))
         
         if published_only:
             query = query.where(Startup.is_published == True)
@@ -48,21 +80,17 @@ class StartupRepository:
             startup.slug = self._generate_slug(startup.name)
             
         self.session.add(startup)
-        await self.session.commit()
-        await self.session.refresh(startup)
+        await self.session.flush() # flush to get startup.id
         return startup
 
     async def update(self, startup: Startup) -> Startup:
         self.session.add(startup)
-        await self.session.commit()
-        await self.session.refresh(startup)
         return startup
 
     async def delete(self, startup_id: uuid.UUID, user_id: uuid.UUID) -> bool:
         result = await self.session.execute(
             update(Startup).where(Startup.id == startup_id).values(deleted_at=utcnow(), deleted_by=user_id)
         )
-        await self.session.commit()
         return result.rowcount > 0
 
     # --- Gallery Methods ---

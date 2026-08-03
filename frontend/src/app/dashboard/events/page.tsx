@@ -94,7 +94,7 @@ export default function EventsPage() {
     e.preventDefault();
 const method = editingEvent ? "PUT" : "POST";
     const url = editingEvent 
-      ? `/api/v1/events${editingEvent.id}` 
+      ? `/api/v1/events/${editingEvent.id}` 
       : "/api/v1/events";
 
     const payload = {

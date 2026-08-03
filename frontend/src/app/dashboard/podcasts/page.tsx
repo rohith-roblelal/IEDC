@@ -5,9 +5,11 @@ import { Mic, X, Trash2, Edit, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 export default function PodcastsPage() {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [podcasts, setPodcasts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -80,7 +82,7 @@ export default function PodcastsPage() {
     setIsSubmitting(true);
 try {
       const url = editingPodcast 
-        ? `/api/v1/podcasts${editingPodcast.id}` 
+        ? `/api/v1/podcasts/${editingPodcast.id}` 
         : "/api/v1/podcasts";
       
       const payload = {
@@ -112,7 +114,7 @@ try {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this podcast?")) return;
+    if (!(await confirm("Are you sure you want to delete this podcast?"))) return;
 try {
       const res = await fetch(`/api/v1/podcasts/${id}`, {
         method: "DELETE",
@@ -181,8 +183,8 @@ try {
                   <th className="pb-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               <tbody>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {podcasts.map((pod: any, idx) => (
                   <motion.tr 
                     initial={{ opacity: 0, y: 10 }}

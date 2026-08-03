@@ -4,7 +4,8 @@ import filetype
 from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request
 from app.core.config import settings
 from app.models.models import User
-from app.api.dependencies import get_current_super_admin
+from app.models.enums import Role
+from app.api.dependencies import get_current_super_admin, get_optional_current_user
 from app.core.supabase import supabase_client
 from app.core.rate_limit import limiter
 
@@ -18,20 +19,27 @@ async def upload_image(
     request: Request,
     file: UploadFile = File(...),
     folder: str = Form(...),
-    current_user: User = Depends(get_current_super_admin)
+    current_user: User | None = Depends(get_optional_current_user)
 ):
+    if not current_user or current_user.role != Role.SUPER_ADMIN:
+        if folder != "events/payments":
+            raise HTTPException(status_code=403, detail="Not authorized to upload to this folder")
     if ".." in folder or folder.startswith("/") or "\\" in folder:
         raise HTTPException(status_code=400, detail="Invalid folder path")
 
-    ext = file.filename.split('.')[-1].lower()
+    filename = file.filename or "upload.bin"
+    ext = filename.split('.')[-1].lower() if '.' in filename else ""
     if ext not in ["jpg", "jpeg", "png", "webp"]:
         raise HTTPException(status_code=400, detail="Invalid file format. Only jpg, png, webp allowed.")
     
-    file.file.seek(0, 2)
-    size = file.file.tell()
-    file.file.seek(0)
-    if size > 5 * 1024 * 1024:
+    if file.size is not None and file.size > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
+    elif file.size is None:
+        file.file.seek(0, 2)
+        size = file.file.tell()
+        file.file.seek(0)
+        if size > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
     
     # Read first 2KB to verify magic bytes
     chunk = await file.read(2048)
@@ -42,6 +50,7 @@ async def upload_image(
     
     # Reset file pointer for the streaming upload
     await file.seek(0)
+    file_bytes = await file.read()
 
     filename = f"{uuid.uuid4().hex[:8]}.{ext}"
     path = f"{folder}/{filename}"
@@ -50,7 +59,7 @@ async def upload_image(
     
     try:
         res = supabase_client.storage.from_(SUPABASE_BUCKET).upload(
-            file=file.file,
+            file=file_bytes,
             path=path,
             file_options={"content-type": mime}
         )

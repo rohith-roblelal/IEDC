@@ -2,10 +2,15 @@ import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.database.session import get_db
-from app.models.models import User, StartupGalleryImage
-from app.schemas.startups import StartupResponse, StartupCreate, StartupUpdate, StartupGalleryImageBase
+from app.models.models import User, StartupGalleryImage, Batch, Technology
+from app.schemas.startups import (
+    StartupPublicResponse, StartupAdminResponse, 
+    StartupCreate, StartupUpdate, StartupGalleryImageBase,
+    BatchResponse, TechnologyResponse
+)
 from app.api.dependencies import get_current_super_admin
 from app.services.startups import StartupService
 from app.schemas.schemas import PaginatedResponse
@@ -13,9 +18,26 @@ from app.services.storage import storage_service
 
 router = APIRouter()
 
+# --- Dictionary Lookups ---
+
+@router.get("/batches", response_model=List[BatchResponse])
+async def get_batches(db: AsyncSession = Depends(get_db)):
+    """Retrieve all batches."""
+    query = select(Batch).where(Batch.deleted_at.is_(None), Batch.is_active == True).order_by(Batch.display_order)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+@router.get("/technologies", response_model=List[TechnologyResponse])
+async def get_technologies(db: AsyncSession = Depends(get_db)):
+    """Retrieve all technologies."""
+    query = select(Technology).where(Technology.deleted_at.is_(None)).order_by(Technology.name)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
 # --- Public Endpoints ---
 
-@router.get("", response_model=PaginatedResponse[StartupResponse])
+@router.get("", response_model=PaginatedResponse[StartupPublicResponse])
 async def get_public_startups(
     page: int = Query(1, ge=1), 
     page_size: int = Query(20, ge=1, le=100),
@@ -31,7 +53,7 @@ async def get_public_startups(
         featured_only=featured_only
     )
 
-@router.get("/{startup_id_or_slug}", response_model=StartupResponse)
+@router.get("/{startup_id_or_slug}", response_model=StartupPublicResponse)
 async def get_public_startup(startup_id_or_slug: str, db: AsyncSession = Depends(get_db)):
     """Retrieve a specific published startup. Public endpoint."""
     startup_service = StartupService(db)
@@ -39,7 +61,7 @@ async def get_public_startup(startup_id_or_slug: str, db: AsyncSession = Depends
 
 # --- Admin Dashboard Endpoints ---
 
-@router.get("/dashboard/all", response_model=PaginatedResponse[StartupResponse])
+@router.get("/dashboard/all", response_model=PaginatedResponse[StartupAdminResponse])
 async def get_all_startups_admin(
     page: int = Query(1, ge=1), 
     page_size: int = Query(20, ge=1, le=100), 
@@ -50,7 +72,7 @@ async def get_all_startups_admin(
     startup_service = StartupService(db)
     return await startup_service.get_all_startups(page=page, page_size=page_size, published_only=False)
 
-@router.get("/dashboard/{startup_id_or_slug}", response_model=StartupResponse)
+@router.get("/dashboard/{startup_id_or_slug}", response_model=StartupAdminResponse)
 async def get_startup_admin(
     startup_id_or_slug: str, 
     db: AsyncSession = Depends(get_db),
@@ -60,7 +82,7 @@ async def get_startup_admin(
     startup_service = StartupService(db)
     return await startup_service.get_startup(startup_id_or_slug, published_only=False)
 
-@router.post("", response_model=StartupResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=StartupAdminResponse, status_code=status.HTTP_201_CREATED)
 async def create_startup(
     startup_in: StartupCreate,
     db: AsyncSession = Depends(get_db),
@@ -68,9 +90,9 @@ async def create_startup(
 ):
     """Create a new startup. Only accessible by Admin."""
     startup_service = StartupService(db)
-    return await startup_service.create_startup(startup_in)
+    return await startup_service.create_startup(startup_in, current_user.id)
 
-@router.put("/{startup_id}", response_model=StartupResponse)
+@router.put("/{startup_id}", response_model=StartupAdminResponse)
 async def update_startup(
     startup_id: uuid.UUID,
     startup_in: StartupUpdate,
@@ -93,7 +115,7 @@ async def delete_startup(
 
 # --- Media Upload Endpoints ---
 
-@router.post("/{startup_id}/logo", response_model=StartupResponse)
+@router.post("/{startup_id}/logo", response_model=StartupAdminResponse)
 async def upload_startup_logo(
     startup_id: uuid.UUID,
     file: UploadFile = File(...),

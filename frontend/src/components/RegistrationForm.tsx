@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { ImageUpload } from "@/components/ui/ImageUpload";
+import { motion } from "framer-motion";
 
 interface RegistrationFormProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,6 +38,10 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
         fSchema = z.string();
       }
 
+      if (field.type === "iedc_member_check") {
+        customAnswersSchema[`${field.id}_screenshot`] = z.string().optional();
+      }
+
       if (field.required) {
         if (field.type === "checkbox") {
           fSchema = fSchema.min(1, "Please select at least one option");
@@ -60,7 +66,6 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
       year: z.enum(["1", "2", "3", "4"]),
       department: z.enum(["ICE", "ECE", "EEE", "CIVIL", "MECH", "CSE (Ai)", "CSE (Cyber)", "CSE"]),
       has_laptop: z.string().min(1, "Please select an option"),
-      is_iedc_member: z.string().min(1, "Please select an option"),
       custom_answers: z.object(customAnswersSchema).optional(),
     });
   };
@@ -108,7 +113,7 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
         body: JSON.stringify({
           ...data,
           has_laptop: data.has_laptop.toString() === "true",
-          is_iedc_member: data.is_iedc_member.toString() === "true",
+          is_iedc_member: false,
           custom_answers: data.custom_answers || {},
         }),
       });
@@ -214,6 +219,44 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
               {...register(`custom_answers.${field.id}`)} 
               className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
             />
+          </div>
+        ) : field.type === "iedc_member_check" ? (
+          <div className="mt-2 flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
+              {field.options?.map((opt: string, i: number) => (
+                <label key={i} className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    value={opt} 
+                    {...register(`custom_answers.${field.id}`)} 
+                    className="w-4 h-4 text-[#4F7DF9]" 
+                  />
+                  <span className="text-gray-700">{opt}</span>
+                </label>
+              ))}
+            </div>
+            {/* Show QR if 'No' is selected */}
+            {(customAnswersWatch as any)[field.id] === "No" && field.qr_image_url && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="mt-3 p-4 border border-blue-500/20 bg-blue-500/5 rounded-lg overflow-hidden"
+              >
+                <p className="text-sm text-gray-800 mb-3 font-medium">Non-member Payment Required</p>
+                <p className="text-xs text-gray-600 mb-3">Please scan the QR code to complete payment, then upload the screenshot below.</p>
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                  <img src={field.qr_image_url} alt="Payment QR Code" className="max-w-[150px] rounded-lg shadow-sm border border-gray-200" />
+                  <div className="flex-1 w-full">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Upload Payment Screenshot *</label>
+                    <ImageUpload 
+                      value={(customAnswersWatch as any)[`${field.id}_screenshot`] || ""}
+                      onChange={(url) => setValue(`custom_answers.${field.id}_screenshot`, url, { shouldValidate: true })}
+                      folder="events/payments"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
         ) : null}
 
@@ -321,21 +364,6 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
             </label>
           </div>
           {errors.has_laptop && <p className="text-red-500 text-xs mt-1">{errors.has_laptop.message}</p>}
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Are you an IEDC Member? *</label>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" value="true" {...register("is_iedc_member")} className="w-4 h-4 text-[#4F7DF9]" />
-              <span className="text-gray-700">Yes</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" value="false" {...register("is_iedc_member")} className="w-4 h-4 text-[#4F7DF9]" />
-              <span className="text-gray-700">No</span>
-            </label>
-          </div>
-          {errors.is_iedc_member && <p className="text-red-500 text-xs mt-1">{errors.is_iedc_member.message}</p>}
         </div>
       </div>
 

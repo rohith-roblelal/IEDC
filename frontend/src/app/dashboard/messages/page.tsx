@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { MessageSquare, CheckCircle, Trash2, Mail, User, Send, X, Loader2, Archive, Inbox } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 export default function MessagesPage() {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [tab, setTab] = useState<"inbox" | "archived">("inbox");
@@ -63,7 +65,7 @@ export default function MessagesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this message?")) return;
+    if (!(await confirm("Are you sure you want to delete this message?"))) return;
     try {
       const res = await fetch(`/api/v1/contact/${id}`, {
         method: "DELETE"

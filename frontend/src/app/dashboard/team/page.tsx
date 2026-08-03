@@ -5,9 +5,11 @@ import { Users, X, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 export default function TeamPage() {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [team, setTeam] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -127,7 +129,7 @@ const method = editingMember ? "PUT" : "POST";
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this team member?")) return;
+    if (!(await confirm("Are you sure you want to delete this team member?"))) return;
 try {
       const res = await fetch(`/api/v1/team/${id}`, {
         method: "DELETE",
@@ -139,6 +141,14 @@ try {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleUrlBlur = (field: 'linkedin_url' | 'instagram_url') => {
+    let val = formData[field].trim();
+    if (val && !/^https?:\/\//i.test(val)) {
+      val = 'https://' + val;
+      setFormData(prev => ({ ...prev, [field]: val }));
     }
   };
 
@@ -326,20 +336,22 @@ try {
                   <div>
                     <label className="block text-sm font-medium text-[#C4C4D4] mb-1">LinkedIn URL</label>
                     <input 
-                      type="url" 
+                      type="text" 
                       placeholder="https://linkedin.com/in/..."
                       value={formData.linkedin_url}
                       onChange={(e) => setFormData({...formData, linkedin_url: e.target.value})}
+                      onBlur={() => handleUrlBlur('linkedin_url')}
                       className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Instagram URL</label>
                     <input 
-                      type="url" 
+                      type="text" 
                       placeholder="https://instagram.com/..."
                       value={formData.instagram_url}
                       onChange={(e) => setFormData({...formData, instagram_url: e.target.value})}
+                      onBlur={() => handleUrlBlur('instagram_url')}
                       className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
                     />
                   </div>

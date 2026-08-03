@@ -5,10 +5,12 @@ import { Handshake, X, Trash2, Edit } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { clientFetch } from "@/lib/api/client";
 
 export default function PartnersPage() {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [partners, setPartners] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -96,7 +98,7 @@ try {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this partner?")) return;
+    if (!(await confirm("Are you sure you want to delete this partner?"))) return;
 
     try {
       await clientFetch(`api/v1/partners/${id}`, {

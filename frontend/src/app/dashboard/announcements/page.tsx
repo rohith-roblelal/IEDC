@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { Megaphone, X, Trash2, Edit } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 export default function AnnouncementsPage() {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,7 +69,7 @@ export default function AnnouncementsPage() {
     setIsSubmitting(true);
 try {
       const url = editingAnnouncement 
-        ? `/api/v1/announcements${editingAnnouncement.id}` 
+        ? `/api/v1/announcements/${editingAnnouncement.id}` 
         : "/api/v1/announcements";
       
       const res = await fetch(url, {
@@ -94,8 +96,7 @@ try {
   };
 
   const handleDelete = async (id: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!confirm("Are you sure you want to delete this announcement?")) return;
+    if (!(await confirm("Are you sure you want to delete this announcement?"))) return;
 try {
       const res = await fetch(`/api/v1/announcements/${id}`, {
         method: "DELETE",

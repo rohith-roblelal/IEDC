@@ -25,6 +25,7 @@ class User(Base, SoftDeleteMixin):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.SUPER_ADMIN, nullable=False)
+    is_mentor: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     
     failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -117,15 +118,33 @@ class Event(Base, SoftDeleteMixin):
     def computed_status(self) -> str:
         if not self.is_published:
             return "DRAFT"
+            
         now = datetime.now(timezone.utc)
-        if self.start_datetime and self.end_datetime:
+        
+        # Check if completed
+        if self.end_datetime and now > self.end_datetime:
+            return "COMPLETED"
+            
+        # Determine if registration is open
+        is_registration_open = False
+        if self.registration_deadline:
+            if now <= self.registration_deadline:
+                is_registration_open = True
+        elif self.start_datetime:
             if now < self.start_datetime:
-                return "UPCOMING"
-            elif self.start_datetime <= now <= self.end_datetime:
+                is_registration_open = True
+        else:
+            is_registration_open = True
+
+        if is_registration_open:
+            return "REGISTRATION_OPEN"
+
+        if self.start_datetime and self.end_datetime:
+            if self.start_datetime <= now <= self.end_datetime:
                 return "ONGOING"
-            else:
-                return "COMPLETED"
+        
         return "PUBLISHED"
+        
     @property
     def status(self) -> str:
         return self.computed_status
@@ -309,34 +328,161 @@ class WebsiteSettings(Base):
 
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
+class Batch(Base, SoftDeleteMixin):
+    __tablename__ = "batches"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    display_order: Mapped[int] = mapped_column(Integer, default=0)
+
+    startups = relationship("Startup", back_populates="batch")
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+class Technology(Base, SoftDeleteMixin):
+    __tablename__ = "technologies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+class StartupTechnology(Base):
+    __tablename__ = "startup_technologies"
+
+    startup_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("startups.id", ondelete="CASCADE"), primary_key=True)
+    technology_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("technologies.id", ondelete="CASCADE"), primary_key=True)
+    
 class Startup(Base, SoftDeleteMixin):
     __tablename__ = "startups"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    tagline: Mapped[str | None] = mapped_column(String(120), nullable=True)
     logo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    cover_image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     
     short_description: Mapped[str] = mapped_column(String(300), nullable=False)
     full_description: Mapped[str] = mapped_column(Text, nullable=False)
     
-    founders: Mapped[list | None] = mapped_column(JSON, nullable=True)
-    team_members: Mapped[list | None] = mapped_column(JSON, nullable=True)
-    
-    from app.models.enums import StartupStage
+    from app.models.enums import StartupStage, StartupStatus, StartupRegistrationStatus
     stage: Mapped[StartupStage] = mapped_column(Enum(StartupStage), default=StartupStage.IDEA, nullable=False)
+    status: Mapped[StartupStatus] = mapped_column(Enum(StartupStatus), default=StartupStatus.ACTIVE, nullable=False)
+    registration_status: Mapped[StartupRegistrationStatus | None] = mapped_column(Enum(StartupRegistrationStatus), nullable=True)
     industry: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    founded_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    team_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
     
+    business_model: Mapped[str | None] = mapped_column(Text, nullable=True)
+    problem_statement: Mapped[str | None] = mapped_column(Text, nullable=True)
+    solution: Mapped[str | None] = mapped_column(Text, nullable=True)
+    target_market: Mapped[str | None] = mapped_column(Text, nullable=True)
+    
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     website_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     github_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     linkedin_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    instagram_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     demo_video_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    pitch_deck_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    youtube_demo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    
+    incubator: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    clients: Mapped[str | None] = mapped_column(Text, nullable=True)
+    patents: Mapped[str | None] = mapped_column(Text, nullable=True)
     
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     is_featured: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    verification_status: Mapped[str] = mapped_column(String(50), default="PENDING", nullable=False)
+    internal_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    display_order: Mapped[int] = mapped_column(Integer, default=0)
+    approval_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    gallery_images = relationship("StartupGalleryImage", back_populates="startup", cascade="all, delete-orphan", passive_deletes=True, lazy="selectin")
+    batch_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("batches.id", ondelete="SET NULL"), nullable=True)
+    assigned_mentor_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
+    # Relationships
+    batch = relationship("Batch", back_populates="startups")
+    assigned_mentor = relationship("User", foreign_keys=[assigned_mentor_id])
+    creator = relationship("User", foreign_keys=[created_by])
+    
+    founders = relationship("StartupFounder", back_populates="startup", cascade="all, delete-orphan", passive_deletes=True)
+    gallery_images = relationship("StartupGalleryImage", back_populates="startup", cascade="all, delete-orphan", passive_deletes=True)
+    awards = relationship("StartupAward", back_populates="startup", cascade="all, delete-orphan", passive_deletes=True)
+    funding = relationship("StartupFunding", back_populates="startup", cascade="all, delete-orphan", passive_deletes=True)
+    press_links = relationship("StartupPressLink", back_populates="startup", cascade="all, delete-orphan", passive_deletes=True)
+    
+    technologies = relationship("Technology", secondary="startup_technologies", lazy="selectin")
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+class StartupFounder(Base, SoftDeleteMixin):
+    __tablename__ = "startup_founders"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    startup_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("startups.id", ondelete="CASCADE"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    department: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_alumni: Mapped[bool] = mapped_column(Boolean, default=False)
+    graduation_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    linkedin_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    
+    startup = relationship("Startup", back_populates="founders")
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+class StartupAward(Base, SoftDeleteMixin):
+    __tablename__ = "startup_awards"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    startup_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("startups.id", ondelete="CASCADE"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    awarded_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    date_received: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    
+    startup = relationship("Startup", back_populates="awards")
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+class StartupFunding(Base, SoftDeleteMixin):
+    __tablename__ = "startup_funding"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    startup_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("startups.id", ondelete="CASCADE"), nullable=False, index=True)
+    funding_round: Mapped[str] = mapped_column(String(255), nullable=False)
+    amount: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    investors: Mapped[str | None] = mapped_column(Text, nullable=True)
+    date_received: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    
+    startup = relationship("Startup", back_populates="funding")
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+class StartupPressLink(Base, SoftDeleteMixin):
+    __tablename__ = "startup_press_links"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    startup_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("startups.id", ondelete="CASCADE"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    url: Mapped[str] = mapped_column(String(512), nullable=False)
+    publisher: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    date_published: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    
+    startup = relationship("Startup", back_populates="press_links")
+    
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
@@ -347,6 +493,7 @@ class StartupGalleryImage(Base, SoftDeleteMixin):
     startup_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("startups.id", ondelete="CASCADE"), nullable=False, index=True)
     image_url: Mapped[str] = mapped_column(String(1024), nullable=False)
     storage_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    thumbnail_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     alt_text: Mapped[str | None] = mapped_column(String(255), nullable=True)
     caption: Mapped[str | None] = mapped_column(String(255), nullable=True)
     display_order: Mapped[int] = mapped_column(Integer, default=0)

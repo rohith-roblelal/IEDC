@@ -11,7 +11,7 @@ export default function Home() {
   const { toast } = useToast();
   const settings = useSettings();
   const [announcements, setAnnouncements] = useState<any[]>([]);
-  const [podcast, setPodcast] = useState<any | null>(null);
+  const [podcasts, setPodcasts] = useState<any[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
 
   useEffect(() => {
@@ -30,10 +30,10 @@ export default function Home() {
     
     const fetchPodcast = async () => {
       try {
-        const res = await fetch("/api/v1/podcasts");
+        const res = await fetch("/api/v1/podcasts/active");
         if (res.ok) {
           const data = await res.json();
-          setPodcast(data.items || (Array.isArray(data) ? data : []));
+          setPodcasts(Array.isArray(data) ? data : (data ? [data] : []));
         }
       } catch (err) {
         console.error(err);
@@ -185,41 +185,46 @@ export default function Home() {
       )}
 
       {/* Podcast Section */}
-      {podcast && (
+      {podcasts.length > 0 && (
         <section className="px-6 py-24">
-          <h2 className="text-center text-[clamp(1.8rem,4vw,2.4rem)] font-bold mb-5">Our Podcast</h2>
-          <motion.button 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              if (podcast.video_url) {
-                window.open(podcast.video_url, "_blank");
-              } else {
-                toast("No URL provided for this podcast.", "error");
-              }
-            }}
-            className="block w-full max-w-[900px] mx-auto rounded-[28px] overflow-hidden relative shadow-xl text-left bg-[#0d1b3a]"
-            aria-label={`Play ${podcast.title} podcast episode`}
-          >
-            {podcast.image_url ? (
-              <img src={podcast.image_url} alt="Podcast Background" className="w-full h-auto block" />
-            ) : (
-              <div className="w-full aspect-video md:aspect-[16/9] bg-gradient-to-br from-[#1a2f5c] to-[#0d1b3a]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(59,130,246,0.35),transparent_60%)]"></div>
-              </div>
-            )}
-            <div className="absolute inset-0 bg-black/30"></div>
-            <span className="absolute top-5 right-6 text-sm text-white/90 z-10 font-medium drop-shadow-md">{podcast.date_str}</span>
-            <div className="absolute bottom-0 left-0 right-0 p-7 md:p-8 flex items-end justify-between gap-4 z-10 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-              <div>
-                <h3 className="text-[clamp(1.2rem,3vw,1.7rem)] font-bold text-white">{podcast.title}</h3>
-                <p className="text-[#C4C4D4] text-sm mt-1.5">{podcast.description}</p>
-              </div>
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white bg-white/10 text-white flex items-center justify-center shrink-0 backdrop-blur-sm">
-                <Play fill="currentColor" size={20} className="ml-1" />
-              </div>
-            </div>
-          </motion.button>
+          <h2 className="text-center text-[clamp(1.8rem,4vw,2.4rem)] font-bold mb-10">Our Podcasts</h2>
+          <div className="flex flex-wrap justify-center gap-8 max-w-[1200px] mx-auto">
+            {podcasts.map(podcast => (
+              <motion.button 
+                key={podcast.id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  if (podcast.video_url) {
+                    window.open(podcast.video_url, "_blank");
+                  } else {
+                    toast("No URL provided for this podcast.", "error");
+                  }
+                }}
+                className="block w-full md:w-[calc(50%-1rem)] rounded-[28px] overflow-hidden relative shadow-xl text-left bg-[#0d1b3a] aspect-[16/9]"
+                aria-label={`Play ${podcast.title} podcast episode`}
+              >
+                {podcast.image_url ? (
+                  <img src={podcast.image_url} alt="Podcast Background" className="w-full h-full object-cover block" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-[#1a2f5c] to-[#0d1b3a]">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(59,130,246,0.35),transparent_60%)]"></div>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/30"></div>
+                <span className="absolute top-5 right-6 text-sm text-white/90 z-10 font-medium drop-shadow-md">{podcast.date_str}</span>
+                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6 flex items-end justify-between gap-4 z-10 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+                  <div>
+                    <h3 className="text-[clamp(1.1rem,2vw,1.4rem)] font-bold text-white line-clamp-2">{podcast.title}</h3>
+                    <p className="text-[#C4C4D4] text-sm mt-1 line-clamp-2">{podcast.description}</p>
+                  </div>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white bg-white/10 text-white flex items-center justify-center shrink-0 backdrop-blur-sm">
+                    <Play fill="currentColor" size={16} className="ml-1" />
+                  </div>
+                </div>
+              </motion.button>
+            ))}
+          </div>
         </section>
       )}
 

@@ -24,23 +24,18 @@ class PodcastService:
             "has_next": (page * page_size) < total
         }
 
-    async def get_active_podcast(self) -> Optional[Podcast]:
+    async def get_active_podcasts(self) -> List[Podcast]:
         result = await self.session.execute(
-            select(Podcast).where(Podcast.is_active == True).order_by(Podcast.created_at.desc()).limit(1)
+            select(Podcast).where(Podcast.is_active == True).order_by(Podcast.created_at.desc())
         )
-        return result.scalars().first()
+        return list(result.scalars().all())
 
     async def get_podcast(self, podcast_id: uuid.UUID) -> Optional[Podcast]:
         result = await self.session.execute(select(Podcast).where(Podcast.id == podcast_id))
         return result.scalars().first()
 
     async def create_podcast(self, podcast_in: PodcastCreate) -> Podcast:
-        # If creating an active podcast, deactivate all others
-        if podcast_in.is_active:
-            await self.session.execute(
-                update(Podcast).values(is_active=False)
-            )
-            
+
         podcast = Podcast(**podcast_in.model_dump())
         self.session.add(podcast)
         await self.session.commit()
@@ -54,11 +49,7 @@ class PodcastService:
 
         update_data = podcast_in.model_dump(exclude_unset=True)
         
-        # If setting to active, deactivate all others first
-        if update_data.get("is_active", False):
-            await self.session.execute(
-                update(Podcast).where(Podcast.id != podcast_id).values(is_active=False)
-            )
+        
 
         for field, value in update_data.items():
             setattr(podcast, field, value)

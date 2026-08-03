@@ -7,6 +7,7 @@ import * as z from "zod";
 import { X } from "lucide-react";
 import { motion } from "framer-motion";
 import { LoadingButton } from "@/components/ui/LoadingButton";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { AnnouncementsAPI, AnnouncementCreate, AnnouncementUpdate, AnnouncementResponse } from "@/lib/api/announcements";
 
 // Zod Schema for validation
@@ -29,6 +30,7 @@ interface AnnouncementFormProps {
 }
 
 export function AnnouncementForm({ initialData, onClose, onSaved, showToast }: AnnouncementFormProps) {
+  const confirm = useConfirm();
   const [isAutoSlug, setIsAutoSlug] = useState(!initialData);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -101,8 +103,8 @@ export function AnnouncementForm({ initialData, onClose, onSaved, showToast }: A
     }
   };
 
-  const handleClose = () => {
-    if (isDirty && !window.confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+  const handleClose = async () => {
+    if (isDirty && !(await confirm("You have unsaved changes. Are you sure you want to discard them?"))) {
       return;
     }
     onClose();

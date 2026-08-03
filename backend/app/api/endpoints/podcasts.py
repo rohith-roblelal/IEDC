@@ -26,17 +26,14 @@ async def read_podcasts(
     podcast_service = PodcastService(db)
     return await podcast_service.get_all_podcasts(page=page, page_size=page_size)
 
-@router.get("/active", response_model=PodcastResponse)
-async def read_active_podcast(db: AsyncSession = Depends(get_db)):
+@router.get("/active", response_model=List[PodcastResponse])
+async def read_active_podcasts(db: AsyncSession = Depends(get_db)):
     """
-    Retrieve the currently active podcast. Public endpoint.
+    Retrieve the currently active podcasts. Public endpoint.
     """
     podcast_service = PodcastService(db)
-    podcast = await podcast_service.get_active_podcast()
-    if not podcast:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="No active podcast found")
-    return podcast
+    podcasts = await podcast_service.get_active_podcasts()
+    return podcasts
 
 @router.post("", response_model=PodcastResponse)
 async def create_podcast(

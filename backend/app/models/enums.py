@@ -15,6 +15,12 @@ class StartupStatus(str, enum.Enum):
     ACTIVE = "ACTIVE"
     ALUMNI = "ALUMNI"
     INACTIVE = "INACTIVE"
+    CLOSED = "CLOSED"
+
+class StartupRegistrationStatus(str, enum.Enum):
+    REGISTERED = "REGISTERED"
+    UNREGISTERED = "UNREGISTERED"
+    INCORPORATED = "INCORPORATED"
 
 class StartupStage(str, enum.Enum):
     IDEA = "IDEA"

@@ -4,10 +4,12 @@ import { useEffect, useState, useRef } from "react";
 import { Image as ImageIcon, Trash2, X, UploadCloud, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { galleryApi } from "@/lib/api/gallery";
 
 export default function GalleryPage() {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [images, setImages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,7 +62,7 @@ export default function GalleryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this image?")) return;
+    if (!(await confirm("Are you sure you want to delete this image?"))) return;
     
     try {
       await galleryApi.deleteImage(id);

@@ -45,6 +45,14 @@ function TeamCard({ member, featured }: { member: any, featured?: boolean }) {
   );
 }
 
+function getGridClass(count: number, maxCols: number = 4) {
+  if (count === 1) return "grid grid-cols-1 max-w-[320px] mx-auto";
+  if (count === 2) return "grid grid-cols-1 sm:grid-cols-2 max-w-[640px] mx-auto";
+  if (count === 3 && maxCols >= 3) return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-[960px] mx-auto";
+  if (maxCols === 3) return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-[960px] mx-auto";
+  return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mx-auto";
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function TeamClient({ team }: { team: any[] }) {
   // Group explicitly by the new Category field
@@ -65,7 +73,7 @@ export default function TeamClient({ team }: { team: any[] }) {
         {faculty.length > 0 && (
           <div>
             <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Faculty & Nodal Officers</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 justify-center max-w-[640px] mx-auto">
+            <div className={`${getGridClass(faculty.length, 2)} gap-5`}>
               {faculty.map((m, i) => <TeamCard key={i} member={m} featured />)}
             </div>
           </div>
@@ -74,7 +82,7 @@ export default function TeamClient({ team }: { team: any[] }) {
         {leadership.length > 0 && (
           <div>
             <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Student Leadership</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 justify-center max-w-[560px] mx-auto">
+            <div className={`${getGridClass(leadership.length, 2)} gap-5`}>
               {leadership.map((m, i) => <TeamCard key={i} member={m} featured />)}
             </div>
           </div>
@@ -83,7 +91,7 @@ export default function TeamClient({ team }: { team: any[] }) {
         {core.length > 0 && (
           <div>
             <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Core Team</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            <div className={`${getGridClass(core.length, 4)} gap-5`}>
               {core.map((m, i) => <TeamCard key={i} member={m} />)}
             </div>
           </div>
@@ -92,7 +100,7 @@ export default function TeamClient({ team }: { team: any[] }) {
         {assistantLeads.length > 0 && (
           <div>
             <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Assistant Leads</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 justify-center max-w-[800px] mx-auto">
+            <div className={`${getGridClass(assistantLeads.length, 3)} gap-5`}>
               {assistantLeads.map((m, i) => <TeamCard key={i} member={m} />)}
             </div>
           </div>
@@ -101,7 +109,7 @@ export default function TeamClient({ team }: { team: any[] }) {
         {others.length > 0 && (
           <div>
             <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Members</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 justify-center max-w-[800px] mx-auto">
+            <div className={`${getGridClass(others.length, 3)} gap-5`}>
               {others.map((m, i) => <TeamCard key={i} member={m} />)}
             </div>
           </div>
