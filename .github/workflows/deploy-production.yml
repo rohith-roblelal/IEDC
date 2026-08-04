@@ -1,0 +1,29 @@
+name: Deploy to Production Cloud Server
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'frontend/**'
+      - 'docs/**'
+      - 'README.md'
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Execute Deployment Script via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_SERVER_IP }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/iedc
+            bash scripts/deploy.sh

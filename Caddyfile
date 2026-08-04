@@ -1,0 +1,17 @@
+# Global configuration
+{
+    email {$ACME_EMAIL}
+}
+
+# Backend API
+{$DOMAIN_API} {
+    reverse_proxy backend:8000
+    
+    # Optional: Enable HSTS after verifying HTTPS works
+    # header Strict-Transport-Security max-age=31536000;
+}
+
+# Grafana (Internal Observability)
+{$DOMAIN_GRAFANA} {
+    reverse_proxy grafana:3000
+}

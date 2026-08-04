@@ -104,3 +104,8 @@ opentelemetry-instrumentation-sqlalchemy
 opentelemetry-instrumentation-redis
 opentelemetry-instrumentation-httpx
 sentry-sdk
+
+structlog
+prometheus-client
+
+arq
