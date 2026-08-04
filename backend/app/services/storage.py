@@ -1,4 +1,5 @@
 import uuid
+import filetype
 from typing import Optional, List
 from datetime import datetime
 from fastapi import UploadFile, HTTPException, status
@@ -11,7 +12,7 @@ class StorageService:
         self.client = supabase_client
 
     async def validate_file(self, file: UploadFile, max_size_mb: int = 5, allowed_types: List[str] = None) -> bool:
-        """Validate file size and MIME type."""
+        """Validate file size and MIME type (including Magic Bytes)."""
         if allowed_types is None:
             allowed_types = [
                 "image/jpeg", "image/png", "image/webp", 
@@ -19,6 +20,7 @@ class StorageService:
                 "image/vnd.microsoft.icon", "image/ico", "application/octet-stream"
             ]
             
+        # 1. Basic client content-type check
         if not (file.content_type in allowed_types or file.content_type.startswith("image/")):
             print(f"Rejected file upload. Content-Type: {file.content_type}")
             raise HTTPException(
@@ -26,6 +28,7 @@ class StorageService:
                 detail=f"Invalid file type: {file.content_type}. Allowed types: {', '.join(allowed_types)}"
             )
             
+        # 2. Check maximum file size
         file.file.seek(0, 2)
         size_bytes = file.file.tell()
         file.file.seek(0)
@@ -36,6 +39,25 @@ class StorageService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"File too large. Maximum size is {max_size_mb}MB"
             )
+            
+        # 3. Read first 2KB to verify magic bytes
+        chunk = await file.read(2048)
+        kind = filetype.guess(chunk)
+        mime = kind.mime if kind else None
+        
+        if mime:
+            if not (mime in allowed_types or mime.startswith("image/")):
+                raise HTTPException(status_code=400, detail=f"Malicious file type detected: {mime}")
+        elif file.content_type == "image/svg+xml" and "image/svg+xml" in allowed_types:
+            # SVG is XML text, filetype doesn't reliably guess it.
+            pass
+        elif "application/octet-stream" in allowed_types:
+            pass
+        else:
+            raise HTTPException(status_code=400, detail="Could not verify file signature (Magic Bytes).")
+        
+        # 4. Reset stream
+        await file.seek(0)
         
         return True
 

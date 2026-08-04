@@ -89,7 +89,7 @@ export default function Footer() {
             {socials.map((s) => (
               <Link 
                 key={s.label}
-                href={s.url!} 
+                href={s.url!.startsWith('http') ? s.url! : `https://${s.url}`} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 aria-label={s.label}

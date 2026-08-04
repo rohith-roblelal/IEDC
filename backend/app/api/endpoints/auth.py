@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 from typing import Any
 from jose import jwt, JWTError
 from datetime import datetime, timezone, timedelta
+import secrets
+import uuid
 
 from app.database.session import get_db
 from app.auth.security import verify_password, create_access_token, needs_password_rehash, get_password_hash, generate_reset_token
@@ -163,22 +165,31 @@ async def forgot_password(
         get_password_hash("dummy_password_to_prevent_timing_attacks")
         return {"status": "success", "message": "If that email is registered, a password reset link has been sent."}
     
-    reset_token = generate_reset_token()
-    token_hash = get_password_hash(reset_token)
+    # Invalidate any previous unused reset tokens for this user
+    invalidate_stmt = update(PasswordResetToken).where(
+        PasswordResetToken.user_id == user.id,
+        PasswordResetToken.used_at.is_(None)
+    ).values(used_at=datetime.now(timezone.utc))
+    await db.execute(invalidate_stmt)
+
+    reset_secret = secrets.token_urlsafe(32)
+    token_hash = get_password_hash(reset_secret)
     
     # Store token hash in db, valid for 15 minutes
     db_token = PasswordResetToken(
         user_id=user.id,
         token_hash=token_hash,
+        hash_algorithm="argon2",
         expires_at=datetime.now(timezone.utc) + timedelta(minutes=15)
     )
     db.add(db_token)
     await db.commit()
+    await db.refresh(db_token)
     
     await log_audit_event(db, "PASSWORD_RESET_REQUESTED", user_id=user.id, ip_address=client_ip)
     
     # Send email
-    full_token = f"{user.id}:{reset_token}"
+    full_token = f"{db_token.id}.{reset_secret}"
     await email_service.send_password_reset_email(user.email, full_token)
     
     return {"status": "success", "message": "If that email is registered, a password reset link has been sent."}
@@ -211,27 +222,27 @@ async def reset_password(
     
     # Let's decode the token to get the user ID
     try:
-        user_id_str, token_secret = body.token.split(":", 1)
+        token_id_str, token_secret = body.token.split(".", 1)
+        token_id_uuid = uuid.UUID(token_id_str)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid token format")
         
-    # Get all active tokens for this user
+    # O(1) lookup for the exact token
     stmt = select(PasswordResetToken).where(
-        PasswordResetToken.user_id == user_id_str,
-        PasswordResetToken.is_used == False,
+        PasswordResetToken.id == token_id_uuid,
+        PasswordResetToken.used_at.is_(None),
         PasswordResetToken.expires_at > datetime.now(timezone.utc)
     )
     result = await db.execute(stmt)
-    active_tokens = result.scalars().all()
+    valid_token_obj = result.scalar_one_or_none()
     
-    valid_token_obj = None
-    for t in active_tokens:
-        if verify_password(token_secret, t.token_hash):
-            valid_token_obj = t
-            break
-            
     if not valid_token_obj:
-        await log_audit_event(db, "PASSWORD_RESET_FAILED", ip_address=client_ip, metadata_json={"reason": "Invalid or expired token"})
+        await log_audit_event(db, "PASSWORD_RESET_FAILED", ip_address=client_ip, metadata_json={"reason": "Invalid, expired, or already used token"})
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+            
+    # Verify the hash in constant time
+    if not verify_password(token_secret, valid_token_obj.token_hash):
+        await log_audit_event(db, "PASSWORD_RESET_FAILED", ip_address=client_ip, metadata_json={"reason": "Invalid token secret"})
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
         
     # Valid token found, update password
@@ -245,7 +256,7 @@ async def reset_password(
     user.locked_until = None
     
     # Invalidate token
-    valid_token_obj.is_used = True
+    valid_token_obj.used_at = datetime.now(timezone.utc)
     
     await db.commit()
     await log_audit_event(db, "PASSWORD_RESET_COMPLETED", user_id=user.id, ip_address=client_ip)

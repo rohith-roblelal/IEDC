@@ -174,8 +174,8 @@ try {
   };
 
   const handleShare = (eventId: string) => {
-    // Generate the public events link
-    const url = `${window.location.origin}/events`; 
+    // Generate the public event link
+    const url = `${window.location.origin}/events/${eventId}`; 
     
     const fallbackCopyTextToClipboard = (text: string) => {
       const textArea = document.createElement("textarea");

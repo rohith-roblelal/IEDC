@@ -20,12 +20,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Clean markdown characters for the description meta tag
     const plainTextContent = announcement.content.replace(/[#*`_]/g, '').substring(0, 160);
     
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    
     return {
       title: `${announcement.title} | IEDC SNMIMT`,
       description: plainTextContent,
+      alternates: {
+        canonical: `${baseUrl}/announcements/${slug}`,
+      },
       openGraph: {
         title: announcement.title,
         description: plainTextContent,
+        url: `${baseUrl}/announcements/${slug}`,
         type: "article",
       }
     };
@@ -52,9 +58,44 @@ export default async function AnnouncementDetailPage({ params }: Props) {
     
     return (
       <div className="py-24 px-6 relative max-w-3xl mx-auto min-h-screen">
-        <Link href="/announcements" className="inline-flex items-center text-blue-400 hover:text-blue-300 mb-8 transition-colors">
-          <ArrowLeft size={18} className="mr-2" /> Back to Announcements
-        </Link>
+        <nav aria-label="Breadcrumb" className="mb-8 text-sm font-medium">
+          <ol className="flex items-center space-x-2 text-[#C4C4D4]">
+            <li>
+              <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            </li>
+            <li className="flex items-center space-x-2">
+              <span className="text-white/30">/</span>
+              <Link href="/announcements" className="hover:text-white transition-colors">Announcements</Link>
+            </li>
+            <li className="flex items-center space-x-2">
+              <span className="text-white/30">/</span>
+              <span className="text-white line-clamp-1" aria-current="page">{announcement.title}</span>
+            </li>
+          </ol>
+        </nav>
+
+        {/* AI GEO Summary Block */}
+        <section className="sr-only" aria-label="Quick Summary">
+          <p>What is this page? An official announcement from IEDC SNMIMT titled &quot;{announcement.title}&quot;.</p>
+          <p>Published on: {new Date(announcement.created_at).toLocaleDateString()}</p>
+        </section>
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "NewsArticle",
+              "headline": announcement.title,
+              "datePublished": announcement.created_at,
+              "author": {
+                "@type": "Organization",
+                "name": "IEDC SNMIMT"
+              },
+              "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/announcements/${slug}`
+            })
+          }}
+        />
 
         <article className="bg-[#0A0E27] border border-white/10 rounded-2xl p-8 md:p-12 shadow-2xl">
           <header className="mb-10 border-b border-white/10 pb-8">

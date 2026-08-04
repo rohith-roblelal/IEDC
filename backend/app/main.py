@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy import text
 
@@ -42,53 +43,12 @@ async def generic_exception_handler(request: Request, exc: Exception):
     logger.error("Unhandled exception", exc_info=exc)
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
-# -------------------------------------------------
-# Automatic DB migration on startup (ensures schema is up‑to‑date
-# for any environment – local dev, test, or Render production).
-# -------------------------------------------------
-@app.on_event("startup")
-async def run_migrations_on_startup():
-    """Run Alembic migrations via subprocess to avoid event-loop conflicts.
 
-    Uses synchronous subprocess.run() offloaded to a thread, because:
-    - Alembic's env.py calls asyncio.run() (can't nest inside FastAPI's loop)
-    - asyncio.create_subprocess_exec() fails on Windows under uvicorn
-    """
-    import asyncio
-    import subprocess
-    import sys
-    from pathlib import Path
-
-    backend_dir = Path(__file__).resolve().parents[1]
-    alembic_ini = backend_dir / "alembic.ini"
-    if not alembic_ini.is_file():
-        logger.warning(f"alembic.ini not found at {alembic_ini}, skipping auto-migration.")
-        return
-
-    def _run():
-        result = subprocess.run(
-            [sys.executable, "-m", "alembic", "upgrade", "head"],
-            cwd=str(backend_dir),
-            capture_output=True,
-            text=True,
-        )
-        return result
-
-    try:
-        result = await asyncio.to_thread(_run)
-        if result.returncode == 0:
-            logger.info("Database migrations applied successfully.")
-        else:
-            logger.error(
-                f"Alembic migration failed (exit {result.returncode}):\n"
-                f"{result.stderr.strip()}"
-            )
-    except Exception as e:
-        logger.error("Failed to run migration subprocess", exc_info=e)
 
 # Rate Limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # Security Headers Middleware
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -97,9 +57,27 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Security Headers
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;"
+        response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+        
+        # Hardened CSP (Phase 1)
+        supabase_url = getattr(settings, "SUPABASE_URL", "https://*.supabase.co")
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            f"img-src 'self' data: {supabase_url}; "
+            "font-src 'self'; "
+            f"connect-src 'self' {supabase_url}; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "frame-ancestors 'none'; "
+            "form-action 'self'; "
+            "upgrade-insecure-requests;"
+        )
+        response.headers["Content-Security-Policy"] = csp
+        
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         
         if hasattr(settings, "ENVIRONMENT") and settings.ENVIRONMENT == "production":
@@ -109,14 +87,26 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 
+from urllib.parse import urlparse
+
+def validate_cors_origin(origin: str) -> None:
+    if not origin or origin == "*":
+        raise RuntimeError(f"Invalid CORS origin: Cannot use wildcard or empty origin in production. Got: '{origin}'")
+        
+    parsed = urlparse(origin)
+    if parsed.scheme not in ("http", "https"):
+        raise RuntimeError(f"Invalid CORS origin scheme for '{origin}'. Must be http or https.")
+        
+    if parsed.scheme == "http" and parsed.hostname not in {"localhost", "127.0.0.1"}:
+        raise RuntimeError(f"Invalid CORS origin for production. Insecure HTTP is only allowed for localhost, got: '{origin}'")
+
 # Set all CORS enabled origins
 if settings.FRONTEND_URLS:
-    origins = [url.strip() for url in settings.FRONTEND_URLS.split(",")]
+    origins = [url.strip() for url in settings.FRONTEND_URLS.split(",") if url.strip()]
     
     if hasattr(settings, "ENVIRONMENT") and settings.ENVIRONMENT == "production":
         for origin in origins:
-            if origin == "*" or "http://" in origin and "localhost" not in origin:
-                raise RuntimeError("Invalid CORS origin for production environment. Cannot use wildcard or insecure HTTP.")
+            validate_cors_origin(origin)
                 
     app.add_middleware(
         CORSMiddleware,

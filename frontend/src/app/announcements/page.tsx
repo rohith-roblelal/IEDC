@@ -3,10 +3,21 @@ import Link from "next/link";
 import { Megaphone, Pin, Clock, ChevronRight } from "lucide-react";
 import { AnnouncementsAPI } from "@/lib/api/announcements";
 
-export const metadata: Metadata = {
-  title: "Announcements | IEDC SNMIMT",
-  description: "Stay updated with the latest news, announcements, and notices from IEDC SNMIMT.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  return {
+    title: "Announcements | IEDC SNMIMT",
+    description: "Stay updated with the latest news, announcements, and notices from IEDC SNMIMT.",
+    alternates: {
+      canonical: `${baseUrl}/announcements`,
+    },
+    openGraph: {
+      title: "Announcements | IEDC SNMIMT",
+      description: "Stay updated with the latest news, announcements, and notices from IEDC SNMIMT.",
+      url: `${baseUrl}/announcements`,
+    }
+  };
+}
 
 export default async function AnnouncementsPage() {
   try {
@@ -34,6 +45,25 @@ export default async function AnnouncementsPage() {
             Stay updated with the latest news, deadlines, and official notices from the IEDC SNMIMT community.
           </p>
         </div>
+
+        {/* AI GEO Summary Block */}
+        <section className="sr-only" aria-label="Quick Summary">
+          <p>What is this page? A listing of all official announcements, news, and notices for IEDC SNMIMT.</p>
+          <p>What will you find here? Important updates, upcoming deadlines, and general information for student innovators.</p>
+        </section>
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              "name": "IEDC SNMIMT Announcements",
+              "description": "Stay updated with the latest news, announcements, and notices from IEDC SNMIMT.",
+              "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/announcements`
+            })
+          }}
+        />
 
         {announcements.length === 0 ? (
           <div className="text-center bg-[#111432] p-12 rounded-2xl border border-white/10">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, MapPin, Clock, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { RegistrationForm } from "@/components/RegistrationForm";
 import { EventResponse } from "@/lib/api/events";
 
@@ -26,9 +27,21 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
 
   return (
     <div className="py-24 px-6 relative max-w-4xl mx-auto">
-      <Link href="/events" className="inline-flex items-center text-blue-400 hover:text-blue-300 mb-8 transition-colors">
-        <ArrowLeft size={18} className="mr-2" /> Back to Events
-      </Link>
+      <nav aria-label="Breadcrumb" className="mb-8 text-sm font-medium">
+        <ol className="flex items-center space-x-2 text-[#C4C4D4]">
+          <li>
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          </li>
+          <li className="flex items-center space-x-2">
+            <span className="text-white/30">/</span>
+            <Link href="/events" className="hover:text-white transition-colors">Events</Link>
+          </li>
+          <li className="flex items-center space-x-2">
+            <span className="text-white/30">/</span>
+            <span className="text-white line-clamp-1" aria-current="page">{event.title}</span>
+          </li>
+        </ol>
+      </nav>
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -37,7 +50,13 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
       >
         {event.banner_image_url && (
           <div className="w-full h-64 md:h-96 relative">
-            <img src={event.banner_image_url} alt={event.title} className="w-full h-full object-cover" />
+            <Image 
+              src={event.banner_image_url} 
+              alt={event.title || "Event Banner"} 
+              fill
+              sizes="100vw"
+              className="object-cover" 
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A0E27] to-transparent"></div>
           </div>
         )}

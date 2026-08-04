@@ -7,6 +7,7 @@ import {
   Save, Upload, Loader2, CheckCircle, Plus, Trash2, Image
 } from "lucide-react";
 import { useToast } from "@/components/ui/ToastProvider";
+import { revalidateSettings } from "./actions";
 import { clientFetch } from "@/lib/api/client";
 
 const TABS = [
@@ -92,7 +93,6 @@ export default function SettingsPage() {
   const heroImageRef = useRef<HTMLInputElement>(null);
   const ogImageRef = useRef<HTMLInputElement>(null);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -123,11 +123,12 @@ export default function SettingsPage() {
     try {
       const data = await clientFetch("api/v1/settings", {
         method: "PATCH",
-        headers: token ? { } : {},
+        headers: {},
         body: JSON.stringify(payload),
       });
       setSettings(data);
       window.dispatchEvent(new Event("settings-updated"));
+      await revalidateSettings();
       toast("Settings saved!", "success");
     } catch {
       toast("Error saving settings", "error");
@@ -144,11 +145,12 @@ export default function SettingsPage() {
     try {
       const data = await clientFetch(`api/v1/settings/${endpoint}`, {
         method: "POST",
-        headers: token ? { } : {},
+        headers: {},
         body: formData,
       });
       setSettings(data);
       window.dispatchEvent(new Event("settings-updated"));
+      await revalidateSettings();
       toast("Image uploaded!", "success");
     } catch {
       toast("Upload error", "error");

@@ -1,12 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { UseFormReturn, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { StartupSchema, StartupFormData, Batch, Technology } from '@/lib/validations/startup';
 import { startupsApi } from '@/lib/api/startups';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useRouter } from 'next/navigation';
+import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { useConfirm } from '@/components/ui/ConfirmProvider';
 
 interface StartupWizardContextType {
   currentStep: number;
@@ -42,9 +44,13 @@ export function StartupWizardProvider({
 }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDraftRestored, setIsDraftRestored] = useState(false);
   const totalSteps = 5;
   const router = useRouter();
   const { toast } = useToast();
+  const confirm = useConfirm();
+  
+  const DRAFT_KEY = 'startup_wizard_draft';
 
   const form = useForm<StartupFormData>({
     // @ts-expect-error - Zod resolver has a known typing issue with default values
@@ -68,6 +74,61 @@ export function StartupWizardProvider({
     },
     mode: 'onChange'
   });
+
+  // Auto-save draft
+  useEffect(() => {
+    if (isEditMode) return; // Don't auto-save for edits
+    if (!isDraftRestored) return; // Don't save before checking for draft
+
+    const subscription = form.watch((value) => {
+      // Debounce the save
+      const timeoutId = setTimeout(() => {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(value));
+      }, 1000);
+      return () => clearTimeout(timeoutId);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, isEditMode, isDraftRestored]);
+
+  // Restore draft on mount
+  useEffect(() => {
+    let isMounted = true;
+    
+    const checkDraft = async () => {
+      if (!isEditMode && typeof window !== 'undefined') {
+        const draft = localStorage.getItem(DRAFT_KEY);
+        if (draft) {
+          try {
+            const parsed = JSON.parse(draft);
+            if (parsed.name || parsed.short_description) {
+              const shouldRestore = await confirm("We found an unsaved draft of a startup. Would you like to restore it?");
+              if (isMounted) {
+                if (shouldRestore) {
+                  form.reset(parsed);
+                  toast('Draft restored', 'success');
+                } else {
+                  localStorage.removeItem(DRAFT_KEY);
+                }
+              }
+            }
+          } catch (e) {
+            localStorage.removeItem(DRAFT_KEY);
+          }
+        }
+      }
+      if (isMounted) {
+        setIsDraftRestored(true);
+      }
+    };
+    
+    checkDraft();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [isEditMode, form, toast, confirm]);
+
+  useBeforeUnload(form.formState.isDirty);
 
   const nextStep = useCallback(async () => {
     // Validate current step fields before moving to next step

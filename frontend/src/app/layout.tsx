@@ -20,8 +20,21 @@ import { cn } from "@/lib/utils";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "IEDC SNMIMT",
-  description: "Innovation and Entrepreneurship Development Cell at SNMIMT",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+  title: {
+    default: "IEDC SNMIMT | Innovation and Entrepreneurship Development Cell",
+    template: "%s | IEDC SNMIMT",
+  },
+  description: "Fostering innovations combined with entrepreneurship amongst young minds at SNMIMT.",
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    siteName: "IEDC SNMIMT",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@iedcsnmimt",
+  },
 };
 
 export default async function RootLayout({
@@ -31,13 +44,51 @@ export default async function RootLayout({
 }>) {
   let initialSettings = null;
   try {
-    initialSettings = await clientFetch("api/v1/settings", { cache: "no-store" });
-  } catch (error) {
-    console.error("Failed to fetch initial settings:", error);
+    initialSettings = await clientFetch("api/v1/settings", { next: { revalidate: 60 } });
+  } catch (error: any) {
+    if (error?.name === "ApiError") {
+      console.error("Failed to fetch initial settings:", error);
+    } else {
+      throw error;
+    }
   }
 
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "EducationalOrganization",
+              "name": initialSettings?.site_name || "IEDC SNMIMT",
+              "url": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+              "logo": initialSettings?.logo_url,
+              "description": initialSettings?.about_description || "Innovation and Entrepreneurship Development Cell at SNMIMT",
+              "sameAs": [
+                initialSettings?.facebook_url,
+                initialSettings?.instagram_url,
+                initialSettings?.linkedin_url,
+                initialSettings?.twitter_url,
+                initialSettings?.youtube_url,
+                initialSettings?.github_url,
+              ].filter(Boolean)
+            })
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": initialSettings?.site_name || "IEDC SNMIMT",
+              "url": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+            })
+          }}
+        />
+      </head>
       <body suppressHydrationWarning className={`${poppins.variable} font-sans bg-[radial-gradient(circle_at_75%_20%,#3D1A5C,#0D1030_70%)] bg-fixed bg-[#0D1030] text-white antialiased min-h-screen flex flex-col`}>
         <ToastProvider>
           <ConfirmProvider>

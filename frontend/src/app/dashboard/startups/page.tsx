@@ -14,6 +14,8 @@ export default function StartupsPage() {
   const confirm = useConfirm();
   const [startups, setStartups] = useState<StartupResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isProcessingBulk, setIsProcessingBulk] = useState(false);
 
   const fetchStartups = async () => {
     setIsLoading(true);
@@ -45,6 +47,42 @@ export default function StartupsPage() {
     }
   };
 
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkAction = async (action: 'publish' | 'unpublish' | 'delete') => {
+    if (selectedIds.length === 0) return;
+    
+    if (!(await confirm(`Are you sure you want to ${action} ${selectedIds.length} startups?`))) return;
+    
+    setIsProcessingBulk(true);
+    try {
+      if (action === 'delete') {
+        await Promise.all(selectedIds.map(id => startupsApi.deleteStartup(id)));
+        setStartups(startups.filter(s => !selectedIds.includes(s.id)));
+        toast(`Successfully deleted ${selectedIds.length} startups`, 'success');
+      } else {
+        const isPublished = action === 'publish';
+        await Promise.all(selectedIds.map(id => 
+          startupsApi.updateStartup(id, { is_published: isPublished } as any)
+        ));
+        setStartups(startups.map(s => 
+          selectedIds.includes(s.id) ? { ...s, is_published: isPublished } : s
+        ));
+        toast(`Successfully ${action}ed ${selectedIds.length} startups`, 'success');
+      }
+      setSelectedIds([]);
+    } catch (err) {
+      console.error(err);
+      toast(`Failed to complete bulk ${action}`, 'error');
+    } finally {
+      setIsProcessingBulk(false);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-8">
@@ -72,9 +110,17 @@ export default function StartupsPage() {
               key={startup.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col h-full shadow-lg"
+              className={`bg-zinc-900 border ${selectedIds.includes(startup.id) ? 'border-indigo-500' : 'border-zinc-800'} rounded-xl p-5 flex flex-col h-full shadow-lg relative transition-colors`}
             >
-              <div className="flex justify-between items-start mb-4">
+              <div className="absolute top-4 left-4 z-10">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(startup.id)}
+                  onChange={() => toggleSelection(startup.id)}
+                  className="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-indigo-500 focus:ring-indigo-500/50 cursor-pointer"
+                />
+              </div>
+              <div className="flex justify-between items-start mb-4 pl-6">
                 <div className="flex items-center space-x-4">
                   {startup.logo_url ? (
                     <img src={startup.logo_url} alt={startup.name} className="w-12 h-12 rounded-lg object-cover bg-white p-1" />
@@ -143,6 +189,46 @@ export default function StartupsPage() {
             </div>
           )}
         </div>
+      )}
+
+      {selectedIds.length > 0 && (
+        <motion.div 
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-zinc-800 border border-zinc-700 shadow-2xl rounded-full px-6 py-3 flex items-center space-x-4 z-50"
+        >
+          <span className="text-white font-medium mr-4">
+            {selectedIds.length} selected
+          </span>
+          <button
+            onClick={() => handleBulkAction('publish')}
+            disabled={isProcessingBulk}
+            className="text-sm bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50"
+          >
+            Publish
+          </button>
+          <button
+            onClick={() => handleBulkAction('unpublish')}
+            disabled={isProcessingBulk}
+            className="text-sm bg-zinc-700 text-zinc-300 hover:bg-zinc-600 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50"
+          >
+            Unpublish
+          </button>
+          <button
+            onClick={() => handleBulkAction('delete')}
+            disabled={isProcessingBulk}
+            className="text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => setSelectedIds([])}
+            disabled={isProcessingBulk}
+            className="ml-2 text-zinc-400 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+        </motion.div>
       )}
     </div>
   );

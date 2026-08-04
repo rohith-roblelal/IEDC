@@ -98,6 +98,15 @@ This document tracks the ongoing development, features implemented, and upcoming
 - Removed `RESEND_API_KEY` as a required field from `Settings()` — Render now deploys without it.
 - Added missing `email-validator==2.2.0` dependency to `requirements.txt` (required by Pydantic `EmailStr`).
 
+#### Startup Module Enterprise Polish ✅
+- **Performance Parity**: Refactored public startup pages to use the optimized Next.js `<Image />` component for automatic WebP conversion and lazy loading.
+- **Enterprise Form UX**: Integrated an Auto-Save Draft mechanism (debounced to `localStorage`) into the Startup Wizard, and added live character counters to textareas to improve data entry constraints.
+- **Advanced Admin Controls**: Introduced a Bulk Actions framework to the dashboard startup grid, allowing admins to Bulk Publish, Bulk Unpublish, and Bulk Delete startups with native selection actions.
+
+#### UI & Bug Fixes ✅
+- **Global Styles**: Fixed a critical `CssSyntaxError: Unclosed block` in `globals.css` caused by malformed Tailwind v4 `:root` duplications, resolving the Turbopack build failure.
+- **Form Modals**: Upgraded standard `window.confirm` dialogs in the Startup Wizard to use the custom, animated `useConfirm` UI modal for a premium feel.
+
 ## 🚧 In Progress / Next Steps
 - **Sprint 4 — Authentication & Security**: Verify `/auth/me` flow, test session expiry and password reset end-to-end.
 - **Sprint 5 — Accessibility (A11y)**: Keyboard navigation, ARIA labels, image alt text, color contrast.

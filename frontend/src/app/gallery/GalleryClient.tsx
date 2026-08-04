@@ -1,12 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Image as ImageIcon, X } from "lucide-react";
+import Image from "next/image";
+import { galleryApi } from "@/lib/api/gallery";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function GalleryClient({ images }: { images: any[] }) {
+export default function GalleryClient() {
+  const [images, setImages] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const res = await galleryApi.getImages({ is_published: true });
+        setImages(res || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchImages();
+  }, []);
 
   return (
     <div className="min-h-screen pt-24 pb-20 px-6">
@@ -25,14 +42,17 @@ export default function GalleryClient({ images }: { images: any[] }) {
           </p>
         </motion.div>
 
-        {images.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+          </div>
+        ) : images.length === 0 ? (
           <div className="text-center text-[#C4C4D4] py-20 bg-[#111432]/50 rounded-3xl border border-white/5">
             <p className="text-xl">No images uploaded yet.</p>
             <p className="mt-2 text-sm">Check back later for exciting photos!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[250px]">
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             {images.map((img: any, idx) => {
               // Creating a dynamic masonry feel by spanning some images across multiple rows/cols randomly based on index
               const isLarge = idx % 7 === 0;
@@ -49,13 +69,14 @@ export default function GalleryClient({ images }: { images: any[] }) {
                     ${isLarge ? 'md:col-span-2 md:row-span-2' : ''} 
                     ${isWide ? 'md:col-span-2' : ''}`}
                 >
-                  <img 
+                  <Image 
                     src={img.image_url} 
                     alt="Gallery item" 
-                    className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105" 
-                    loading="lazy"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105" 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6 z-10">
                     <span className="text-white font-medium transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                       {img.event_id ? "Event Memory" : "IEDC Snapshot"}
                     </span>

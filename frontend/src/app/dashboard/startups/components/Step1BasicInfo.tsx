@@ -105,11 +105,17 @@ export function Step1BasicInfo() {
             name="short_description"
             render={({ field }) => (
               <FormItem>
-                  <FormLabel className="text-[#F9FAFB] font-medium">Short Description *</FormLabel>
+                  <div className="flex justify-between items-center mb-1">
+                    <FormLabel className="text-[#F9FAFB] font-medium mb-0">Short Description *</FormLabel>
+                    <span className="text-xs text-[#6B7280]">
+                      {field.value?.length || 0}/200
+                    </span>
+                  </div>
                   <FormControl>
                     <Textarea 
                       placeholder="A brief overview of what your startup does..." 
                       className="bg-[#1F2937] border-[#374151] text-[#F9FAFB] placeholder:text-[#6B7280] focus-visible:ring-[#6366F1] focus-visible:border-[#6366F1] rounded-lg min-h-[120px] resize-none" 
+                      maxLength={200}
                       {...field} 
                     />
                 </FormControl>

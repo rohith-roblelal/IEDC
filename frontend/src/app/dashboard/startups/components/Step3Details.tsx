@@ -68,11 +68,17 @@ export function Step3Details() {
             name="problem_statement"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[#F9FAFB] font-medium">Problem Statement</FormLabel>
+                <div className="flex justify-between items-center mb-1">
+                  <FormLabel className="text-[#F9FAFB] font-medium mb-0">Problem Statement</FormLabel>
+                  <span className="text-xs text-[#6B7280]">
+                    {field.value?.length || 0}/1000
+                  </span>
+                </div>
                 <FormControl>
                   <Textarea 
                     placeholder="Describe the pain point or problem you are addressing..." 
                     className="bg-[#1F2937] border-[#374151] text-[#F9FAFB] placeholder:text-[#6B7280] focus-visible:ring-[#6366F1] focus-visible:border-[#6366F1] rounded-lg h-24 resize-none" 
+                    maxLength={1000}
                     {...field} 
                     value={field.value || ''}
                   />
@@ -86,11 +92,17 @@ export function Step3Details() {
             name="solution"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[#F9FAFB] font-medium">Your Solution</FormLabel>
+                <div className="flex justify-between items-center mb-1">
+                  <FormLabel className="text-[#F9FAFB] font-medium mb-0">Your Solution</FormLabel>
+                  <span className="text-xs text-[#6B7280]">
+                    {field.value?.length || 0}/1000
+                  </span>
+                </div>
                 <FormControl>
                   <Textarea 
                     placeholder="How does your startup solve this problem? What is the core value proposition?" 
                     className="bg-[#1F2937] border-[#374151] text-[#F9FAFB] placeholder:text-[#6B7280] focus-visible:ring-[#6366F1] focus-visible:border-[#6366F1] rounded-lg h-24 resize-none" 
+                    maxLength={1000}
                     {...field} 
                     value={field.value || ''}
                   />

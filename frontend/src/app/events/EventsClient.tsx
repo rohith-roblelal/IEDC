@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { EventResponse } from "@/lib/api/events";
 
 interface EventsClientProps {
@@ -29,7 +30,15 @@ export default function EventsClient({ upcomingEvents, pastEvents }: EventsClien
           className="bg-gradient-to-br from-[#3A2065]/55 to-[#0D1030]/90 border border-white/10 rounded-[18px] p-7 flex flex-col gap-3.5 shadow-xl h-full"
         >
           {event.banner_image_url ? (
-            <img src={event.banner_image_url} alt="" className="w-full h-40 object-cover rounded-xl mb-2 bg-black/20" />
+            <div className="w-full h-40 relative rounded-xl mb-2 bg-black/20 overflow-hidden">
+              <Image 
+                src={event.banner_image_url} 
+                alt={event.title || "Event Banner"} 
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover" 
+              />
+            </div>
           ) : (
             <div className="w-full h-40 rounded-xl mb-2 bg-white/5 flex items-center justify-center">
               <span className="text-white/20 font-bold text-xl">IEDC SNMIMT</span>

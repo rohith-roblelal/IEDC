@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Megaphone, X, Trash2, Edit } from "lucide-react";
+import { Megaphone, X, Trash2, Edit, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
@@ -114,6 +114,45 @@ try {
     }
   };
 
+  const handleShare = (announcementId: string) => {
+    const url = `${window.location.origin}/announcements/${announcementId}`; 
+    
+    const fallbackCopyTextToClipboard = (text: string) => {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.top = "0";
+      textArea.style.left = "0";
+      textArea.style.position = "fixed";
+      
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          toast("Announcement link copied!", "success");
+        } else {
+          toast("Failed to copy link", "error");
+        }
+      } catch (err) {
+        toast("Failed to copy link", "error");
+      }
+      
+      document.body.removeChild(textArea);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(url).then(() => {
+        toast("Announcement link copied!", "success");
+      }).catch(() => {
+        fallbackCopyTextToClipboard(url);
+      });
+    } else {
+      fallbackCopyTextToClipboard(url);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -167,6 +206,12 @@ try {
                     </td>
                     <td className="py-4">
                       <div className="flex items-center justify-end gap-3">
+                        <button 
+                          onClick={() => handleShare(ann.id)}
+                          className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1"
+                        >
+                          <Share2 size={16} /> Share
+                        </button>
                         <button 
                           onClick={() => handleOpenModal(ann)}
                           className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1"
