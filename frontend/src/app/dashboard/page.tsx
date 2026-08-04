@@ -26,14 +26,25 @@ export default function DashboardOverview() {
         setStats(data);
       } catch (err: any) {
         console.error("Dashboard fetch error:", err);
-        setError(err.message === "Failed to fetch" 
-          ? "Network error: Make sure the backend server is running." 
-          : err.message);
+        // Only set error if we don't have existing stats to fall back on
+        if (!stats) {
+          setError(err.message === "Failed to fetch" 
+            ? "Network error: Make sure the backend server is running." 
+            : err.message);
+        }
       } finally {
         setIsLoading(false);
       }
     };
+
+    // Fetch immediately on mount
     fetchStats();
+
+    // Poll for live updates every 5 seconds
+    const interval = setInterval(fetchStats, 5000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
   }, []);
 
   if (isLoading) {
