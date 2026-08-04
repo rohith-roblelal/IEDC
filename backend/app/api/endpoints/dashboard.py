@@ -19,24 +19,28 @@ async def get_dashboard_stats(
     """
     Retrieve aggregated statistics for the admin dashboard. Only accessible by Admin.
     """
-    # Total Events
-    events_result = await db.execute(select(func.count(Event.id)))
+    # Total Events (excluding deleted)
+    events_result = await db.execute(select(func.count(Event.id)).where(Event.deleted_at.is_(None)))
     total_events = events_result.scalar_one()
 
-    # Total Registrations
-    regs_result = await db.execute(select(func.count(Registration.id)))
+    # Active Registrations (only for non-deleted events)
+    regs_result = await db.execute(
+        select(func.count(Registration.id))
+        .join(Event, Registration.event_id == Event.id)
+        .where(Event.deleted_at.is_(None))
+    )
     total_registrations = regs_result.scalar_one()
 
     # Unread Messages
     unread_msg_result = await db.execute(select(func.count(ContactMessage.id)).where(ContactMessage.is_read == False))
     unread_messages = unread_msg_result.scalar_one()
 
-    # Total Team Members
-    team_result = await db.execute(select(func.count(TeamMember.id)))
+    # Total Team Members (excluding deleted)
+    team_result = await db.execute(select(func.count(TeamMember.id)).where(TeamMember.deleted_at.is_(None)))
     total_team_members = team_result.scalar_one()
 
-    # Total Startups
-    startups_result = await db.execute(select(func.count(Startup.id)))
+    # Total Startups (excluding deleted)
+    startups_result = await db.execute(select(func.count(Startup.id)).where(Startup.deleted_at.is_(None)))
     total_startups = startups_result.scalar_one()
 
     return {
