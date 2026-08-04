@@ -9,12 +9,14 @@ from app.schemas.schemas import AnnouncementResponse, AnnouncementCreate, Announ
 from app.api.dependencies import get_current_super_admin
 from app.services.announcement import AnnouncementService
 
-router = APIRouter()
+from app.api.cache import cache_control, ETagRoute
+
+router = APIRouter(route_class=ETagRoute)
 
 from fastapi import APIRouter, Depends, Query
 from app.schemas.schemas import PaginatedResponse
 
-@router.get("", response_model=PaginatedResponse[AnnouncementResponse])
+@router.get("", response_model=PaginatedResponse[AnnouncementResponse], dependencies=[Depends(cache_control(max_age=300, s_maxage=900))])
 async def read_announcements(
     page: int = Query(1, ge=1), 
     page_size: int = Query(20, ge=1, le=100),
@@ -35,7 +37,7 @@ async def read_announcements(
         include_expired=include_expired
     )
 
-@router.get("/{slug}", response_model=AnnouncementResponse)
+@router.get("/{slug}", response_model=AnnouncementResponse, dependencies=[Depends(cache_control(max_age=300, s_maxage=900))])
 async def read_announcement(slug: str, db: AsyncSession = Depends(get_db)):
     """
     Retrieve a specific announcement by slug or ID. Public endpoint.

@@ -9,12 +9,14 @@ from app.schemas.schemas import PodcastResponse, PodcastCreate, PodcastUpdate
 from app.api.dependencies import get_current_super_admin
 from app.services.podcast import PodcastService
 
-router = APIRouter()
+from app.api.cache import cache_control, ETagRoute
+
+router = APIRouter(route_class=ETagRoute)
 
 from fastapi import APIRouter, Depends, Query
 from app.schemas.schemas import PaginatedResponse
 
-@router.get("", response_model=PaginatedResponse[PodcastResponse])
+@router.get("", response_model=PaginatedResponse[PodcastResponse], dependencies=[Depends(cache_control(max_age=3600, s_maxage=21600))])
 async def read_podcasts(
     page: int = Query(1, ge=1), 
     page_size: int = Query(20, ge=1, le=100), 
@@ -26,7 +28,7 @@ async def read_podcasts(
     podcast_service = PodcastService(db)
     return await podcast_service.get_all_podcasts(page=page, page_size=page_size)
 
-@router.get("/active", response_model=List[PodcastResponse])
+@router.get("/active", response_model=List[PodcastResponse], dependencies=[Depends(cache_control(max_age=3600, s_maxage=21600))])
 async def read_active_podcasts(db: AsyncSession = Depends(get_db)):
     """
     Retrieve the currently active podcasts. Public endpoint.

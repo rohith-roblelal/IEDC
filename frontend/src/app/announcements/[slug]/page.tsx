@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Clock, Pin } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AnnouncementsAPI } from "@/lib/api/announcements";
+import JsonLd from "@/components/seo/JsonLd";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -33,6 +34,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: plainTextContent,
         url: `${baseUrl}/announcements/${slug}`,
         type: "article",
+      },
+      twitter: {
+        card: "summary",
+        title: announcement.title,
+        description: plainTextContent,
       }
     };
   } catch (error) {
@@ -56,8 +62,22 @@ export default async function AnnouncementDetailPage({ params }: Props) {
       notFound();
     }
     
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://iedcsnmimt.com';
+    const jsonLdData = {
+      headline: announcement.title,
+      description: announcement.content.replace(/[#*`_]/g, '').substring(0, 160),
+      datePublished: announcement.created_at,
+      dateModified: announcement.updated_at || announcement.created_at,
+      author: {
+        "@type": "Organization",
+        name: "IEDC SNMIMT",
+        url: baseUrl,
+      }
+    };
+
     return (
-      <div className="py-24 px-6 relative max-w-3xl mx-auto min-h-screen">
+      <main className="py-24 px-6 relative max-w-3xl mx-auto min-h-screen">
+        <JsonLd type="Article" data={jsonLdData} />
         <nav aria-label="Breadcrumb" className="mb-8 text-sm font-medium">
           <ol className="flex items-center space-x-2 text-[#C4C4D4]">
             <li>
@@ -135,7 +155,7 @@ export default async function AnnouncementDetailPage({ params }: Props) {
             </ReactMarkdown>
           </div>
         </article>
-      </div>
+      </main>
     );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {

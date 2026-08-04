@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import StartupsClient from "../StartupsClient";
 import { startupsApi } from "@/lib/api/startups";
+import JsonLd from "@/components/seo/JsonLd";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -67,11 +68,8 @@ export default async function StartupDetailPage({ params }: Props) {
     };
 
     return (
-      <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
+      <main>
+        <JsonLd type="Organization" data={schema} />
         {/* AI GEO Summary Block */}
         <section className="sr-only" aria-label="Quick Summary">
           <p>What is this page? The directory profile for {startup.name}, an innovative startup incubated at IEDC SNMIMT.</p>
@@ -79,7 +77,7 @@ export default async function StartupDetailPage({ params }: Props) {
           <p>Stage: {startup.stage?.replace('_', ' ').toLowerCase() || startup.status}</p>
         </section>
         <StartupsClient initialStartupSlug={slug} />
-      </>
+      </main>
     );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {

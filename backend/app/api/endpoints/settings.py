@@ -8,10 +8,12 @@ from app.schemas.settings import WebsiteSettingsResponse, WebsiteSettingsUpdate
 from app.api.dependencies import get_current_super_admin
 from app.services.settings import SettingsService
 
-router = APIRouter()
+from app.api.cache import cache_control, ETagRoute
+
+router = APIRouter(route_class=ETagRoute)
 
 
-@router.get("", response_model=WebsiteSettingsResponse)
+@router.get("", response_model=WebsiteSettingsResponse, dependencies=[Depends(cache_control(max_age=3600, s_maxage=86400))])
 async def get_settings(db: AsyncSession = Depends(get_db)):
     """Public endpoint — returns website configuration."""
     service = SettingsService(db)

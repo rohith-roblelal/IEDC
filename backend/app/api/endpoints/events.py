@@ -11,12 +11,14 @@ from app.api.dependencies import get_current_super_admin
 from app.services.event import EventService
 from app.core.rate_limit import limiter
 
+from app.api.cache import cache_control, ETagRoute
+
 class GoogleFormConnectRequest(BaseModel):
     url: str
 
-router = APIRouter()
+router = APIRouter(route_class=ETagRoute)
 
-@router.get("", response_model=PaginatedResponse[EventResponse])
+@router.get("", response_model=PaginatedResponse[EventResponse], dependencies=[Depends(cache_control(max_age=300, s_maxage=900))])
 async def read_events(
     page: int = Query(1, ge=1), 
     page_size: int = Query(20, ge=1, le=100),
@@ -37,7 +39,7 @@ async def read_events(
         search=search
     )
 
-@router.get("/{slug}", response_model=EventResponse)
+@router.get("/{slug}", response_model=EventResponse, dependencies=[Depends(cache_control(max_age=300, s_maxage=900))])
 async def read_event(slug: str, db: AsyncSession = Depends(get_db)):
     """
     Retrieve a specific event by slug. Public endpoint.

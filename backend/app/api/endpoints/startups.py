@@ -16,18 +16,20 @@ from app.services.startups import StartupService
 from app.schemas.schemas import PaginatedResponse
 from app.services.storage import storage_service
 
-router = APIRouter()
+from app.api.cache import cache_control, ETagRoute
+
+router = APIRouter(route_class=ETagRoute)
 
 # --- Dictionary Lookups ---
 
-@router.get("/batches", response_model=List[BatchResponse])
+@router.get("/batches", response_model=List[BatchResponse], dependencies=[Depends(cache_control(max_age=900, s_maxage=3600))])
 async def get_batches(db: AsyncSession = Depends(get_db)):
     """Retrieve all batches."""
     query = select(Batch).where(Batch.deleted_at.is_(None), Batch.is_active == True).order_by(Batch.display_order)
     result = await db.execute(query)
     return result.scalars().all()
 
-@router.get("/technologies", response_model=List[TechnologyResponse])
+@router.get("/technologies", response_model=List[TechnologyResponse], dependencies=[Depends(cache_control(max_age=900, s_maxage=3600))])
 async def get_technologies(db: AsyncSession = Depends(get_db)):
     """Retrieve all technologies."""
     query = select(Technology).where(Technology.deleted_at.is_(None)).order_by(Technology.name)
@@ -37,7 +39,7 @@ async def get_technologies(db: AsyncSession = Depends(get_db)):
 
 # --- Public Endpoints ---
 
-@router.get("", response_model=PaginatedResponse[StartupPublicResponse])
+@router.get("", response_model=PaginatedResponse[StartupPublicResponse], dependencies=[Depends(cache_control(max_age=900, s_maxage=3600))])
 async def get_public_startups(
     page: int = Query(1, ge=1), 
     page_size: int = Query(20, ge=1, le=100),
@@ -53,7 +55,7 @@ async def get_public_startups(
         featured_only=featured_only
     )
 
-@router.get("/{startup_id_or_slug}", response_model=StartupPublicResponse)
+@router.get("/{startup_id_or_slug}", response_model=StartupPublicResponse, dependencies=[Depends(cache_control(max_age=900, s_maxage=3600))])
 async def get_public_startup(startup_id_or_slug: str, db: AsyncSession = Depends(get_db)):
     """Retrieve a specific published startup. Public endpoint."""
     startup_service = StartupService(db)

@@ -9,12 +9,14 @@ from app.schemas.schemas import TeamMemberResponse, TeamMemberCreate, TeamMember
 from app.api.dependencies import get_current_super_admin
 from app.services.team import TeamService
 
-router = APIRouter()
+from app.api.cache import cache_control, ETagRoute
+
+router = APIRouter(route_class=ETagRoute)
 
 from fastapi import APIRouter, Depends, Query
 from app.schemas.schemas import PaginatedResponse
 
-@router.get("", response_model=PaginatedResponse[TeamMemberResponse])
+@router.get("", response_model=PaginatedResponse[TeamMemberResponse], dependencies=[Depends(cache_control(max_age=3600, s_maxage=21600))])
 async def read_team_members(
     page: int = Query(1, ge=1), 
     page_size: int = Query(20, ge=1, le=100), 
