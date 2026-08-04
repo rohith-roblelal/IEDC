@@ -1,0 +1,30 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g. v1.0.1)'
+        required: true
+      reason:
+        description: 'Reason for deployment'
+        required: true
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production # Requires manual approval in GitHub Environments if configured
+
+    steps:
+    - name: Trigger Render Production Deploy Hook
+      env:
+        RENDER_PRODUCTION_DEPLOY_HOOK: ${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}
+      run: |
+        if [ -n "$RENDER_PRODUCTION_DEPLOY_HOOK" ]; then
+          curl -X POST $RENDER_PRODUCTION_DEPLOY_HOOK
+          echo "Production deploy triggered for version ${{ github.event.inputs.version }}. Reason: ${{ github.event.inputs.reason }}"
+        else
+          echo "Error: RENDER_PRODUCTION_DEPLOY_HOOK secret is not set!"
+          exit 1
+        fi

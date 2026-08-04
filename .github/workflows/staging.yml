@@ -1,0 +1,26 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    # Wait for CI to pass before deploying to staging
+    # If Render auto-deploy is enabled, Render will deploy automatically anyway,
+    # but using a Deploy Hook here gives more control.
+    needs: [] # In a real setup, this would need the CI workflow to pass. Since CI is a separate file, we rely on branch protection requiring CI before merge.
+
+    steps:
+    - name: Trigger Render Staging Deploy Hook
+      env:
+        RENDER_STAGING_DEPLOY_HOOK: ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
+      run: |
+        if [ -n "$RENDER_STAGING_DEPLOY_HOOK" ]; then
+          curl -X POST $RENDER_STAGING_DEPLOY_HOOK
+          echo "Staging deploy triggered."
+        else
+          echo "RENDER_STAGING_DEPLOY_HOOK not set. Assuming auto-deploy is handled by Render."
+        fi

@@ -94,3 +94,13 @@ wcwidth==0.8.1
 websockets==15.0.1
 wrapt==2.2.2
 yarl==1.24.2
+
+# Observability
+opentelemetry-distro
+opentelemetry-sdk
+opentelemetry-exporter-otlp
+opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-sqlalchemy
+opentelemetry-instrumentation-redis
+opentelemetry-instrumentation-httpx
+sentry-sdk

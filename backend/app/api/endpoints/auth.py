@@ -18,10 +18,11 @@ from app.api.dependencies import oauth2_scheme, get_current_user
 from app.models.models import TokenBlocklist, PasswordResetToken
 from app.services.audit import log_audit_event
 from app.services.email import email_service
+import structlog
 import logging
 
 logger = logging.getLogger(__name__)
-
+auth_logger = structlog.get_logger("auth")
 router = APIRouter()
 
 MAX_FAILED_ATTEMPTS = 5
@@ -43,11 +44,13 @@ async def login_access_token(
         # Avoid user enumeration by taking roughly the same time as a real verification
         # and returning a generic error message
         get_password_hash("dummy_password_to_prevent_timing_attacks")
+        auth_logger.warning("login_failure", reason="User not found")
         await log_audit_event(db, "LOGIN_FAILED", ip_address=client_ip, metadata_json={"reason": "User not found", "email": form_data.username})
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 
     # Check lockout
     if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+        auth_logger.warning("login_failure", reason="Account locked", user_id=str(user.id))
         await log_audit_event(db, "LOGIN_LOCKED", user_id=user.id, ip_address=client_ip, metadata_json={"email": form_data.username})
         raise HTTPException(status_code=400, detail="Account locked due to too many failed attempts. Try again later.")
 
@@ -56,9 +59,11 @@ async def login_access_token(
         user.failed_login_attempts += 1
         if user.failed_login_attempts >= MAX_FAILED_ATTEMPTS:
             user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+            auth_logger.warning("account_locked", user_id=str(user.id))
             await log_audit_event(db, "ACCOUNT_LOCKED", user_id=user.id, ip_address=client_ip)
         
         await db.commit()
+        auth_logger.warning("login_failure", reason="Incorrect password", user_id=str(user.id))
         await log_audit_event(db, "LOGIN_FAILED", user_id=user.id, ip_address=client_ip, metadata_json={"reason": "Incorrect password"})
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     
@@ -73,6 +78,7 @@ async def login_access_token(
     
     await db.commit()
 
+    auth_logger.info("login_success", user_id=str(user.id))
     await log_audit_event(db, "LOGIN_SUCCESS", user_id=user.id, ip_address=client_ip)
     
     access_token = create_access_token(
@@ -134,9 +140,11 @@ async def logout(
         if jti:
             blocked_token = TokenBlocklist(jti=jti)
             db.add(blocked_token)
+            auth_logger.info("logout", user_id=str(user_id) if user_id else "unknown")
             await log_audit_event(db, "LOGOUT", user_id=user_id, ip_address=client_ip)
             await db.commit()
     except JWTError:
+        auth_logger.warning("logout_failed", reason="Invalid token")
         await log_audit_event(db, "LOGOUT_FAILED", ip_address=client_ip, metadata_json={"reason": "Invalid token"})
         
     response.delete_cookie(

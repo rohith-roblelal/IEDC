@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
 
+    # Redis
+    REDIS_URL: str = "redis://localhost:6379"
+    REDIS_MAX_CONNECTIONS: int = 10
+    REDIS_SOCKET_TIMEOUT: int = 5
+    REDIS_HEALTH_CHECK_INTERVAL: int = 30
+
     # Super Admin Init
     FIRST_SUPERADMIN_PASSWORD: str
 
@@ -31,6 +37,10 @@ class Settings(BaseSettings):
     # Email
     EMAIL_FROM: str = "IEDC SNMIMT <noreply@iedcsnmimt.com>"
     EMAIL_FROM_NAME: str = "IEDC SNMIMT"
+    
+    # Observability
+    SENTRY_DSN: Optional[str] = None
+    OTEL_EXPORTER_OTLP_ENDPOINT: Optional[str] = None
     
     # Optional Debug settings (must be False in production)
     DEBUG: bool = False

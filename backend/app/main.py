@@ -15,40 +15,105 @@ from app.api.router import api_router
 from app.core.rate_limit import limiter
 from app.database.session import get_db
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
+import uuid
+import structlog
+from app.core.logging import setup_logging
+from app.api.middleware.observability import ObservabilityMiddleware
+from app.api.middleware.metrics import PrometheusMiddleware
+from prometheus_client import make_asgi_app
+from contextlib import asynccontextmanager
+from app.core.redis import get_redis_pool, close_redis
+from app.core.arq import init_arq_pool, close_arq_pool
+from app.database.session import engine
+
+# Configure structured logging
+setup_logging()
+logger = structlog.get_logger(__name__)
+
+from app.core.sentry import setup_sentry
+from app.core.telemetry import setup_telemetry
+
+# Initialize Sentry before FastAPI application starts
+setup_sentry()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup validation
+    try:
+        # Initialize ARQ Pool
+        await init_arq_pool(app)
+        
+        # Validate Redis connection
+        redis_pool = get_redis_pool()
+        logger.info("redis_connected", max_connections=settings.REDIS_MAX_CONNECTIONS)
+        
+        # Test DB connection (Fail fast)
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        logger.info("database_connected")
+    except Exception as e:
+        logger.critical("startup_validation_failed", error=str(e))
+        raise RuntimeError(f"Critical startup dependency failed: {e}")
+
+    yield
+
+    # Graceful Shutdown
+    await close_arq_pool()
+    await close_redis()
+    await engine.dispose()
+    logger.info("shutdown_completed")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan
 )
+
+# Initialize OpenTelemetry after FastAPI app creation
+setup_telemetry(app)
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    error_id = f"ERR-{uuid.uuid4().hex[:6].upper()}"
+    logger.warning("validation_error", error_id=error_id, detail=exc.errors(), path=request.url.path)
     return JSONResponse(
         status_code=422,
-        content={"detail": exc.errors()},
+        content={"detail": exc.errors(), "error_id": error_id},
     )
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
+    # Don't necessarily need a unique error ID for 401/403/404, but good for tracking
+    error_id = f"ERR-{uuid.uuid4().hex[:6].upper()}"
+    # Log warnings for 4xx, errors for 5xx
+    if exc.status_code >= 500:
+        logger.error("http_exception", error_id=error_id, status_code=exc.status_code, detail=exc.detail)
+    else:
+        logger.warning("http_exception", error_id=error_id, status_code=exc.status_code, detail=exc.detail)
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.detail},
+        content={"detail": exc.detail, "error_id": error_id},
     )
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    logger.error("Unhandled exception", exc_info=exc)
-    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+    error_id = f"ERR-{uuid.uuid4().hex[:6].upper()}"
+    logger.error("unhandled_exception", error_id=error_id, exc_info=exc)
+    return JSONResponse(
+        status_code=500, 
+        content={"detail": "Internal server error", "error_id": error_id}
+    )
 
 
 
 # Rate Limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# Add Observability Middleware FIRST so it wraps everything else
+app.add_middleware(ObservabilityMiddleware)
 app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(PrometheusMiddleware)
 
 # Security Headers Middleware
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -118,22 +183,10 @@ if settings.FRONTEND_URLS:
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+# Mount Prometheus Metrics
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
+
 @app.get("/")
 def root():
     return {"message": f"Welcome to the {settings.PROJECT_NAME} API"}
-
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
-
-@app.get("/health/ready")
-async def health_ready(db=Depends(get_db)):
-    try:
-        await db.execute(text("SELECT 1"))
-        return {"status": "ok", "database": "connected"}
-    except Exception as e:
-        logger.error(f"Database health check failed: {e}")
-        return JSONResponse(
-            status_code=503,
-            content={"status": "error", "database": "disconnected"}
-        )

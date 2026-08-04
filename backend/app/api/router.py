@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import auth, users, events, registrations, team, announcements, gallery, contact, dashboard, upload, podcasts, partners, startups, settings
+from app.api.endpoints import auth, users, events, registrations, team, announcements, gallery, contact, dashboard, upload, podcasts, partners, startups, settings, health
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
@@ -17,3 +17,4 @@ api_router.include_router(podcasts.router, prefix="/podcasts", tags=["podcasts"]
 api_router.include_router(partners.router, prefix="/partners", tags=["partners"])
 api_router.include_router(startups.router, prefix="/startups", tags=["startups"])
 api_router.include_router(settings.router, prefix="/settings", tags=["settings"])
+api_router.include_router(health.router, tags=["health"])

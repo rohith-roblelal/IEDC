@@ -1,0 +1,30 @@
+groups:
+  - name: IEDC_Alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Error Rate (>1%)"
+          description: "Over 1% of HTTP requests have failed in the last 5 minutes."
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High P95 Latency (>500ms)"
+          description: "P95 latency is over 500ms for 10 minutes."
+
+      - alert: DatabaseDown
+        # Assuming we have an up metric or health check metric
+        expr: up{job="fastapi_backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend Unreachable"
+          description: "The backend service is down."

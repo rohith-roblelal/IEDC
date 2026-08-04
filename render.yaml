@@ -20,3 +20,12 @@ services:
         sync: false
       - key: FRONTEND_URLS
         sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: iedc-redis
+          property: connectionString
+
+  - type: redis
+    name: iedc-redis
+    ipAllowList: [] # internal only
