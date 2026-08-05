@@ -107,6 +107,10 @@ This document tracks the ongoing development, features implemented, and upcoming
 - **Global Styles**: Fixed a critical `CssSyntaxError: Unclosed block` in `globals.css` caused by malformed Tailwind v4 `:root` duplications, resolving the Turbopack build failure.
 - **Form Modals**: Upgraded standard `window.confirm` dialogs in the Startup Wizard to use the custom, animated `useConfirm` UI modal for a premium feel.
 
+#### Testing & CI Cleanup ✅
+- **Test Removal**: Deleted all test files, test directories, and test configurations from the frontend and backend to strictly adhere to the production-only environment requirement.
+- **CI Pipeline**: Updated `.github/workflows/ci.yml` to remove test execution and coverage reporting steps.
+
 ## 🚧 In Progress / Next Steps
 - **Sprint 4 — Authentication & Security**: Verify `/auth/me` flow, test session expiry and password reset end-to-end.
 - **Sprint 5 — Accessibility (A11y)**: Keyboard navigation, ARIA labels, image alt text, color contrast.
