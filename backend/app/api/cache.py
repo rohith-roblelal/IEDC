@@ -35,7 +35,10 @@ class ETagRoute(APIRoute):
                     response.headers["ETag"] = etag_val
                     
                     if request.headers.get("if-none-match") == etag_val:
-                        return Response(status_code=304, headers=response.headers)
+                        # Strip Content-Length for 304 responses to prevent ASGI server errors
+                        headers = dict(response.headers)
+                        headers.pop("content-length", None)
+                        return Response(status_code=304, headers=headers)
             return response
 
         return custom_route_handler

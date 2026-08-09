@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
 
+    # Proxies & Rate Limiting
+    TRUSTED_PROXIES: str = "127.0.0.1,::1"
+
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
     REDIS_MAX_CONNECTIONS: int = 10

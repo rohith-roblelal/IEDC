@@ -89,6 +89,7 @@ class Event(Base, SoftDeleteMixin):
     start_datetime: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True, nullable=True)
     end_datetime: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), default="DRAFT", index=True)
     
     banner_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     registration_link: Mapped[str | None] = mapped_column(String(512), nullable=True)
@@ -115,40 +116,7 @@ class Event(Base, SoftDeleteMixin):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
     
-    @property
-    def computed_status(self) -> str:
-        if not self.is_published:
-            return "DRAFT"
-            
-        now = datetime.now(timezone.utc)
-        
-        # Check if completed
-        if self.end_datetime and now > self.end_datetime:
-            return "COMPLETED"
-            
-        # Determine if registration is open
-        is_registration_open = False
-        if self.registration_deadline:
-            if now <= self.registration_deadline:
-                is_registration_open = True
-        elif self.start_datetime:
-            if now < self.start_datetime:
-                is_registration_open = True
-        else:
-            is_registration_open = True
 
-        if is_registration_open:
-            return "REGISTRATION_OPEN"
-
-        if self.start_datetime and self.end_datetime:
-            if self.start_datetime <= now <= self.end_datetime:
-                return "ONGOING"
-        
-        return "PUBLISHED"
-        
-    @property
-    def status(self) -> str:
-        return self.computed_status
 
 class Registration(Base):
     __tablename__ = "registrations"
@@ -268,6 +236,8 @@ class Partner(Base):
     
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    website_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     

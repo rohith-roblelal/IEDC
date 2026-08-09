@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Users, Calendar, ArrowLeft, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { clientFetch } from "@/lib/api/client";
 
 export default function RegistrationsPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -16,11 +17,8 @@ export default function RegistrationsPage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch("/api/v1/events");
-        if (res.ok) {
-          const data = await res.json();
-          setEvents(data.items || []);
-        }
+        const data = await clientFetch("/api/v1/events");
+        setEvents(data.items || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -34,12 +32,9 @@ export default function RegistrationsPage() {
     setSelectedEvent(event);
     setIsLoadingParticipants(true);
     setParticipants([]);
-try {
-      const res = await fetch(`/api/v1/events/${event.id}/participants`);
-      if (res.ok) {
-        const data = await res.json();
-        setParticipants(data.items || []);
-      }
+    try {
+      const data = await clientFetch(`/api/v1/events/${event.id}/participants`);
+      setParticipants(data.items || []);
     } catch (err) {
       console.error(err);
     } finally {

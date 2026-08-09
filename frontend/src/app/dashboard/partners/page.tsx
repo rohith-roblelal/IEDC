@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
-import { clientFetch } from "@/lib/api/client";
+import { clientFetch, ApiError } from "@/lib/api/client";
 
 export default function PartnersPage() {
   const { toast } = useToast();
@@ -21,6 +21,8 @@ export default function PartnersPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [formData, setFormData] = useState({
     name: "",
+    description: "",
+    website_url: "",
     image_url: "",
     sort_order: 0,
   });
@@ -47,6 +49,8 @@ export default function PartnersPage() {
       setEditingPartner(partner);
       setFormData({
         name: partner.name,
+        description: partner.description || "",
+        website_url: partner.website_url || "",
         image_url: partner.image_url || "",
         sort_order: partner.sort_order,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,6 +59,8 @@ export default function PartnersPage() {
       setEditingPartner(null);
       setFormData({
         name: "",
+        description: "",
+        website_url: "",
         image_url: "",
         sort_order: 0,
       });
@@ -70,7 +76,7 @@ export default function PartnersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-try {
+    try {
       const url = editingPartner 
         ? `api/v1/partners/${editingPartner.id}` 
         : "api/v1/partners";
@@ -91,7 +97,11 @@ try {
       toast(editingPartner ? "Partner updated successfully" : "Partner created successfully", "success");
     } catch (err) {
       console.error(err);
-      toast("Failed to save partner", "error");
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to save partner", "error");
+      } else {
+        toast("An unexpected error occurred", "error");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -109,7 +119,11 @@ try {
       toast("Partner deleted successfully", "success");
     } catch (err) {
       console.error(err);
-      toast("Failed to delete partner", "error");
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to delete partner", "error");
+      } else {
+        toast("An unexpected error occurred", "error");
+      }
     }
   };
 
@@ -226,6 +240,27 @@ try {
                     placeholder="E.g., TinkerHub"
                   />
                   <p className="text-xs text-[#C4C4D4] mt-1">This will be used as text if no logo is uploaded.</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Description</label>
+                  <textarea 
+                    value={formData.description}
+                    onChange={e => setFormData({...formData, description: e.target.value})}
+                    className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 min-h-[100px]"
+                    placeholder="Brief description about the partner..."
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Website URL</label>
+                  <input 
+                    type="url" 
+                    value={formData.website_url}
+                    onChange={e => setFormData({...formData, website_url: e.target.value})}
+                    className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500"
+                    placeholder="https://example.com"
+                  />
                 </div>
                 
                 <div>

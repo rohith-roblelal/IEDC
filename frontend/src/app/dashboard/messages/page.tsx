@@ -5,6 +5,7 @@ import { MessageSquare, CheckCircle, Trash2, Mail, User, Send, X, Loader2, Archi
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { clientFetch, ApiError } from "@/lib/api/client";
 
 export default function MessagesPage() {
   const { toast } = useToast();
@@ -18,13 +19,10 @@ export default function MessagesPage() {
   const fetchMessages = async (archived = false) => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/v1/contact?is_archived=${archived}`, {
+      const data = await clientFetch(`/api/v1/contact?is_archived=${archived}`, {
         cache: "no-store"
       });
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(data.items || (Array.isArray(data) ? data : []));
-      }
+      setMessages(data.items || (Array.isArray(data) ? data : []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -38,44 +36,50 @@ export default function MessagesPage() {
 
   const handleMarkAsRead = async (id: string) => {
     try {
-      const res = await fetch(`/api/v1/contact/${id}/read`, {
+      await clientFetch(`/api/v1/contact/${id}/read`, {
         method: "PATCH"
       });
-      if (res.ok) {
-        setMessages(messages.map((m) => (m.id === id ? { ...m, is_read: true } : m)));
-        toast("Message marked as read", "success");
+      setMessages(messages.map((m) => (m.id === id ? { ...m, is_read: true } : m)));
+      toast("Message marked as read", "success");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to mark as read", "error");
+      } else {
+        toast("Failed to mark as read", "error");
       }
-    } catch {
-      toast("Failed to mark as read", "error");
     }
   };
 
   const handleArchive = async (id: string, currentlyArchived: boolean) => {
     try {
-      const res = await fetch(`/api/v1/contact/${id}/archive`, {
+      await clientFetch(`/api/v1/contact/${id}/archive`, {
         method: "PATCH"
       });
-      if (res.ok) {
-        setMessages(messages.filter((m) => m.id !== id));
-        toast(currentlyArchived ? "Moved to Inbox" : "Archived", "success");
+      setMessages(messages.filter((m) => m.id !== id));
+      toast(currentlyArchived ? "Moved to Inbox" : "Archived", "success");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to archive message", "error");
+      } else {
+        toast("Failed to archive message", "error");
       }
-    } catch {
-      toast("Failed to archive message", "error");
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!(await confirm("Are you sure you want to delete this message?"))) return;
     try {
-      const res = await fetch(`/api/v1/contact/${id}`, {
+      await clientFetch(`/api/v1/contact/${id}`, {
         method: "DELETE"
       });
-      if (res.ok) {
-        setMessages(messages.filter((m) => m.id !== id));
-        toast("Message deleted", "success");
+      setMessages(messages.filter((m) => m.id !== id));
+      toast("Message deleted", "success");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to delete message", "error");
+      } else {
+        toast("Failed to delete message", "error");
       }
-    } catch {
-      toast("Failed to delete message", "error");
     }
   };
 

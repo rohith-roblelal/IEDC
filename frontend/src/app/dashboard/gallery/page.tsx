@@ -66,6 +66,7 @@ export default function GalleryPage() {
     
     try {
       await galleryApi.deleteImage(id);
+      setImages(prev => prev.filter(img => img.id !== id));
       fetchImages();
       toast("Image deleted successfully", "success");
     } catch (err) {

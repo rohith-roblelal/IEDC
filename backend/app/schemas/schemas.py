@@ -59,6 +59,7 @@ class EventBase(SchemaBase):
     start_datetime: Optional[datetime] = None
     end_datetime: Optional[datetime] = None
     is_published: bool = False
+    status: str = "DRAFT"
     
     banner_url: Optional[str] = None
     registration_link: Optional[str] = None
@@ -89,6 +90,7 @@ class EventUpdate(SchemaBase):
     start_datetime: Optional[datetime] = None
     end_datetime: Optional[datetime] = None
     is_published: Optional[bool] = None
+    status: Optional[str] = None
     
     banner_url: Optional[str] = None
     registration_link: Optional[str] = None
@@ -110,8 +112,7 @@ class EventResponse(EventBase):
     created_at: datetime
     updated_at: datetime
     created_by: Optional[uuid.UUID] = None
-    computed_status: str
-    status: Optional[str] = None
+    status: str
     registrations_count: int = 0
 
 # -----------------
@@ -272,6 +273,8 @@ class PodcastResponse(PodcastBase):
 
 class PartnerBase(BaseModel):
     name: str
+    description: Optional[str] = None
+    website_url: Optional[str] = None
     image_url: Optional[str] = None
     sort_order: int = 0
 
@@ -280,6 +283,8 @@ class PartnerCreate(PartnerBase):
 
 class PartnerUpdate(BaseModel):
     name: Optional[str] = None
+    description: Optional[str] = None
+    website_url: Optional[str] = None
     image_url: Optional[str] = None
     sort_order: Optional[int] = None
 

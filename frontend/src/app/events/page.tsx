@@ -24,10 +24,10 @@ export default async function EventsPage() {
   let pastEvents = [];
 
   try {
-    const { data } = await EventsAPI.getEvents({ page: 1, page_size: 100 }, true);
-    const items = data.items || [];
-    upcomingEvents = items.filter((e: any) => ["UPCOMING", "ONGOING", "PUBLISHED", "REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(e.status || e.computed_status));
-    pastEvents = items.filter((e: any) => e.status === "COMPLETED" || e.computed_status === "COMPLETED" || e.status === "PAST");
+    const res = await EventsAPI.getEvents({ page: 1, page_size: 100 }, true);
+    const items = res.items || [];
+    upcomingEvents = items.filter((e: any) => ["UPCOMING", "ONGOING", "PUBLISHED", "REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(e.status));
+    pastEvents = items.filter((e: any) => e.status === "COMPLETED" || e.status === "PAST");
   } catch (error) {
     console.error("Failed to fetch events", error);
   }

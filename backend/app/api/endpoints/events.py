@@ -25,6 +25,9 @@ async def read_events(
     is_published: Optional[bool] = Query(None),
     category: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    date_after: Optional[str] = Query(None, description="ISO formatted date string"),
+    sort: Optional[str] = Query(None, description="Sort order, e.g. 'date_asc' or 'date_desc'"),
+    scope: Optional[str] = Query(None, description="Scope of events, e.g. 'upcoming'"),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -36,7 +39,10 @@ async def read_events(
         page_size=page_size, 
         is_published=is_published, 
         category=category, 
-        search=search
+        search=search,
+        date_after=date_after,
+        sort=sort,
+        scope=scope
     )
 
 @router.get("/{slug}", response_model=EventResponse, dependencies=[Depends(cache_control(max_age=300, s_maxage=900))])

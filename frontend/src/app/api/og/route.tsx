@@ -1,21 +1,13 @@
 import { ImageResponse } from 'next/og';
 
-// Route segment config
-export const runtime = 'edge';
-export const alt = 'IEDC SNMIMT - Innovation and Entrepreneurship Development Cell';
-export const size = {
-  width: 1200,
-  height: 630,
-};
-export const contentType = 'image/png';
+export const runtime = 'nodejs';
 export const revalidate = 86400; // Cache for 24 hours
 
-export default async function Image() {
+export async function GET(request: Request) {
   let siteName = 'IEDC SNMIMT';
   let tagline = 'Innovation and Entrepreneurship Development Cell';
   
   try {
-    // Attempt to fetch settings, fallback if unavailable
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const settings = await fetch(`${baseUrl}/api/v1/settings`).then(r => r.json());
     if (settings) {
@@ -51,7 +43,6 @@ export default async function Image() {
             marginBottom: '40px',
           }}
         >
-          {/* SVG Logo abstraction for OG image since fetching external images in Edge can be tricky without arrayBuffers */}
           <svg width="120" height="120" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
             <circle cx="65" cy="70" r="42" fill="none" stroke="#3B82F6" strokeWidth="14"/>
             <circle cx="135" cy="70" r="42" fill="none" stroke="#A855F7" strokeWidth="14"/>
@@ -89,7 +80,8 @@ export default async function Image() {
       </div>
     ),
     {
-      ...size,
+      width: 1200,
+      height: 630,
     }
   );
 }

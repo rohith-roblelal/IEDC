@@ -5,6 +5,8 @@ import { Calendar, Plus, X, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { CustomFormBuilder } from "@/components/CustomFormBuilder";
+import { clientFetch, ApiError } from "@/lib/api/client";
+import { getStatusDisplay } from "@/lib/event-utils";
 
 export default function EventsPage() {
   const [events, setEvents] = useState<any[]>([]);
@@ -36,11 +38,8 @@ export default function EventsPage() {
   const fetchEvents = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/events");
-      if (res.ok) {
-        const data = await res.json();
-        setEvents(data.items || []);
-      }
+      const data = await clientFetch("/api/v1/events");
+      setEvents(data.items || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -60,7 +59,7 @@ export default function EventsPage() {
         title: event.title,
         description: event.description,
         banner_url: event.banner_url || "",
-        status: event.is_published ? "PUBLISHED" : "DRAFT",
+        status: event.status || "DRAFT",
         registration_deadline: event.registration_deadline ? new Date(event.registration_deadline).toISOString().slice(0, 16) : "",
         max_participants: event.max_participants || "",
         registration_link: event.registration_link || "",
@@ -99,51 +98,45 @@ const method = editingEvent ? "PUT" : "POST";
 
     const payload = {
       ...formData,
-      is_published: formData.status !== "DRAFT" && formData.status !== "CANCELLED",
+      is_published: formData.status !== "DRAFT",
       max_participants: formData.max_participants ? parseInt(formData.max_participants) : null,
       registration_deadline: formData.registration_deadline ? new Date(formData.registration_deadline).toISOString() : null,
     };
 
     try {
-      const res = await fetch(url, {
+      await clientFetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          },
         body: JSON.stringify(payload)
       });
-      if (res.ok) {
-        setIsModalOpen(false);
-        fetchEvents();
-        showToast("Event saved successfully!", "success");
-      } else {
-        const err = await res.text();
-        showToast("Failed to save: " + err, "error");
-      }
+      setIsModalOpen(false);
+      fetchEvents();
+      showToast("Event saved successfully!", "success");
     } catch (err) {
       console.error(err);
-      showToast("Error saving event", "error");
+      if (err instanceof ApiError) {
+        showToast("Failed to save: " + err.message, "error");
+      } else {
+        showToast("Error saving event", "error");
+      }
     }
   };
 
   const handleConnectGoogleForm = async () => {
     if (!formData.google_form_url || !editingEvent) return showToast("Please save the event first before connecting a Google Form.", "error");
     try {
-const res = await fetch(`/api/v1/events/${editingEvent.id}/google-form/connect`, {
+      const data = await clientFetch(`/api/v1/events/${editingEvent.id}/google-form/connect`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", },
         body: JSON.stringify({ url: formData.google_form_url })
       });
-      const data = await res.json();
-      if (res.ok) {
-        setFormData({ ...formData, google_form_enabled: true, field_mapping: data.data.mapping });
-        showToast("Google Form connected successfully!", "success");
-        fetchEvents(); // Refresh in background
-      } else {
-        showToast(data.detail || "Failed to connect Google Form", "error");
-      }
+      setFormData({ ...formData, google_form_enabled: true, field_mapping: data.data.mapping });
+      showToast("Google Form connected successfully!", "success");
+      fetchEvents(); // Refresh in background
     } catch (err) {
-      showToast("Network error connecting Google Form", "error");
+      if (err instanceof ApiError) {
+        showToast(err.message || "Failed to connect Google Form", "error");
+      } else {
+        showToast("Network error connecting Google Form", "error");
+      }
     }
   };
 
@@ -154,20 +147,20 @@ const res = await fetch(`/api/v1/events/${editingEvent.id}/google-form/connect`,
   const confirmDelete = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     if (!eventToDelete) return;
-try {
+    try {
       console.log("Deleting event:", eventToDelete);
-      const res = await fetch(`/api/v1/events/${eventToDelete}`, {
+      await clientFetch(`/api/v1/events/${eventToDelete}`, {
         method: "DELETE",
-        });
-      if (res.ok) {
-        fetchEvents();
-        showToast("Event deleted", "success");
-      } else {
-        showToast("Failed to delete", "error");
-      }
+      });
+      fetchEvents();
+      showToast("Event deleted", "success");
     } catch (err) {
       console.error(err);
-      showToast("Network error", "error");
+      if (err instanceof ApiError) {
+        showToast("Failed to delete: " + err.message, "error");
+      } else {
+        showToast("Network error", "error");
+      }
     } finally {
       setEventToDelete(null);
     }
@@ -213,16 +206,6 @@ try {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PUBLISHED": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      case "REGISTRATION_OPEN": return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "REGISTRATION_CLOSED": return "bg-orange-500/20 text-orange-400 border-orange-500/30";
-      case "COMPLETED": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
-      case "CANCELLED": return "bg-red-500/20 text-red-400 border-red-500/30";
-      default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -279,8 +262,8 @@ try {
                     </td>
                     <td className="py-4 text-[#C4C4D4]">{new Date(event.created_at).toLocaleDateString()}</td>
                     <td className="py-4">
-                      <span className={`px-2.5 py-1 text-xs rounded-full border ${getStatusColor(event.status)}`}>
-                        {event.status.replace("_", " ")}
+                      <span className={`px-2.5 py-1 text-xs rounded-full border ${getStatusDisplay(event.status).color}`}>
+                        {getStatusDisplay(event.status).text}
                       </span>
                     </td>
                     <td className="py-4 text-[#C4C4D4]">{event.registrations_count || 0} / {event.max_participants || "∞"}</td>

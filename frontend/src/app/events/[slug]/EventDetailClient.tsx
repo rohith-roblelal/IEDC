@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { RegistrationForm } from "@/components/RegistrationForm";
 import { EventResponse } from "@/lib/api/events";
+import { getStatusDisplay } from "@/lib/event-utils";
 
 interface EventDetailClientProps {
   event: EventResponse;
@@ -17,13 +18,6 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   const isRegistrationOpen = event.status === "REGISTRATION_OPEN";
-
-  const getStatusDisplay = (status: string) => {
-    if (status === "REGISTRATION_OPEN") return { text: "Registration Open", color: "bg-[#22D46B]/15 text-[#22D46B]" };
-    if (status === "REGISTRATION_CLOSED") return { text: "Registration Closed", color: "bg-orange-500/15 text-orange-400" };
-    if (status === "COMPLETED") return { text: "Completed", color: "bg-purple-500/15 text-purple-400" };
-    return { text: "Coming Soon", color: "bg-blue-500/15 text-blue-400" };
-  };
 
   return (
     <div className="py-24 px-6 relative max-w-4xl mx-auto">
@@ -48,10 +42,10 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
         animate={{ opacity: 1, y: 0 }}
         className="bg-[#0A0E27] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
       >
-        {event.banner_image_url && (
+        {event.banner_url && (
           <div className="w-full h-64 md:h-96 relative">
             <Image 
-              src={event.banner_image_url} 
+              src={event.banner_url} 
               alt={event.title || "Event Banner"} 
               fill
               sizes="100vw"

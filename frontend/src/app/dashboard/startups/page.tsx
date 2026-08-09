@@ -8,6 +8,10 @@ import { useConfirm } from "@/components/ui/ConfirmProvider";
 import Link from "next/link";
 import { startupsApi } from "@/lib/api/startups";
 import { StartupResponse } from "@/lib/validations/startup";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { groupTeamByRole, sortGroupedRoles, formatRoleDisplay } from "@/lib/team";
+import Image from "next/image";
 
 export default function StartupsPage() {
   const { toast } = useToast();
@@ -123,7 +127,15 @@ export default function StartupsPage() {
               <div className="flex justify-between items-start mb-4 pl-6">
                 <div className="flex items-center space-x-4">
                   {startup.logo_url ? (
-                    <img src={startup.logo_url} alt={startup.name} className="w-12 h-12 rounded-lg object-cover bg-white p-1" />
+                    <div className="relative w-12 h-12 rounded-lg bg-white flex-shrink-0 overflow-hidden flex items-center justify-center">
+                      <Image 
+                        src={startup.logo_url} 
+                        alt={startup.name} 
+                        fill
+                        sizes="48px"
+                        className="object-contain p-1.5"
+                      />
+                    </div>
                   ) : (
                     <div className="w-12 h-12 bg-indigo-500/10 border border-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400">
                       <Rocket size={24} />
@@ -166,12 +178,32 @@ export default function StartupsPage() {
                 {startup.short_description || "No description provided."}
               </p>
               <div className="text-xs text-zinc-500 mt-auto pt-4 border-t border-zinc-800 flex flex-col gap-1.5">
-                {startup.founders && startup.founders.length > 0 && (
-                  <div className="flex items-center">
-                    <span className="text-zinc-400 w-16">Founders:</span> 
-                    <span className="truncate flex-1">{startup.founders.map(f => f.name).join(', ')}</span>
-                  </div>
-                )}
+                {(() => {
+                  const allMembers = [...(startup.founders || []), ...(startup.team_members || [])];
+                  if (allMembers.length === 0) return null;
+                  
+                  const grouped = groupTeamByRole(allMembers);
+                  const sortedRoles = sortGroupedRoles(grouped);
+                  
+                  const topRoles = sortedRoles.slice(0, 3);
+                  const remainingRoles = sortedRoles.length - topRoles.length;
+
+                  return (
+                    <>
+                      {topRoles.map(role => (
+                        <div key={role} className="flex items-start">
+                          <span className="text-zinc-400 w-24 shrink-0">{formatRoleDisplay(role, grouped[role].length)}:</span> 
+                          <span className="truncate flex-1">{grouped[role].map(m => m.name).join(', ')}</span>
+                        </div>
+                      ))}
+                      {remainingRoles > 0 && (
+                        <div className="flex items-center text-zinc-500 mt-1">
+                          <span>+{remainingRoles} more team role{remainingRoles > 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
                 {startup.industry && (
                   <div className="flex items-center">
                     <span className="text-zinc-400 w-16">Industry:</span> 

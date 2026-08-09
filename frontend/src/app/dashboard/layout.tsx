@@ -62,13 +62,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Settings", icon: <Settings size={20} />, href: "/dashboard/settings" },
   ];
 
-  if (!isAuthorized) {
-    return (
-      <div className="min-h-screen bg-[#05081A] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
+  // Note: Route protection is handled by Next.js Middleware.
+  // This state is only used for fetching the user role to display the greeting.
 
   const getGreeting = () => {
     const hour = new Date().getHours();

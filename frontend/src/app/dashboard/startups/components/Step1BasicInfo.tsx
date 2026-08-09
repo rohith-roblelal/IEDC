@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Briefcase, Building2, Calendar, FileText, Link as LinkIcon, Mail, Phone } from 'lucide-react';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 
 export function Step1BasicInfo() {
   const { form, nextStep, batches } = useStartupWizard();
@@ -80,6 +81,29 @@ export function Step1BasicInfo() {
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name="logo_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[#F9FAFB] font-medium">Startup Logo</FormLabel>
+                <FormControl>
+                  <div className="w-full">
+                    <ImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      folder="startups/logos"
+                    />
+                  </div>
+                </FormControl>
+                <p className="text-[0.8rem] text-[#9CA3AF]">
+                  Recommended size: 512×512 PNG or SVG.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}

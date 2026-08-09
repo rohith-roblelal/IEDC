@@ -18,8 +18,8 @@ class EventService:
     def __init__(self, session: AsyncSession):
         self.repo = EventRepository(session)
 
-    async def get_all_events(self, page: int = 1, page_size: int = 20, is_published: Optional[bool] = None, category: Optional[str] = None, search: Optional[str] = None) -> dict:
-        items, total = await self.repo.get_all(page=page, page_size=page_size, is_published=is_published, category=category, search=search)
+    async def get_all_events(self, page: int = 1, page_size: int = 20, is_published: Optional[bool] = None, category: Optional[str] = None, search: Optional[str] = None, date_after: Optional[str] = None, sort: Optional[str] = None, scope: Optional[str] = None) -> dict:
+        items, total = await self.repo.get_all(page=page, page_size=page_size, is_published=is_published, category=category, search=search, date_after=date_after, sort=sort, scope=scope)
         return {
             "items": items,
             "total": total,

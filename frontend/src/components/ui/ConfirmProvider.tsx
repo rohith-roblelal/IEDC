@@ -23,24 +23,24 @@ export const useConfirm = () => {
 export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [resolvePromise, setResolvePromise] = useState<(value: boolean) => void>();
+  const resolvePromiseRef = React.useRef<(value: boolean) => void>(null);
 
   const confirm = (msg: string): Promise<boolean> => {
     setMessage(msg);
     setIsOpen(true);
     return new Promise((resolve) => {
-      setResolvePromise(() => resolve);
+      resolvePromiseRef.current = resolve as (value: boolean) => void;
     });
   };
 
   const handleConfirm = () => {
     setIsOpen(false);
-    if (resolvePromise) resolvePromise(true);
+    if (resolvePromiseRef.current) resolvePromiseRef.current(true);
   };
 
   const handleCancel = () => {
     setIsOpen(false);
-    if (resolvePromise) resolvePromise(false);
+    if (resolvePromiseRef.current) resolvePromiseRef.current(false);
   };
 
   return (
@@ -63,6 +63,7 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
               className="bg-[#111432] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative"
             >
               <button 
+                type="button"
                 onClick={handleCancel}
                 className="absolute top-4 right-4 text-[#C4C4D4] hover:text-white transition-colors"
               >
@@ -82,12 +83,14 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
               
               <div className="flex gap-3 justify-end">
                 <button
+                  type="button"
                   onClick={handleCancel}
                   className="px-4 py-2 rounded-lg font-medium text-white/80 hover:text-white hover:bg-white/5 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleConfirm}
                   className="px-4 py-2 rounded-lg font-medium bg-red-500/90 hover:bg-red-500 text-white transition-colors shadow-lg shadow-red-500/20"
                 >

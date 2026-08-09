@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Rocket, Globe, User, Users, ChevronRight, X, Play } from "lucide-react";
 import Image from "next/image";
+import { groupTeamByRole, sortGroupedRoles, formatRoleDisplay } from "@/lib/team";
 
 interface StartupsClientProps {
   initialStartupSlug?: string;
@@ -39,6 +40,14 @@ export default function StartupsClient({ initialStartupSlug }: StartupsClientPro
 
     fetchStartups();
   }, []);
+
+  const detailTeamGrouped = useMemo(() => {
+    if (!selectedStartup) return { sortedRoles: [], grouped: {} };
+    const allMembers = [...(selectedStartup.founders || []), ...(selectedStartup.team_members || [])];
+    const grouped = groupTeamByRole(allMembers);
+    const sortedRoles = sortGroupedRoles(grouped);
+    return { sortedRoles, grouped };
+  }, [selectedStartup]);
 
   return (
     <div className="min-h-screen text-white selection:bg-[#22D46B] selection:text-[#1A1A2E]">
@@ -104,18 +113,37 @@ export default function StartupsClient({ initialStartupSlug }: StartupsClientPro
                   </p>
                   
                   <div className="pt-4 border-t border-white/10 flex flex-col space-y-2 text-sm text-[#C4C4D4]">
-                    {startup.founders && startup.founders.length > 0 && (
-                      <div className="flex items-center">
-                        <User size={16} className="mr-2 opacity-70" />
-                        <span className="truncate">Founders: {startup.founders.map((f: any) => f.name).join(', ')}</span>
-                      </div>
-                    )}
-                    {startup.team_members && startup.team_members.length > 0 && (
-                      <div className="flex items-center">
-                        <Users size={16} className="mr-2 opacity-70" />
-                        <span>{startup.team_members.length} Team Members</span>
-                      </div>
-                    )}
+                    {(() => {
+                      const allMembers = [...(startup.founders || []), ...(startup.team_members || [])];
+                      if (allMembers.length === 0) return null;
+                      
+                      const grouped = groupTeamByRole(allMembers);
+                      const sortedRoles = sortGroupedRoles(grouped);
+                      
+                      const topRoles = sortedRoles.slice(0, 3);
+                      const topMembersCount = topRoles.reduce((sum, role) => sum + grouped[role].length, 0);
+                      const remainingCount = allMembers.length - topMembersCount;
+
+                      return (
+                        <>
+                          {topRoles.map(role => (
+                            <div key={role} className="flex items-start">
+                              <User size={16} className="mr-2 mt-0.5 opacity-70 shrink-0" />
+                              <span className="truncate">
+                                <span className="font-medium text-white/80">{formatRoleDisplay(role, grouped[role].length)}:</span>{' '}
+                                {grouped[role].map((m: any) => m.name).join(', ')}
+                              </span>
+                            </div>
+                          ))}
+                          {remainingCount > 0 && (
+                            <div className="flex items-center">
+                              <Users size={16} className="mr-2 opacity-70 shrink-0" />
+                              <span>+{remainingCount} more team role{remainingCount > 1 ? 's' : ''}</span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                     {startup.website_url && (
                       <div className="flex items-center text-[#22D46B]">
                         <Globe size={16} className="mr-2" />
@@ -252,41 +280,25 @@ export default function StartupsClient({ initialStartupSlug }: StartupsClientPro
                       </div>
                     </section>
                     
-                    {(selectedStartup.founders?.length > 0 || selectedStartup.team_members?.length > 0) && (
+                    {detailTeamGrouped.sortedRoles.length > 0 && (
                       <section className="bg-white/5 border border-white/10 rounded-xl p-5">
                         <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 opacity-80">Team</h3>
                         
-                        {selectedStartup.founders?.length > 0 && (
-                          <div className="mb-4">
-                            <p className="text-white/50 mb-2 text-xs">Founders</p>
-                            <ul className="space-y-2">
-                              {selectedStartup.founders.map((founder: any, i: number) => (
-                                <li key={i} className="text-[#C4C4D4] text-sm flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
-                                  <span className="font-medium text-white">{founder.name}</span>
-                                  {founder.role && <span className="opacity-70 text-xs">({founder.role})</span>}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {selectedStartup.team_members?.length > 0 && (
-                          <div>
-                            <p className="text-white/50 mb-2 text-xs">Key Members</p>
-                            <ul className="space-y-3">
-                              {selectedStartup.team_members.map((member: any, i: number) => (
-                                <li key={i} className="text-[#C4C4D4] text-sm">
-                                  <div className="flex items-center gap-2 mb-0.5">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#22D46B]/50" />
+                        <div className="space-y-5">
+                          {detailTeamGrouped.sortedRoles.map(role => (
+                            <div key={role}>
+                              <p className="text-white/50 mb-2 text-xs border-b border-white/5 pb-1 uppercase tracking-widest">{role}</p>
+                              <ul className="space-y-2">
+                                {detailTeamGrouped.grouped[role].map((member: any, i: number) => (
+                                  <li key={i} className="text-[#C4C4D4] text-sm flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
                                     <span className="font-medium text-white">{member.name}</span>
-                                  </div>
-                                  <span className="ml-3.5 text-xs opacity-70 block">{member.role}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
                       </section>
                     )}
                   </div>

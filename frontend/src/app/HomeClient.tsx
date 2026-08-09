@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Play, Megaphone, Settings } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Play, Megaphone, Settings, X, ExternalLink, Calendar } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useSettings } from "@/lib/settings-context";
+import { EventCard } from "@/components/events/EventCard";
 
 export default function HomeClient() {
   const { toast } = useToast();
@@ -14,6 +15,16 @@ export default function HomeClient() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [podcasts, setPodcasts] = useState<any[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
+  const [partnersLoading, setPartnersLoading] = useState(true);
+  const [selectedPartner, setSelectedPartner] = useState<any | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedPartner(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -50,6 +61,8 @@ export default function HomeClient() {
         }
       } catch (err) {
         console.error(err);
+      } finally {
+        setPartnersLoading(false);
       }
     };
 
@@ -57,6 +70,22 @@ export default function HomeClient() {
     fetchPodcast();
     fetchPartners();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedPartner(null);
+      }
+    };
+    
+    if (selectedPartner) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedPartner]);
 
   if (settings.maintenance_mode) {
     return (
@@ -124,27 +153,45 @@ export default function HomeClient() {
             </Link>
           </div>
           
-          <motion.svg 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="mt-11 mx-auto w-[min(220px,60%)]" 
-            viewBox="0 0 200 200" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <defs>
-              <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#3B82F6"/>
-                <stop offset="50%" stopColor="#A855F7"/>
-                <stop offset="100%" stopColor="#F97316"/>
-              </linearGradient>
-            </defs>
-            <circle cx="65" cy="70" r="42" fill="none" stroke="url(#logoGrad)" strokeWidth="14"/>
-            <circle cx="135" cy="70" r="42" fill="none" stroke="url(#logoGrad)" strokeWidth="14"/>
-            <path d="M105 40 L80 75 L100 75 L90 110 L125 65 L103 65 Z" fill="url(#logoGrad)"/>
-            <text x="100" y="150" textAnchor="middle" fontFamily="var(--font-poppins)" fontWeight="800" fontSize="26" fill="#FFFFFF">IEDC</text>
-            <text x="100" y="172" textAnchor="middle" fontFamily="var(--font-poppins)" fontWeight="500" fontSize="13" fill="#A855F7">SNMIMT</text>
-          </motion.svg>
+          {settings.hero_image_url ? (
+            <motion.div 
+               initial={{ scale: 0.95, opacity: 0 }}
+               animate={{ scale: 1, opacity: 1 }}
+               transition={{ delay: 0.3, duration: 0.8 }}
+               className="mt-11 mx-auto w-[min(800px,100%)] h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative"
+            >
+              <Image 
+                src={settings.hero_image_url} 
+                alt={`${settings.site_name || 'IEDC'} Hero Banner`} 
+                fill
+                priority={true}
+                sizes="(max-width: 800px) 100vw, 800px"
+                className="object-cover" 
+              />
+            </motion.div>
+          ) : (
+            <motion.svg 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="mt-11 mx-auto w-[min(220px,60%)]" 
+              viewBox="0 0 200 200" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3B82F6"/>
+                  <stop offset="50%" stopColor="#A855F7"/>
+                  <stop offset="100%" stopColor="#F97316"/>
+                </linearGradient>
+              </defs>
+              <circle cx="65" cy="70" r="42" fill="none" stroke="url(#logoGrad)" strokeWidth="14"/>
+              <circle cx="135" cy="70" r="42" fill="none" stroke="url(#logoGrad)" strokeWidth="14"/>
+              <path d="M105 40 L80 75 L100 75 L90 110 L125 65 L103 65 Z" fill="url(#logoGrad)"/>
+              <text x="100" y="150" textAnchor="middle" fontFamily="var(--font-poppins)" fontWeight="800" fontSize="26" fill="#FFFFFF">IEDC</text>
+              <text x="100" y="172" textAnchor="middle" fontFamily="var(--font-poppins)" fontWeight="500" fontSize="13" fill="#A855F7">SNMIMT</text>
+            </motion.svg>
+          )}
         </motion.div>
       </section>
 
@@ -189,7 +236,6 @@ export default function HomeClient() {
           </div>
         </section>
       )}
-
       {/* Podcast Section */}
       {podcasts.length > 0 && (
         <section className="px-6 py-24">
@@ -274,50 +320,109 @@ export default function HomeClient() {
       </section>
 
       {/* Partners Section */}
-      <section id="partners" className="px-6 pb-12">
-        <h2 className="text-center text-[clamp(2.2rem,8vw,3.4rem)] font-light text-white/90 my-10 uppercase tracking-widest">
-          Collaborative
-        </h2>
-        <div className="flex flex-wrap justify-center gap-4 max-w-[900px] mx-auto">
-          {partners.length > 0 ? (
-            partners.map((partner) => (
-              <div key={partner.id} className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] bg-white rounded-xl h-[90px] flex items-center justify-center text-[#1A1A2E] font-bold text-sm text-center p-2 shadow-lg overflow-hidden">
-                {partner.image_url ? (
-                  <div className="relative w-full h-full p-2">
+      {partnersLoading || partners.length > 0 ? (
+        <section id="partners" className="px-6 pb-12">
+          <h2 className="text-center text-[clamp(2.2rem,8vw,3.4rem)] font-light text-white/90 my-10 uppercase tracking-widest">
+            Collaborative
+          </h2>
+          <div className="flex flex-wrap justify-center gap-4 max-w-[900px] mx-auto">
+            {partnersLoading ? (
+              // Skeleton Loaders for Hydration/SSR consistency
+              Array.from({ length: 4 }).map((_, idx) => (
+                <div 
+                  key={`skeleton-${idx}`} 
+                  className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] bg-white/5 border border-white/10 rounded-2xl h-[140px] animate-pulse"
+                />
+              ))
+            ) : (
+              partners.map((partner) => (
+                <motion.button 
+                  key={partner.id} 
+                  onClick={() => setSelectedPartner(partner)}
+                  whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)" }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl h-[140px] flex items-center justify-center text-white font-bold text-sm text-center p-4 transition-colors overflow-hidden cursor-pointer shadow-lg"
+                >
+                  {partner.image_url ? (
+                    <div className="relative w-full h-full p-2">
+                      <Image 
+                        src={partner.image_url} 
+                        alt={partner.name} 
+                        fill
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                        className="object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <span className="break-words px-2">{partner.name}</span>
+                  )}
+                </motion.button>
+              ))
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {/* Partner Details Modal */}
+      <AnimatePresence>
+        {selectedPartner && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedPartner(null)}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[#1A1D3D] border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl relative overflow-hidden"
+            >
+              <button 
+                onClick={() => setSelectedPartner(null)}
+                className="absolute top-4 right-4 text-[#C4C4D4] hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full p-2"
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="flex flex-col items-center mt-2">
+                {selectedPartner.image_url ? (
+                  <div className="w-40 h-40 relative mb-6 bg-white/5 rounded-2xl p-4 border border-white/10">
                     <Image 
-                      src={partner.image_url} 
-                      alt={partner.name} 
+                      src={selectedPartner.image_url} 
+                      alt={selectedPartner.name} 
                       fill
                       className="object-contain p-2" 
                     />
                   </div>
                 ) : (
-                  <span>{partner.name}</span>
+                  <div className="w-32 h-32 relative mb-6 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center text-3xl font-bold text-white text-center">
+                    {selectedPartner.name.charAt(0)}
+                  </div>
+                )}
+                
+                <h3 className="text-2xl font-bold text-white text-center mb-3">
+                  {selectedPartner.name}
+                </h3>
+                
+                {selectedPartner.description && (
+                  <p className="text-[#C4C4D4] text-center mb-6 text-sm leading-relaxed max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {selectedPartner.description}
+                  </p>
+                )}
+                
+                {selectedPartner.website_url && (
+                  <a 
+                    href={selectedPartner.website_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl transition-all hover:shadow-[0_0_15px_rgba(5,150,105,0.4)]"
+                  >
+                    Visit Website <ExternalLink size={18} />
+                  </a>
                 )}
               </div>
-            ))
-          ) : (
-            [
-              { name: "Institution's Innovation Council", content: "Institution's Innovation Council" },
-              { 
-                name: "ed club", 
-                content: (
-                  <div className="bg-white rounded-[14px] shadow-[0_8px_30px_rgba(168,85,247,0.15)] w-[110px] h-[65px] flex flex-col items-center justify-center leading-[1.1] font-extrabold tracking-tight text-[#2D2D2D]">
-                    <span className="text-[1.05rem]">ed</span>
-                    <span className="text-[0.95rem]">club</span>
-                  </div>
-                )
-              },
-              { name: "TinkerHub", content: "TinkerHub" },
-              { name: "y1p", content: "y1p" }
-            ].map((partner) => (
-              <div key={partner.name} className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] bg-white rounded-xl h-[90px] flex items-center justify-center text-[#1A1A2E] font-bold text-sm text-center p-2 shadow-lg">
-                {partner.content}
-              </div>
-            ))
-          )}
-        </div>
-      </section>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

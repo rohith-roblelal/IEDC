@@ -5,6 +5,7 @@ import { Megaphone, X, Trash2, Edit, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { clientFetch, ApiError } from "@/lib/api/client";
 
 export default function AnnouncementsPage() {
   const { toast } = useToast();
@@ -24,11 +25,8 @@ export default function AnnouncementsPage() {
   const fetchAnnouncements = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/announcements");
-      if (res.ok) {
-        const data = await res.json();
-        setAnnouncements(data.items || (Array.isArray(data) ? data : []));
-      }
+      const data = await clientFetch("/api/v1/announcements");
+      setAnnouncements(data.items || (Array.isArray(data) ? data : []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -67,29 +65,25 @@ export default function AnnouncementsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-try {
+    try {
       const url = editingAnnouncement 
         ? `/api/v1/announcements/${editingAnnouncement.id}` 
         : "/api/v1/announcements";
       
-      const res = await fetch(url, {
+      await clientFetch(url, {
         method: editingAnnouncement ? "PUT" : "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          },
         body: JSON.stringify(formData)
       });
       
-      if (res.ok) {
-        handleCloseModal();
-        fetchAnnouncements();
-      } else {
-        toast("Failed to save announcement", "error");
-      }
+      handleCloseModal();
+      fetchAnnouncements();
     } catch (err) {
       console.error(err);
-      toast("An error occurred", "error");
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to save announcement", "error");
+      } else {
+        toast("An unexpected error occurred", "error");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -97,20 +91,18 @@ try {
 
   const handleDelete = async (id: string) => {
     if (!(await confirm("Are you sure you want to delete this announcement?"))) return;
-try {
-      const res = await fetch(`/api/v1/announcements/${id}`, {
+    try {
+      await clientFetch(`/api/v1/announcements/${id}`, {
         method: "DELETE",
-        });
-      
-      if (res.ok) {
-        fetchAnnouncements();
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        toast("Failed to delete announcement", "error");
-      }
+      });
+      fetchAnnouncements();
     } catch (err) {
       console.error(err);
-      toast("An error occurred", "error");
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to delete announcement", "error");
+      } else {
+        toast("An unexpected error occurred", "error");
+      }
     }
   };
 

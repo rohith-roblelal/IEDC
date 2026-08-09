@@ -10,7 +10,7 @@ export interface EventResponse {
   start_datetime: string;
   end_datetime: string;
   is_published: boolean;
-  banner_image_url?: string;
+  banner_url?: string;
   registration_deadline?: string;
   max_participants?: number;
   registration_link?: string;
@@ -31,7 +31,7 @@ export interface EventCreate {
   start_datetime: string;
   end_datetime: string;
   is_published?: boolean;
-  banner_image_url?: string;
+  banner_url?: string;
   registration_deadline?: string;
   max_participants?: number;
   registration_link?: string;
@@ -47,7 +47,7 @@ export interface EventUpdate {
   start_datetime?: string;
   end_datetime?: string;
   is_published?: boolean;
-  banner_image_url?: string;
+  banner_url?: string;
   registration_deadline?: string;
   max_participants?: number;
   registration_link?: string;
@@ -55,14 +55,15 @@ export interface EventUpdate {
 
 export const EventsAPI = {
   getEvents: async (params: any = {}, publicOnly: boolean = false, options: any = {}) => {
+    if (publicOnly) {
+      params = { ...params, is_published: true };
+    }
     const urlParams = new URLSearchParams(params).toString();
-    const endpoint = publicOnly 
-      ? `/api/v1/events/public${urlParams ? `?${urlParams}` : ''}` 
-      : `/api/v1/events${urlParams ? `?${urlParams}` : ''}`;
+    const endpoint = `/api/v1/events${urlParams ? `?${urlParams}` : ''}`;
     return clientFetch(endpoint, options);
   },
   getEvent: async (slug: string, publicOnly: boolean = false, options: any = {}) => {
-    const endpoint = publicOnly ? `/api/v1/events/public/${slug}` : `/api/v1/events/${slug}`;
+    const endpoint = `/api/v1/events/${slug}`;
     return clientFetch(endpoint, options);
   },
   createEvent: async (data: any) => {

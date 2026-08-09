@@ -60,7 +60,7 @@ async function handleResponse(response: Response) {
 type FetchOptions = RequestInit & { timeout?: number };
 
 async function fetchWithTimeout(url: string, options: FetchOptions = {}) {
-  const { timeout = 8000, ...fetchOptions } = options;
+  const { timeout = 30000, ...fetchOptions } = options;
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
@@ -89,7 +89,9 @@ export async function clientFetch(path: string, options: FetchOptions = {}) {
   
   const headers = new Headers(options.headers || {});
   headers.set("Accept", "application/json");
-  if (!options.body || typeof options.body === "string") {
+  
+  const method = options.method ? options.method.toUpperCase() : "GET";
+  if (method !== "GET" && (!options.body || typeof options.body === "string")) {
       headers.set("Content-Type", "application/json");
   }
 

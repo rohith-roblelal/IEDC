@@ -20,23 +20,37 @@ import { cn } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
-  title: {
-    default: "IEDC SNMIMT | Innovation and Entrepreneurship Development Cell",
-    template: "%s | IEDC SNMIMT",
-  },
-  description: "Fostering innovations combined with entrepreneurship amongst young minds at SNMIMT.",
-  openGraph: {
-    type: "website",
-    locale: "en_IN",
-    siteName: "IEDC SNMIMT",
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: "@iedcsnmimt",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  let settings = null;
+  try {
+    settings = await clientFetch("api/v1/settings", { next: { revalidate: 60 } });
+  } catch (error) {}
+
+  const siteName = settings?.site_name || "IEDC SNMIMT";
+  const tagline = settings?.site_tagline || "Innovation and Entrepreneurship Development Cell";
+  const defaultOgImage = "/api/og";
+  
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+    title: {
+      default: `${siteName} | ${tagline}`,
+      template: `%s | ${siteName}`,
+    },
+    description: settings?.seo_description || settings?.about_description || "Fostering innovations combined with entrepreneurship amongst young minds.",
+    icons: settings?.favicon_url ? { icon: settings.favicon_url } : undefined,
+    openGraph: {
+      type: "website",
+      locale: "en_IN",
+      siteName: siteName,
+      images: settings?.og_image_url ? [settings.og_image_url] : [defaultOgImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@iedcsnmimt",
+      images: settings?.og_image_url ? [settings.og_image_url] : [defaultOgImage],
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -47,11 +61,7 @@ export default async function RootLayout({
   try {
     initialSettings = await clientFetch("api/v1/settings", { next: { revalidate: 60 } });
   } catch (error: any) {
-    if (error?.name === "ApiError") {
-      console.error("Failed to fetch initial settings:", error);
-    } else {
-      throw error;
-    }
+    console.error("Failed to fetch initial settings:", error);
   }
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useSettings } from "@/lib/settings-context";
 
@@ -20,7 +21,20 @@ export default function Footer() {
   return (
     <footer className="bg-[#0A0A0F] rounded-t-[28px] px-6 pt-16 pb-10 mt-10">
       <div className="max-w-[700px] mx-auto text-center">
-        <h3 className="text-2xl font-bold text-white">{settings.site_name}</h3>
+        <div className="flex items-center justify-center gap-3 mb-2">
+          {settings.logo_url && (
+            <div className="relative h-[28px] w-[28px]">
+              <Image 
+                src={settings.logo_url} 
+                alt={`${settings.site_name} Logo`} 
+                fill
+                sizes="28px"
+                className="object-contain"
+              />
+            </div>
+          )}
+          <h3 className="text-2xl font-bold text-white">{settings.site_name}</h3>
+        </div>
         {settings.contact_address && (
           <p className="text-[#C4C4D4] font-medium mt-3.5 text-[0.95rem]">
             {settings.contact_address}

@@ -22,7 +22,7 @@ const eventSchema = z.object({
   start_datetime: z.string().min(1, "Start date is required"),
   end_datetime: z.string().min(1, "End date is required"),
   is_published: z.boolean(),
-  banner_image_url: z.string().optional().or(z.literal("")),
+  banner_url: z.string().optional().or(z.literal("")),
   registration_deadline: z.string().optional().or(z.literal("")),
   max_participants: z.coerce.number().min(1).optional().or(z.literal("").transform(() => undefined)),
   registration_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
@@ -62,7 +62,7 @@ export function EventForm({ initialData, onClose, onSaved, showToast }: EventFor
       start_datetime: new Date(initialData.start_datetime).toISOString().slice(0, 16),
       end_datetime: new Date(initialData.end_datetime).toISOString().slice(0, 16),
       is_published: initialData.is_published,
-      banner_image_url: initialData.banner_image_url || "",
+      banner_url: (initialData as any).banner_url || "",
       registration_deadline: initialData.registration_deadline ? new Date(initialData.registration_deadline).toISOString().slice(0, 16) : "",
       max_participants: initialData.max_participants || undefined,
       registration_link: initialData.registration_link || "",
@@ -76,7 +76,7 @@ export function EventForm({ initialData, onClose, onSaved, showToast }: EventFor
       start_datetime: "",
       end_datetime: "",
       is_published: false,
-      banner_image_url: "",
+      banner_url: "",
       registration_deadline: "",
       max_participants: undefined,
       registration_link: "",
@@ -84,7 +84,7 @@ export function EventForm({ initialData, onClose, onSaved, showToast }: EventFor
   });
 
   const title = watch("title");
-  const banner_image_url = watch("banner_image_url");
+  const banner_url = watch("banner_url");
 
   // Auto-generate slug
   useEffect(() => {
@@ -168,8 +168,8 @@ export function EventForm({ initialData, onClose, onSaved, showToast }: EventFor
           <div>
             <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Event Banner</label>
             <ImageUpload 
-              value={banner_image_url || ""}
-              onChange={(url) => setValue("banner_image_url", url, { shouldDirty: true })}
+              value={banner_url || ""}
+              onChange={(url) => setValue("banner_url", url, { shouldDirty: true })}
               folder="events"
             />
           </div>

@@ -9,6 +9,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy import text
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.core.config import settings
 from app.api.router import api_router
@@ -53,7 +54,8 @@ async def lifespan(app: FastAPI):
         logger.info("database_connected")
     except Exception as e:
         logger.critical("startup_validation_failed", error=str(e))
-        raise RuntimeError(f"Critical startup dependency failed: {e}")
+        if settings.ENVIRONMENT != "development":
+            raise RuntimeError(f"Critical startup dependency failed: {e}")
 
     yield
 
@@ -110,7 +112,12 @@ async def generic_exception_handler(request: Request, exc: Exception):
 # Rate Limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-# Add Observability Middleware FIRST so it wraps everything else
+
+# 1. Trust proxies (X-Forwarded-For) before rate limiting or observability
+trusted_hosts = [h.strip() for h in settings.TRUSTED_PROXIES.split(",")] if settings.TRUSTED_PROXIES else []
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=trusted_hosts)
+
+# 2. Add Observability Middleware so it wraps everything else
 app.add_middleware(ObservabilityMiddleware)
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(PrometheusMiddleware)
@@ -151,6 +158,31 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 app.add_middleware(SecurityHeadersMiddleware)
+
+class CSRFOriginMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.method in ["POST", "PUT", "PATCH", "DELETE"]:
+            origin = request.headers.get("origin")
+            referer = request.headers.get("referer")
+            
+            # Extract base origin from referer if origin is missing
+            if not origin and referer:
+                from urllib.parse import urlparse
+                parsed_referer = urlparse(referer)
+                origin = f"{parsed_referer.scheme}://{parsed_referer.netloc}"
+                
+            if origin:
+                allowed_origins = [url.strip() for url in settings.FRONTEND_URLS.split(",") if url.strip()]
+                if origin not in allowed_origins:
+                    logger.warning("csrf_origin_mismatch", expected=allowed_origins, received=origin)
+                    return JSONResponse(
+                        status_code=403, 
+                        content={"detail": "Invalid Origin. Potential CSRF attempt rejected."}
+                    )
+        
+        return await call_next(request)
+
+app.add_middleware(CSRFOriginMiddleware)
 
 from urllib.parse import urlparse
 

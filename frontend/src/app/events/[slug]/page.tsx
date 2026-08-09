@@ -29,13 +29,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: event.short_description || event.description.substring(0, 160),
         url: `${baseUrl}/events/${slug}`,
         type: "article",
-        images: event.banner_image_url ? [{ url: event.banner_image_url }] : [],
+        images: event.banner_url ? [{ url: event.banner_url }] : [],
       },
       twitter: {
         card: "summary_large_image",
         title: event.title,
         description: event.short_description || event.description.substring(0, 160),
-        images: event.banner_image_url ? [event.banner_image_url] : [],
+        images: event.banner_url ? [event.banner_url] : [],
       }
     };
   } catch (error) {
@@ -56,7 +56,7 @@ export default async function EventDetailPage({ params }: Props) {
     const eventJsonLd = {
       name: event.title,
       description: event.short_description || event.description.substring(0, 160),
-      image: event.banner_image_url,
+      image: event.banner_url,
       startDate: event.start_date,
       endDate: event.end_date || event.start_date,
       eventStatus: "https://schema.org/EventScheduled",

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { clientFetch, ApiError } from "@/lib/api/client";
 
 export default function PodcastsPage() {
   const { toast } = useToast();
@@ -30,11 +31,8 @@ export default function PodcastsPage() {
   const fetchPodcasts = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/podcasts");
-      if (res.ok) {
-        const data = await res.json();
-        setPodcasts(data.items || (Array.isArray(data) ? data : []));
-      }
+      const data = await clientFetch("/api/v1/podcasts");
+      setPodcasts(data.items || (Array.isArray(data) ? data : []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -91,23 +89,20 @@ try {
         image_url: formData.image_url || null,
       };
 
-      const res = await fetch(url, {
+      await clientFetch(url, {
         method: editingPodcast ? "PUT" : "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          },
         body: JSON.stringify(payload)
       });
       
-      if (res.ok) {
-        handleCloseModal();
-        fetchPodcasts();
-      } else {
-        toast("Failed to save podcast", "error");
-      }
+      handleCloseModal();
+      fetchPodcasts();
     } catch (err) {
       console.error(err);
-      toast("An error occurred", "error");
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to save podcast", "error");
+      } else {
+        toast("An error occurred", "error");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -115,38 +110,35 @@ try {
 
   const handleDelete = async (id: string) => {
     if (!(await confirm("Are you sure you want to delete this podcast?"))) return;
-try {
-      const res = await fetch(`/api/v1/podcasts/${id}`, {
+    try {
+      await clientFetch(`/api/v1/podcasts/${id}`, {
         method: "DELETE",
-        });
+      });
       
-      if (res.ok) {
-        fetchPodcasts();
-      } else {
-        toast("Failed to delete podcast", "error");
-      }
+      fetchPodcasts();
     } catch (err) {
       console.error(err);
-      toast("An error occurred", "error");
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to delete podcast", "error");
+      } else {
+        toast("An error occurred", "error");
+      }
     }
   };
 
   const setAsActive = async (id: string, podcast: any) => {
-try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res = await fetch(`/api/v1/podcasts/${id}`, {
+    try {
+      await clientFetch(`/api/v1/podcasts/${id}`, {
         method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          },
         body: JSON.stringify({ is_active: true })
       });
       
-      if (res.ok) {
-        fetchPodcasts();
-      }
+      fetchPodcasts();
     } catch (err) {
       console.error(err);
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to set as active", "error");
+      }
     }
   };
 

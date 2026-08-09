@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
+import { clientFetch, ApiError } from "@/lib/api/client";
 
 export default function TeamPage() {
   const { toast } = useToast();
@@ -34,11 +35,8 @@ export default function TeamPage() {
   const fetchTeam = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/team");
-      if (res.ok) {
-        const data = await res.json();
-        setTeam(data.items || (Array.isArray(data) ? data : []));
-      }
+      const data = await clientFetch("/api/v1/team");
+      setTeam(data.items || (Array.isArray(data) ? data : []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -106,23 +104,19 @@ const method = editingMember ? "PUT" : "POST";
     };
 
     try {
-      const res = await fetch(url, {
+      await clientFetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          },
         body: JSON.stringify(payload)
       });
-      if (res.ok) {
-        setIsModalOpen(false);
-        fetchTeam();
-      } else {
-        const err = await res.json();
-        setFormError(err.detail || "Failed to save member");
-      }
+      setIsModalOpen(false);
+      fetchTeam();
     } catch (err) {
       console.error(err);
-      setFormError("A network error occurred while saving.");
+      if (err instanceof ApiError) {
+        setFormError(err.message || "Failed to save member");
+      } else {
+        setFormError("A network error occurred while saving.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -130,17 +124,18 @@ const method = editingMember ? "PUT" : "POST";
 
   const handleDelete = async (id: string) => {
     if (!(await confirm("Are you sure you want to delete this team member?"))) return;
-try {
-      const res = await fetch(`/api/v1/team/${id}`, {
+    try {
+      await clientFetch(`/api/v1/team/${id}`, {
         method: "DELETE",
-        });
-      if (res.ok) {
-        fetchTeam();
-      } else {
-        toast("Failed to delete", "error");
-      }
+      });
+      fetchTeam();
     } catch (err) {
       console.error(err);
+      if (err instanceof ApiError) {
+        toast(err.message || "Failed to delete", "error");
+      } else {
+        toast("Unexpected error occurred.", "error");
+      }
     }
   };
 
