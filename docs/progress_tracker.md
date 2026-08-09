@@ -310,43 +310,43 @@ Ensure the website is fully accessible and compliant with modern accessibility s
 
 #### Navigation
 
-* Full keyboard navigation.
-* Proper tab order.
-* Visible focus indicators.
-* Skip navigation support where applicable.
+* [x] Full keyboard navigation.
+* [x] Proper tab order.
+* [x] Visible focus indicators.
+* [x] Skip navigation support where applicable.
 
 #### Semantic Structure
 
-* Proper heading hierarchy.
-* Landmark elements.
-* Accessible forms.
-* Descriptive labels.
+* [x] Proper heading hierarchy.
+* [x] Landmark elements.
+* [x] Accessible forms.
+* [x] Descriptive labels.
 
 #### Screen Reader Support
 
-* Correct ARIA labels.
-* Accessible dialogs.
-* Accessible dropdowns.
-* Accessible modals with focus trapping.
+* [x] Correct ARIA labels.
+* [x] Accessible dialogs.
+* [x] Accessible dropdowns.
+* [x] Accessible modals with focus trapping.
 
 #### Visual Accessibility
 
-* Validate color contrast.
-* Accessible validation messages.
-* Accessible buttons and icons.
-* Meaningful image `alt` text.
+* [x] Validate color contrast.
+* [x] Accessible validation messages.
+* [x] Accessible buttons and icons.
+* [x] Meaningful image `alt` text.
 
 #### Testing
 
-* Lighthouse Accessibility Audit.
-* Manual keyboard testing.
-* Screen reader verification.
+* [x] Lighthouse Accessibility Audit.
+* [x] Manual keyboard testing.
+* [x] Screen reader verification.
 
 ### Exit Criteria
 
-* No critical accessibility issues.
-* Lighthouse Accessibility Score ≥ 95.
-* All interactive components are keyboard accessible.
+* [x] No critical accessibility issues.
+* [x] Lighthouse Accessibility Score ≥ 95.
+* [x] All interactive components are keyboard accessible.
 
 ---
 
@@ -360,37 +360,40 @@ Optimize the public website for search engines and social media sharing.
 
 #### Metadata
 
-* Dynamic page titles.
-* Meta descriptions.
-* Canonical URLs.
-* Open Graph metadata.
-* Twitter/X Card metadata.
+* [x] Dynamic page titles.
+* [x] Meta descriptions.
+* [x] Canonical URLs.
+* [x] Open Graph metadata.
+* [x] Twitter/X Card metadata.
 
 #### Structured Data
 
-* JSON-LD for Organization.
-* JSON-LD for Events.
-* JSON-LD for Articles (if applicable).
+* [x] JSON-LD for Organization.
+* [x] JSON-LD for Events (with correct `eventStatus` mapping).
+* [x] JSON-LD BreadcrumbList on detail pages.
+* [x] JSON-LD FAQPage on Home.
 
 #### Search Engine Support
 
-* XML Sitemap.
-* `robots.txt`.
-* Proper indexing directives.
-* Canonical URL validation.
+* [x] XML Sitemap (dynamic with events + startups).
+* [x] `robots.txt` configured.
+* [x] Proper indexing directives (noindex on 404, 403, login, dashboard).
+* [x] Canonical URL validation.
+* [x] `/403` added to robots disallow list.
 
 #### Branding
 
-* Favicon.
-* Apple Touch Icons.
-* Social preview images.
+* [x] Favicon configured (dynamic from settings).
+* [x] Apple Touch Icons.
+* [x] Social preview images (OG image route).
+* [x] Web App Manifest (`manifest.ts`).
 
 ### Exit Criteria
 
-* Complete metadata on all public pages.
-* Sitemap generated successfully.
-* Robots configuration verified.
-* Social previews render correctly.
+* [x] Complete metadata on all public pages.
+* [x] Sitemap generated successfully.
+* [x] Robots configuration verified.
+* [x] Social previews render correctly.
 
 ---
 

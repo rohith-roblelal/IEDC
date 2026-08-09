@@ -33,7 +33,7 @@ export default function Footer() {
               />
             </div>
           )}
-          <h3 className="text-2xl font-bold text-white">{settings.site_name}</h3>
+          <p className="text-2xl font-bold text-white">{settings.site_name}</p>
         </div>
         {settings.contact_address && (
           <p className="text-[#C4C4D4] font-medium mt-3.5 text-[0.95rem]">
@@ -43,7 +43,7 @@ export default function Footer() {
 
         <div className="w-px h-[60px] bg-white/15 mx-auto my-10"></div>
 
-        <h3 className="text-2xl font-bold text-white">Contact</h3>
+        <h2 className="text-2xl font-bold text-white">Contact</h2>
         
         <form 
           className="bg-white rounded-[18px] p-8 max-w-[420px] mx-auto mt-6 shadow-2xl text-left"
@@ -73,25 +73,37 @@ export default function Footer() {
             }
           }}
         >
-          <input 
-            type="text" 
-            placeholder="Your Name" 
-            required 
-            className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] mb-3.5 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-          />
-          <input 
-            type="email" 
-            placeholder="Your Email" 
-            required 
-            className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] mb-3.5 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-          />
-          <textarea 
-            placeholder="Your Enquiry" 
-            required 
-            className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] mb-3.5 outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[90px] resize-y"
-          ></textarea>
-          <button 
-            type="submit" 
+          <div className="space-y-1 mb-3.5">
+            <label htmlFor="footer-name" className="block text-sm font-medium text-gray-700">Your Name</label>
+            <input
+              id="footer-name"
+              type="text"
+              placeholder="Your Name"
+              required
+              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            />
+          </div>
+          <div className="space-y-1 mb-3.5">
+            <label htmlFor="footer-email" className="block text-sm font-medium text-gray-700">Your Email</label>
+            <input
+              id="footer-email"
+              type="email"
+              placeholder="Your Email"
+              required
+              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            />
+          </div>
+          <div className="space-y-1 mb-3.5">
+            <label htmlFor="footer-message" className="block text-sm font-medium text-gray-700">Your Enquiry</label>
+            <textarea
+              id="footer-message"
+              placeholder="Your Enquiry"
+              required
+              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[90px] resize-y"
+            ></textarea>
+          </div>
+          <button
+            type="submit"
             className="w-full bg-[#4F7DF9] text-white font-bold py-3.5 rounded-full hover:-translate-y-0.5 transition-transform"
           >
             Send
@@ -109,7 +121,7 @@ export default function Footer() {
                 aria-label={s.label}
                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
                   {s.icon}
                 </svg>
               </Link>

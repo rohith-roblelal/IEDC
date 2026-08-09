@@ -37,7 +37,17 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${siteName}`,
     },
     description: settings?.seo_description || settings?.about_description || "Fostering innovations combined with entrepreneurship amongst young minds.",
-    icons: settings?.favicon_url ? { icon: settings.favicon_url } : undefined,
+    icons: settings?.favicon_url
+      ? {
+          icon: settings.favicon_url,
+          shortcut: settings.favicon_url,
+          apple: settings.favicon_url,
+        }
+      : {
+          icon: "/favicon.ico",
+          apple: "/logo.png",
+        },
+    manifest: "/manifest.webmanifest",
     openGraph: {
       type: "website",
       locale: "en_IN",
@@ -101,13 +111,20 @@ export default async function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className={`${poppins.variable} font-sans bg-[radial-gradient(circle_at_75%_20%,#3D1A5C,#0D1030_70%)] bg-fixed bg-[#0D1030] text-white antialiased min-h-screen flex flex-col`}>
+        {/* Skip navigation - WCAG 2.4.1 */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-cyan-500 focus:text-[#0A0E27] focus:font-bold focus:rounded-lg focus:outline-none"
+        >
+          Skip to main content
+        </a>
         <ToastProvider>
           <ConfirmProvider>
             <SettingsProvider initialSettings={initialSettings}>
               <ConditionalWrapper excludePaths={["/dashboard"]}>
                 <Navbar />
               </ConditionalWrapper>
-              <main className="flex-1">
+              <main id="main-content" className="flex-1">
                 {children}
               </main>
               <ConditionalWrapper excludePaths={["/dashboard"]}>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
@@ -12,6 +12,14 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const settings = useSettings();
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
+
+  // Restore focus to hamburger when menu closes
+  useEffect(() => {
+    if (!isOpen && hamburgerRef.current) {
+      hamburgerRef.current.focus();
+    }
+  }, [isOpen]);
 
   const links = [
     { name: "Home", href: "/" },
@@ -70,9 +78,12 @@ export default function Navbar() {
             Login
           </Link>
           <button
+            ref={hamburgerRef}
             className="md:hidden text-white p-2"
             onClick={() => setIsOpen(!isOpen)}
-            aria-label="Toggle menu"
+            aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isOpen}
+            aria-controls="mobile-nav"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -83,6 +94,9 @@ export default function Navbar() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            id="mobile-nav"
+            role="navigation"
+            aria-label="Mobile navigation"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}

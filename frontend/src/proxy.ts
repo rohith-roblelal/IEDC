@@ -34,8 +34,6 @@ export async function proxy(request: NextRequest) {
       tokenValue = tokenValue.replace(/^Bearer\s+/i, '');
 
       // 2. Decode and verify the JWT signature using jose
-      console.log("JWT_SECRET_KEY defined?", !!process.env.JWT_SECRET_KEY);
-      console.log("Cleaned token value (first 20 chars):", tokenValue.substring(0, 20));
       const { payload } = await jwtVerify(tokenValue, SECRET_KEY, {
         algorithms: ['HS256'],
       });

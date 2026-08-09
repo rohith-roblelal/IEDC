@@ -18,13 +18,6 @@ export default function HomeClient() {
   const [partnersLoading, setPartnersLoading] = useState(true);
   const [selectedPartner, setSelectedPartner] = useState<any | null>(null);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelectedPartner(null);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -170,13 +163,15 @@ export default function HomeClient() {
               />
             </motion.div>
           ) : (
-            <motion.svg 
+            <motion.svg
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="mt-11 mx-auto w-[min(220px,60%)]" 
-              viewBox="0 0 200 200" 
+              className="mt-11 mx-auto w-[min(220px,60%)]"
+              viewBox="0 0 200 200"
               xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+              focusable="false"
             >
               <defs>
                 <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">

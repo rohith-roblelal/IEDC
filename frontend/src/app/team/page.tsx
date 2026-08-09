@@ -13,6 +13,11 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Our Team | IEDC SNMIMT",
       description: "Meet the dedicated team behind IEDC SNMIMT, driving innovation and entrepreneurship on campus.",
       url: `${baseUrl}/team`,
+    },
+    twitter: {
+      card: "summary",
+      title: "Our Team | IEDC SNMIMT",
+      description: "Meet the dedicated team behind IEDC SNMIMT, driving innovation and entrepreneurship on campus.",
     }
   };
 }

@@ -13,7 +13,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
@@ -25,10 +24,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         const data = await res.json();
         setUserRole(data.user.role);
-        setIsAuthorized(true);
       } catch (e) {
         console.error("Auth check failed", e);
-        setIsAuthorized(false);
         router.replace("/login");
       }
     };

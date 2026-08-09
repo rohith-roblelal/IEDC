@@ -67,9 +67,23 @@ export default async function StartupDetailPage({ params }: Props) {
       }
     };
 
+    const breadcrumbJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}` },
+        { "@type": "ListItem", "position": 2, "name": "Startups", "item": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/startups` },
+        { "@type": "ListItem", "position": 3, "name": startup.name, "item": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/startups/${slug}` },
+      ]
+    };
+
     return (
       <main>
         <JsonLd type="Organization" data={schema} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        />
         {/* AI GEO Summary Block */}
         <section className="sr-only" aria-label="Quick Summary">
           <p>What is this page? The directory profile for {startup.name}, an innovative startup incubated at IEDC SNMIMT.</p>

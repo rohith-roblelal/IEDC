@@ -13,6 +13,11 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "Event Gallery | IEDC SNMIMT",
       description: "View posters and highlights from our incredible events, hackathons, and workshops at IEDC SNMIMT.",
       url: `${baseUrl}/gallery`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Event Gallery | IEDC SNMIMT",
+      description: "View posters and highlights from our incredible events, hackathons, and workshops at IEDC SNMIMT.",
     }
   };
 }

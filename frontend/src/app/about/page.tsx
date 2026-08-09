@@ -25,6 +25,11 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       url: `${baseUrl}/about`,
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
     }
   };
 }

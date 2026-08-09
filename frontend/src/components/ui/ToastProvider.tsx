@@ -41,29 +41,55 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={toast}>
       {children}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center space-y-3 pointer-events-none">
+      {/* Polite live region for success/info/warning toasts */}
+      <div
+        aria-live="polite"
+        aria-atomic="false"
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center space-y-3 pointer-events-none"
+      >
         <AnimatePresence>
-          {toasts.map((t) => (
+          {toasts.filter(t => t.type !== 'error').map((t) => (
             <motion.div
               key={t.id}
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.9 }}
               transition={{ duration: 0.3, type: "spring" }}
+              role="status"
               className={`flex items-center space-x-3 px-6 py-4 rounded-2xl shadow-2xl text-white pointer-events-auto ${
                 t.type === "success"
                   ? "bg-[#22D46B]"
-                  : t.type === "error"
-                  ? "bg-red-500"
                   : t.type === "warning"
                   ? "bg-orange-500"
                   : "bg-blue-500"
               }`}
             >
-              {t.type === "success" && <CheckCircle size={24} />}
-              {t.type === "error" && <XCircle size={24} />}
-              {t.type === "warning" && <AlertCircle size={24} />}
-              {t.type === "info" && <Info size={24} />}
+              {t.type === "success" && <CheckCircle size={24} aria-hidden="true" />}
+              {t.type === "warning" && <AlertCircle size={24} aria-hidden="true" />}
+              {t.type === "info" && <Info size={24} aria-hidden="true" />}
+              <span className="font-semibold text-[0.95rem]">{t.message}</span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+      {/* Assertive live region for error toasts */}
+      <div
+        aria-live="assertive"
+        aria-atomic="true"
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center space-y-3 pointer-events-none"
+      >
+        <AnimatePresence>
+          {toasts.filter(t => t.type === 'error').map((t) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              transition={{ duration: 0.3, type: "spring" }}
+              role="alert"
+              className="flex items-center space-x-3 px-6 py-4 rounded-2xl shadow-2xl text-white pointer-events-auto bg-red-500"
+            >
+              <XCircle size={24} aria-hidden="true" />
               <span className="font-semibold text-[0.95rem]">{t.message}</span>
             </motion.div>
           ))}

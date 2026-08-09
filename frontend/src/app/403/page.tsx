@@ -1,4 +1,10 @@
 import Link from "next/link";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Access Denied | IEDC SNMIMT",
+  robots: { index: false, follow: false },
+};
 
 export default function ForbiddenPage() {
   return (

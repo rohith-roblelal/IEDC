@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X } from "lucide-react";
 
@@ -24,6 +24,14 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const resolvePromiseRef = React.useRef<(value: boolean) => void>(null);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Move focus inside dialog when it opens
+  useEffect(() => {
+    if (isOpen && cancelButtonRef.current) {
+      cancelButtonRef.current.focus();
+    }
+  }, [isOpen]);
 
   const confirm = (msg: string): Promise<boolean> => {
     setMessage(msg);
@@ -60,6 +68,9 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="confirm-dialog-title"
               className="bg-[#111432] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative"
             >
               <button 
@@ -74,7 +85,7 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
                 <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
                   <AlertTriangle className="text-red-400" size={24} />
                 </div>
-                <h3 className="text-lg font-bold text-white">Please Confirm</h3>
+                <h3 id="confirm-dialog-title" className="text-lg font-bold text-white">Please Confirm</h3>
               </div>
               
               <p className="text-[#C4C4D4] text-sm mb-6 leading-relaxed">
@@ -83,6 +94,7 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
               
               <div className="flex gap-3 justify-end">
                 <button
+                  ref={cancelButtonRef}
                   type="button"
                   onClick={handleCancel}
                   className="px-4 py-2 rounded-lg font-medium text-white/80 hover:text-white hover:bg-white/5 transition-colors"
