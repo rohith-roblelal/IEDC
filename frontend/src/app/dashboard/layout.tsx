@@ -19,14 +19,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const checkAuth = async () => {
       try {
         const res = await fetch("/api/v1/auth/me", { credentials: "include" });
+        if (res.status === 401) {
+          await fetch("/api/v1/auth/logout", {
+            method: "POST",
+            credentials: "include",
+          });
+          router.replace("/login");
+          return;
+        }
         if (!res.ok) {
-          throw new Error("Not authenticated");
+          console.error("Unexpected auth error:", await res.text());
+          return;
         }
         const data = await res.json();
         setUserRole(data.user.role);
       } catch (e) {
         console.error("Auth check failed", e);
-        router.replace("/login");
       }
     };
     checkAuth();

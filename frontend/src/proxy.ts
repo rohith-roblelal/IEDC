@@ -22,11 +22,7 @@ export async function proxy(request: NextRequest) {
   let isValid = false;
   if (token) {
     try {
-      let tokenValue = decodeURIComponent(tokenCookie.value);
-      tokenValue = tokenValue.replace(/^"+|"+$/g, '');
-      tokenValue = tokenValue.replace(/^Bearer\s+/i, '');
-      
-      const { payload } = await jwtVerify(tokenValue, SECRET_KEY, {
+      const { payload } = await jwtVerify(token, SECRET_KEY, {
         algorithms: ['HS256'],
       });
       if (payload.role === 'SUPER_ADMIN') {

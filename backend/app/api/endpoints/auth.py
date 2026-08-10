@@ -88,7 +88,7 @@ async def login_access_token(
     # Set HttpOnly cookie
     response.set_cookie(
         key="access_token",
-        value=f"Bearer {access_token}",
+        value=access_token,
         httponly=True,
         secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False,
         samesite="lax",
