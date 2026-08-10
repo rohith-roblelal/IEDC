@@ -19,44 +19,46 @@ export async function proxy(request: NextRequest) {
   const tokenCookie = request.cookies.get('access_token');
   const token = tokenCookie?.value;
 
-  // If there is a token and they visit login, redirect to dashboard
-  if (token && request.nextUrl.pathname === '/login') {
+  let isValid = false;
+  if (token) {
+    try {
+      let tokenValue = decodeURIComponent(tokenCookie.value);
+      tokenValue = tokenValue.replace(/^"+|"+$/g, '');
+      tokenValue = tokenValue.replace(/^Bearer\s+/i, '');
+      
+      const { payload } = await jwtVerify(tokenValue, SECRET_KEY, {
+        algorithms: ['HS256'],
+      });
+      if (payload.role === 'SUPER_ADMIN') {
+        isValid = true;
+      }
+    } catch (error) {
+      console.warn("Proxy JWT validation failed:", error);
+    }
+  }
+
+  // If they visit login and have a valid token, redirect to dashboard
+  if (isValid && request.nextUrl.pathname === '/login') {
     return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+  
+  if (request.nextUrl.pathname === '/login') {
+    // If the token was invalid, clear it so the browser isn't stuck with a bad cookie
+    const response = NextResponse.next();
+    if (token && !isValid) {
+      response.cookies.delete('access_token');
+    }
+    return response;
   }
 
   // We only want to protect /dashboard and its sub-routes
   if (request.nextUrl.pathname.startsWith('/dashboard')) {
-    // 1. Check if token exists
-    if (!tokenCookie) {
-      return NextResponse.redirect(new URL('/login', request.url));
+    if (!isValid) {
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.cookies.delete('access_token');
+      return response;
     }
-
-    try {
-      // The token is stored as "Bearer <token>" but might be URL encoded as "Bearer%20<token>" or enclosed in quotes
-      let tokenValue = decodeURIComponent(tokenCookie.value);
-      
-      // Aggressively remove any leading/trailing quotes
-      tokenValue = tokenValue.replace(/^"+|"+$/g, '');
-      // Remove the Bearer prefix
-      tokenValue = tokenValue.replace(/^Bearer\s+/i, '');
-
-      // 2. Decode and verify the JWT signature using jose
-      const { payload } = await jwtVerify(tokenValue, SECRET_KEY, {
-        algorithms: ['HS256'],
-      });
-
-      // 3. Verify the role is SUPER_ADMIN
-      if (payload.role !== 'SUPER_ADMIN') {
-        return NextResponse.redirect(new URL('/403', request.url));
-      }
-
-      // If valid, allow the request to proceed
-      return NextResponse.next();
-    } catch (error) {
-      // 4. Token is invalid or expired
-      console.warn("Proxy JWT validation failed:", error);
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+    return NextResponse.next();
   }
 
   // Allow all other routes
