@@ -86,9 +86,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    # Don't necessarily need a unique error ID for 401/403/404, but good for tracking
     error_id = f"ERR-{uuid.uuid4().hex[:6].upper()}"
-    # Log warnings for 4xx, errors for 5xx
     if exc.status_code >= 500:
         logger.error("http_exception", error_id=error_id, status_code=exc.status_code, detail=exc.detail)
     else:

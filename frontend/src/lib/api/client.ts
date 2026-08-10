@@ -61,6 +61,13 @@ type FetchOptions = RequestInit & { timeout?: number };
 
 async function fetchWithTimeout(url: string, options: FetchOptions = {}) {
   const { timeout = 30000, ...fetchOptions } = options;
+  
+  // Do not use AbortController on the server as it disables Next.js fetch memoization
+  const isServer = typeof window === "undefined";
+  if (isServer) {
+    return await fetch(url, fetchOptions);
+  }
+
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
