@@ -5,15 +5,14 @@ import { Image as ImageIcon, Trash2, X, UploadCloud, Loader2 } from "lucide-reac
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
-import { galleryApi } from "@/lib/api/gallery";
+import { galleryApi, GalleryImage } from "@/lib/api/gallery";
 
 export default function GalleryPage() {
   const { toast } = useToast();
   const confirm = useConfirm();
-  const [images, setImages] = useState<any[]>([]);
+  const [images, setImages] = useState<GalleryImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,7 +20,8 @@ export default function GalleryPage() {
   const fetchImages = async () => {
     try {
       const res = await galleryApi.getImages();
-      setImages(res.items || (Array.isArray(res) ? res : []));
+      const items = Array.isArray(res) ? res : (res.items ?? []);
+      setImages(items);
     } catch (err) {
       console.error(err);
       toast("Failed to load images", "error");
@@ -53,7 +53,7 @@ export default function GalleryPage() {
       await fetchImages();
       setIsModalOpen(false);
       toast("Image uploaded successfully", "success");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError("Failed to upload image");
     } finally {
@@ -107,11 +107,10 @@ export default function GalleryPage() {
         {isLoading ? (
           <div className="text-center text-[#C4C4D4] py-8">Loading posters...</div>
         ) : images.length === 0 ? (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           <div className="text-center text-[#C4C4D4] py-8">No images found.</div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {images.map((img: any, idx) => (
+            {images.map((img: GalleryImage, idx) => (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -119,7 +118,7 @@ export default function GalleryPage() {
                 key={img.id} 
                 className="group relative rounded-xl overflow-hidden border border-white/10 aspect-square bg-[#0A0E27]"
               >
-                <img src={img.image_url} alt="Gallery item" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <img src={img.url} alt="Gallery item" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
                   <div className="self-end">
                     <button 

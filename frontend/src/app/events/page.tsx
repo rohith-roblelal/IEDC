@@ -25,7 +25,7 @@ export default async function EventsPage() {
 
   try {
     const res = await EventsAPI.getEvents({ page: 1, page_size: 100 }, true);
-    const items = res.items || [];
+    const items = Array.isArray(res) ? res : (res as any).items || [];
     upcomingEvents = items.filter((e: any) => ["UPCOMING", "ONGOING", "PUBLISHED", "REGISTRATION_OPEN", "REGISTRATION_CLOSED"].includes(e.status));
     pastEvents = items.filter((e: any) => e.status === "COMPLETED" || e.status === "PAST");
   } catch (error) {

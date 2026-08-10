@@ -22,8 +22,8 @@ export async function EventSection({
       page_size: maxItems + 1, 
       sort: 'date_asc',
       scope: 'upcoming'
-    }, true, { next: { revalidate: 0 } });
-    events = res.items || [];
+    }, true, { next: { revalidate: 60 } });
+    events = Array.isArray(res) ? res : (res as any).items || [];
   } catch (error) {
     console.error("Failed to fetch upcoming events", error);
   }

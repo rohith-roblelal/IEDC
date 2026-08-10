@@ -2,11 +2,18 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-// Define the secret key used by the backend. Ensure this matches SECRET_KEY in the backend.
-// In a real app, this should be set in frontend/.env.local
-const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET_KEY || "supersecretproductionkey123456789" // Fallback to match backend
-);
+// JWT_SECRET_KEY must be set in .env.local (development) or as a deployment environment variable (production).
+// It MUST match the SECRET_KEY used by the backend to sign tokens.
+// Never commit this value to source control.
+if (!process.env.JWT_SECRET_KEY) {
+  throw new Error(
+    "FATAL: JWT_SECRET_KEY environment variable is not set. " +
+    "Set it to match the backend SECRET_KEY. Do not use a fallback in production."
+  );
+}
+
+const SECRET_KEY = new TextEncoder().encode(process.env.JWT_SECRET_KEY);
+
 
 export async function proxy(request: NextRequest) {
   const tokenCookie = request.cookies.get('access_token');

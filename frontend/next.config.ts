@@ -35,6 +35,24 @@ const nextConfig: NextConfig = {
         source: '/(.*)',
         headers: securityHeaders,
       },
+      {
+        source: '/(.*\\.(?:svg|png|jpg|jpeg|webp|avif|ico|mp4))$',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          }
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'stale-while-revalidate=60',
+          }
+        ],
+      },
     ];
   },
   async rewrites() {
@@ -55,7 +73,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
+export default withSentryConfig(withBundleAnalyzer(nextConfig), {
   silent: true,
   org: "iedc-snmimt",
   project: "frontend",

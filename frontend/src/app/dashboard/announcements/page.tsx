@@ -6,14 +6,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { clientFetch, ApiError } from "@/lib/api/client";
+import { AnnouncementResponse } from "@/lib/api/announcements";
 
 export default function AnnouncementsPage() {
   const { toast } = useToast();
   const confirm = useConfirm();
-  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<AnnouncementResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingAnnouncement, setEditingAnnouncement] = useState<any | null>(null);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<AnnouncementResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -38,7 +39,7 @@ export default function AnnouncementsPage() {
     fetchAnnouncements();
   }, []);
 
-  const handleOpenModal = (announcement: any = null) => {
+  const handleOpenModal = (announcement: AnnouncementResponse | null = null) => {
     if (announcement) {
       setEditingAnnouncement(announcement);
       setFormData({
@@ -179,7 +180,7 @@ export default function AnnouncementsPage() {
                 </tr>
               </thead>
               <tbody>
-                {announcements.map((ann: any, idx) => (
+                {announcements.map((ann, idx) => (
                   <motion.tr 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}

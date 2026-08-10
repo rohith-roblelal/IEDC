@@ -3,66 +3,54 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Megaphone, Settings, X, ExternalLink, Calendar } from "lucide-react";
+import { Play, Megaphone, Settings, X, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useSettings } from "@/lib/settings-context";
-import { EventCard } from "@/components/events/EventCard";
 
-export default function HomeClient() {
+interface Announcement {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  is_pinned: boolean;
+  is_published: boolean;
+  expires_at: string | null;
+  created_at: string;
+}
+
+interface Podcast {
+  id: string;
+  title: string;
+  description?: string | null;
+  audio_url?: string | null;
+  video_url?: string | null;
+  thumbnail_url?: string | null;
+  image_url?: string | null;
+  duration?: number | null;
+  published_at?: string | null;
+  date_str?: string | null;
+  is_published: boolean;
+}
+
+interface Partner {
+  id: string;
+  name: string;
+  image_url?: string | null;
+  description?: string | null;
+  website_url?: string | null;
+}
+
+interface HomeClientProps {
+  announcements: Announcement[];
+  podcasts: Podcast[];
+  partners: Partner[];
+}
+
+export default function HomeClient({ announcements = [], podcasts = [], partners = [] }: HomeClientProps) {
   const { toast } = useToast();
   const settings = useSettings();
-  const [announcements, setAnnouncements] = useState<any[]>([]);
-  const [podcasts, setPodcasts] = useState<any[]>([]);
-  const [partners, setPartners] = useState<any[]>([]);
-  const [partnersLoading, setPartnersLoading] = useState(true);
-  const [selectedPartner, setSelectedPartner] = useState<any | null>(null);
-
-
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
-      try {
-        const res = await fetch("/api/v1/announcements");
-        if (res.ok) {
-          const data = await res.json();
-          const items = data.items || (Array.isArray(data) ? data : []);
-          setAnnouncements(items.slice(0, 3));
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    
-    const fetchPodcast = async () => {
-      try {
-        const res = await fetch("/api/v1/podcasts/active");
-        if (res.ok) {
-          const data = await res.json();
-          setPodcasts(Array.isArray(data) ? data : (data ? [data] : []));
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    const fetchPartners = async () => {
-      try {
-        const res = await fetch("/api/v1/partners");
-        if (res.ok) {
-          const data = await res.json();
-          setPartners(data.items || (Array.isArray(data) ? data : []));
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setPartnersLoading(false);
-      }
-    };
-
-    fetchAnnouncements();
-    fetchPodcast();
-    fetchPartners();
-  }, []);
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -93,7 +81,7 @@ export default function HomeClient() {
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Under Maintenance</h1>
           <p className="text-[#C4C4D4] text-lg max-w-[500px] mx-auto">
-            We're currently updating our website to bring you a better experience. 
+            We&apos;re currently updating our website to bring you a better experience.
             Please check back soon!
           </p>
         </motion.div>
@@ -315,22 +303,14 @@ export default function HomeClient() {
       </section>
 
       {/* Partners Section */}
-      {partnersLoading || partners.length > 0 ? (
+      {partners.length > 0 ? (
         <section id="partners" className="px-6 pb-12">
           <h2 className="text-center text-[clamp(2.2rem,8vw,3.4rem)] font-light text-white/90 my-10 uppercase tracking-widest">
             Collaborative
           </h2>
           <div className="flex flex-wrap justify-center gap-4 max-w-[900px] mx-auto">
-            {partnersLoading ? (
-              // Skeleton Loaders for Hydration/SSR consistency
-              Array.from({ length: 4 }).map((_, idx) => (
-                <div 
-                  key={`skeleton-${idx}`} 
-                  className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] bg-white/5 border border-white/10 rounded-2xl h-[140px] animate-pulse"
-                />
-              ))
-            ) : (
-              partners.map((partner) => (
+            {partners.map((partner) => {
+              return (
                 <motion.button 
                   key={partner.id} 
                   onClick={() => setSelectedPartner(partner)}
@@ -352,8 +332,8 @@ export default function HomeClient() {
                     <span className="break-words px-2">{partner.name}</span>
                   )}
                 </motion.button>
-              ))
-            )}
+              );
+            })}
           </div>
         </section>
       ) : null}

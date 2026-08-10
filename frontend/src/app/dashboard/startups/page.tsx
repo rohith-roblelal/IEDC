@@ -9,7 +9,7 @@ import Link from "next/link";
 import { startupsApi } from "@/lib/api/startups";
 import { StartupResponse } from "@/lib/validations/startup";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+
 import { groupTeamByRole, sortGroupedRoles, formatRoleDisplay } from "@/lib/team";
 import Image from "next/image";
 

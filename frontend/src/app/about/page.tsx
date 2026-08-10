@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import AboutClient from "./AboutClient";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  let title = "About Us | IEDC SNMIMT";
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+  const title = "About Us | IEDC SNMIMT";
   let description = "IEDC has been developed to foster and nurture innovations combined with entrepreneurship amongst young minds at SNMIMT.";
   
   try {

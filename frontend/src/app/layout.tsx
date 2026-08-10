@@ -70,7 +70,7 @@ export default async function RootLayout({
   let initialSettings = null;
   try {
     initialSettings = await clientFetch("api/v1/settings", { next: { revalidate: 60 } });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to fetch initial settings:", error);
   }
 

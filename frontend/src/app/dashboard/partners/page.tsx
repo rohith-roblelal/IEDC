@@ -8,17 +8,24 @@ import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { clientFetch, ApiError } from "@/lib/api/client";
 
+interface Partner {
+  id: string;
+  name: string;
+  description?: string | null;
+  website_url?: string | null;
+  image_url?: string | null;
+  sort_order: number;
+}
+
 export default function PartnersPage() {
   const { toast } = useToast();
   const confirm = useConfirm();
-  const [partners, setPartners] = useState<any[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [editingPartner, setEditingPartner] = useState<any | null>(null);
+  const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -44,7 +51,7 @@ export default function PartnersPage() {
     fetchPartners();
   }, []);
 
-  const handleOpenModal = (partner: any = null) => {
+  const handleOpenModal = (partner: Partner | null = null) => {
     if (partner) {
       setEditingPartner(partner);
       setFormData({
@@ -53,7 +60,6 @@ export default function PartnersPage() {
         website_url: partner.website_url || "",
         image_url: partner.image_url || "",
         sort_order: partner.sort_order,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       });
     } else {
       setEditingPartner(null);
@@ -161,10 +167,9 @@ export default function PartnersPage() {
                 </tr>
               </thead>
               <tbody>
-                {partners.map((partner: any, idx) => (
+                {partners.map((partner, idx) => (
                   <motion.tr 
                     initial={{ opacity: 0, y: 10 }}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
                     key={partner.id} 

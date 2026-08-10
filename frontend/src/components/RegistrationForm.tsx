@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 interface RegistrationFormProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -245,7 +246,9 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
                 <p className="text-sm text-gray-800 mb-3 font-medium">Non-member Payment Required</p>
                 <p className="text-xs text-gray-600 mb-3">Please scan the QR code to complete payment, then upload the screenshot below.</p>
                 <div className="flex flex-col md:flex-row gap-6 items-start">
-                  <img src={field.qr_image_url} alt="Payment QR Code" className="max-w-[150px] rounded-lg shadow-sm border border-gray-200" />
+                  <div className="relative w-[150px] aspect-square rounded-lg shadow-sm border border-gray-200 overflow-hidden shrink-0">
+                    <Image src={field.qr_image_url} alt="Payment QR Code" fill sizes="150px" className="object-contain" />
+                  </div>
                   <div className="flex-1 w-full">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Upload Payment Screenshot *</label>
                     <ImageUpload 

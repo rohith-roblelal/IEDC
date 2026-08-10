@@ -136,6 +136,7 @@ export interface StartupResponse extends Omit<StartupFormData, 'founders' | 'awa
   created_at: string;
   updated_at: string;
   founders: StartupFounder[];
+  team_members?: StartupFounder[];
   awards: StartupAward[];
   funding: StartupFunding[];
   press_links: StartupPressLink[];

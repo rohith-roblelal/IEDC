@@ -130,8 +130,6 @@ export default function Footer() {
         )}
 
         <div className="mt-6 flex justify-center gap-6 text-[#C4C4D4] text-[0.85rem]">
-          <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
-          <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
         </div>
 
         <p className="mt-6 text-[#6B6B7C] text-[0.8rem]">

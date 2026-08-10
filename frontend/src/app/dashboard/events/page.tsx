@@ -3,16 +3,22 @@
 import { useEffect, useState } from "react";
 import { Calendar, Plus, X, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ImageUpload } from "@/components/ui/ImageUpload";
-import { CustomFormBuilder } from "@/components/CustomFormBuilder";
+import dynamic from "next/dynamic";
+const ImageUpload = dynamic(() => import("@/components/ui/ImageUpload").then(mod => mod.ImageUpload), {
+  loading: () => <div className="p-4 bg-white/5 animate-pulse rounded-2xl h-32 border border-white/10" />
+});
+const CustomFormBuilder = dynamic(() => import("@/components/CustomFormBuilder").then(mod => mod.CustomFormBuilder), {
+  loading: () => <div className="p-4 bg-white/5 animate-pulse rounded-2xl h-32 border border-white/10" />
+});
 import { clientFetch, ApiError } from "@/lib/api/client";
 import { getStatusDisplay } from "@/lib/event-utils";
+import { EventResponse } from "@/lib/api/events";
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<EventResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [editingEvent, setEditingEvent] = useState<EventResponse | null>(null);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
@@ -31,8 +37,8 @@ export default function EventsPage() {
     registration_link: "",
     google_form_enabled: false,
     google_form_url: "",
-    field_mapping: null as any,
-    custom_fields: [] as any[],
+    field_mapping: null as Record<string, string> | null,
+    custom_fields: [] as { id: string; label: string; type: any; required: boolean; options?: string[] }[],
   });
 
   const fetchEvents = async () => {
@@ -48,11 +54,10 @@ export default function EventsPage() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fetchEvents();
   }, []);
 
-  const openModal = (event: any = null) => {
+  const openModal = (event: EventResponse | null = null) => {
     if (event) {
       setEditingEvent(event);
       setFormData({
@@ -61,7 +66,7 @@ export default function EventsPage() {
         banner_url: event.banner_url || "",
         status: event.status || "DRAFT",
         registration_deadline: event.registration_deadline ? new Date(event.registration_deadline).toISOString().slice(0, 16) : "",
-        max_participants: event.max_participants || "",
+        max_participants: event.max_participants ? String(event.max_participants) : "",
         registration_link: event.registration_link || "",
         google_form_enabled: event.google_form_enabled || false,
         google_form_url: event.google_form_url || "",
@@ -69,7 +74,6 @@ export default function EventsPage() {
         custom_fields: event.custom_fields || [],
       });
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setEditingEvent(null);
       setFormData({
         title: "",
@@ -87,27 +91,28 @@ export default function EventsPage() {
     }
     setIsModalOpen(true);
   };
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-const method = editingEvent ? "PUT" : "POST";
-    const url = editingEvent 
-      ? `/api/v1/events/${editingEvent.id}` 
-      : "/api/v1/events";
-
     const payload = {
       ...formData,
+      max_participants: formData.max_participants ? parseInt(formData.max_participants as string) : null,
       is_published: formData.status !== "DRAFT",
-      max_participants: formData.max_participants ? parseInt(formData.max_participants) : null,
       registration_deadline: formData.registration_deadline ? new Date(formData.registration_deadline).toISOString() : null,
     };
 
     try {
-      await clientFetch(url, {
-        method,
-        body: JSON.stringify(payload)
-      });
+      if (editingEvent) {
+        await clientFetch(`/api/v1/events/${editingEvent.id}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await clientFetch("/api/v1/events", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      }
       setIsModalOpen(false);
       fetchEvents();
       showToast("Event saved successfully!", "success");
@@ -148,7 +153,6 @@ const method = editingEvent ? "PUT" : "POST";
     if (e) e.preventDefault();
     if (!eventToDelete) return;
     try {
-      console.log("Deleting event:", eventToDelete);
       await clientFetch(`/api/v1/events/${eventToDelete}`, {
         method: "DELETE",
       });
@@ -386,10 +390,10 @@ const method = editingEvent ? "PUT" : "POST";
                               <p className="text-[#C4C4D4] mb-3 text-xs leading-tight">Map website fields to Google Form entry IDs (e.g. entry.12345678). Leave blank to skip sending.</p>
                               
                               <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                                {["name", "email", "phone", "gender", "year", "department", "has_laptop", "is_iedc_member", ...(formData.custom_fields || []).map((f: any) => f.id)].map((fieldKey: string) => {
+                                {["name", "email", "phone", "gender", "year", "department", "has_laptop", "is_iedc_member", ...(formData.custom_fields || []).map((f) => f.id)].map((fieldKey: string) => {
                                   const label = ["name", "email", "phone", "gender", "year", "department", "has_laptop", "is_iedc_member"].includes(fieldKey) 
                                     ? fieldKey.replace(/_/g, ' ').toUpperCase()
-                                    : formData.custom_fields?.find((f: any) => f.id === fieldKey)?.label || fieldKey;
+                                    : formData.custom_fields?.find((f) => f.id === fieldKey)?.label || fieldKey;
 
                                   return (
                                     <div key={fieldKey} className="flex items-center gap-3">
@@ -399,7 +403,7 @@ const method = editingEvent ? "PUT" : "POST";
                                       <input 
                                         type="text"
                                         placeholder="entry.xxxxx"
-                                        value={formData.field_mapping[fieldKey] || ""}
+                                        value={formData.field_mapping?.[fieldKey] || ""}
                                         onChange={(e) => setFormData({
                                           ...formData,
                                           field_mapping: {

@@ -15,7 +15,8 @@ export default function GalleryClient() {
     const fetchImages = async () => {
       try {
         const res = await galleryApi.getImages({ is_published: true });
-        setImages(res || []);
+        const items = Array.isArray(res) ? res : (res.items ?? []);
+        setImages(items);
       } catch (err) {
         console.error(err);
       } finally {

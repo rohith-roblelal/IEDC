@@ -55,14 +55,14 @@ export default function AboutClient() {
           whileHover={{ scale: 1.02 }}
           className="bg-white text-[#1A1A2E] rounded-[18px] p-8 max-w-[340px] mx-auto mt-7 mb-14 text-center font-semibold text-[1.15rem] shadow-2xl"
         >
-          "Creativity is just connecting things"
+          {"\"Creativity is just connecting things\""}
           <cite className="block mt-3.5 not-italic font-medium text-[0.9rem] text-[#666]">Steve Jobs</cite>
         </motion.div>
         
         <h2 className="text-center text-[clamp(1.8rem,4vw,2.4rem)] font-bold mb-5">Our Vision</h2>
         {settings.about_vision?.trim() && (
           <p className="max-w-[680px] mx-auto text-center font-semibold text-white text-[1.05rem] italic">
-            "{settings.about_vision}"
+            {`"${settings.about_vision}"`}
           </p>
         )}
       </section>

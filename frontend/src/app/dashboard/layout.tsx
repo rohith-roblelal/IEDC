@@ -41,7 +41,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     } catch (e) {
       console.error("Logout API failed", e);
     }
-    setIsAuthorized(false);
     router.replace("/login");
   };
 

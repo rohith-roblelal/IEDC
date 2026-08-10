@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Megaphone, Pin, Clock, ChevronRight } from "lucide-react";
-import { AnnouncementsAPI } from "@/lib/api/announcements";
+import { AnnouncementsAPI, AnnouncementResponse } from "@/lib/api/announcements";
 
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
@@ -20,90 +20,82 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AnnouncementsPage() {
+  let announcements: AnnouncementResponse[] = [];
+
   try {
-    // Fetch only published and active (not expired) announcements
     const data = await AnnouncementsAPI.getAnnouncements(
-      { is_published: true, include_expired: false, page_size: 50 }, 
-      true, 
+      { is_published: true, include_expired: false, page_size: 50 },
+      true,
       { next: { revalidate: 60 } }
     );
-    
-    const announcements = data.items || [];
-
-    // The backend repository sorts by is_pinned DESC automatically, 
-    // but just to be sure we group them nicely in the UI
-    const pinnedAnnouncements = announcements.filter((a: any) => a.is_pinned);
-    const regularAnnouncements = announcements.filter((a: any) => !a.is_pinned);
-
-    return (
-      <div className="py-24 px-6 relative max-w-4xl mx-auto min-h-screen">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 flex items-center justify-center gap-3">
-            <Megaphone className="text-blue-400 w-10 h-10 md:w-12 md:h-12" /> Announcements
-          </h1>
-          <p className="text-[#C4C4D4] text-lg max-w-2xl mx-auto">
-            Stay updated with the latest news, deadlines, and official notices from the IEDC SNMIMT community.
-          </p>
-        </div>
-
-        {/* AI GEO Summary Block */}
-        <section className="sr-only" aria-label="Quick Summary">
-          <p>What is this page? A listing of all official announcements, news, and notices for IEDC SNMIMT.</p>
-          <p>What will you find here? Important updates, upcoming deadlines, and general information for student innovators.</p>
-        </section>
-
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "CollectionPage",
-              "name": "IEDC SNMIMT Announcements",
-              "description": "Stay updated with the latest news, announcements, and notices from IEDC SNMIMT.",
-              "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/announcements`
-            })
-          }}
-        />
-
-        {announcements.length === 0 ? (
-          <div className="text-center bg-[#111432] p-12 rounded-2xl border border-white/10">
-            <Megaphone className="w-16 h-16 mx-auto mb-4 text-[#C4C4D4]/30" />
-            <h2 className="text-2xl font-bold mb-2">No active announcements</h2>
-            <p className="text-[#C4C4D4]">Check back later for updates and news.</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {pinnedAnnouncements.map((announcement: any) => (
-              <AnnouncementCard key={announcement.id} announcement={announcement} />
-            ))}
-            
-            {pinnedAnnouncements.length > 0 && regularAnnouncements.length > 0 && (
-              <div className="py-4 flex items-center">
-                <div className="h-px bg-white/10 flex-1"></div>
-                <span className="px-4 text-sm font-medium text-[#C4C4D4] uppercase tracking-widest">Recent Updates</span>
-                <div className="h-px bg-white/10 flex-1"></div>
-              </div>
-            )}
-
-            {regularAnnouncements.map((announcement: any) => (
-              <AnnouncementCard key={announcement.id} announcement={announcement} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  } catch (err) {
-    return (
-      <div className="min-h-screen pt-24 text-center">
-        <h1 className="text-3xl font-bold text-white">Announcements</h1>
-        <p className="text-red-400 mt-4">Failed to load announcements. Please try again later.</p>
-      </div>
-    );
+    announcements = Array.isArray(data) ? data : (data.items ?? []);
+  } catch {
+    // Silently fall back to empty list — UI handles empty state gracefully
   }
+
+  const pinnedAnnouncements = announcements.filter((a) => a.is_pinned);
+  const regularAnnouncements = announcements.filter((a) => !a.is_pinned);
+
+  return (
+    <div className="py-24 px-6 relative max-w-4xl mx-auto min-h-screen">
+      <div className="text-center mb-16">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 flex items-center justify-center gap-3">
+          <Megaphone className="text-blue-400 w-10 h-10 md:w-12 md:h-12" /> Announcements
+        </h1>
+        <p className="text-[#C4C4D4] text-lg max-w-2xl mx-auto">
+          Stay updated with the latest news, deadlines, and official notices from the IEDC SNMIMT community.
+        </p>
+      </div>
+
+      {/* AI GEO Summary Block */}
+      <section className="sr-only" aria-label="Quick Summary">
+        <p>What is this page? A listing of all official announcements, news, and notices for IEDC SNMIMT.</p>
+        <p>What will you find here? Important updates, upcoming deadlines, and general information for student innovators.</p>
+      </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "IEDC SNMIMT Announcements",
+            "description": "Stay updated with the latest news, announcements, and notices from IEDC SNMIMT.",
+            "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/announcements`
+          })
+        }}
+      />
+
+      {announcements.length === 0 ? (
+        <div className="text-center bg-[#111432] p-12 rounded-2xl border border-white/10">
+          <Megaphone className="w-16 h-16 mx-auto mb-4 text-[#C4C4D4]/30" />
+          <h2 className="text-2xl font-bold mb-2">No active announcements</h2>
+          <p className="text-[#C4C4D4]">Check back later for updates and news.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {pinnedAnnouncements.map((announcement) => (
+            <AnnouncementCard key={announcement.id} announcement={announcement} />
+          ))}
+
+          {pinnedAnnouncements.length > 0 && regularAnnouncements.length > 0 && (
+            <div className="py-4 flex items-center">
+              <div className="h-px bg-white/10 flex-1"></div>
+              <span className="px-4 text-sm font-medium text-[#C4C4D4] uppercase tracking-widest">Recent Updates</span>
+              <div className="h-px bg-white/10 flex-1"></div>
+            </div>
+          )}
+
+          {regularAnnouncements.map((announcement) => (
+            <AnnouncementCard key={announcement.id} announcement={announcement} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function AnnouncementCard({ announcement }: { announcement: any }) {
+function AnnouncementCard({ announcement }: { announcement: AnnouncementResponse }) {
   return (
     <Link href={`/announcements/${announcement.slug}`} className="block group">
       <div className="bg-[#0A0E27] border border-white/10 hover:border-blue-500/50 rounded-2xl p-6 md:p-8 transition-all hover:shadow-2xl hover:shadow-blue-500/10">
@@ -119,15 +111,15 @@ function AnnouncementCard({ announcement }: { announcement: any }) {
             </span>
           </div>
         </div>
-        
+
         <h3 className="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors mb-3">
           {announcement.title}
         </h3>
-        
+
         <p className="text-[#C4C4D4] line-clamp-3 leading-relaxed">
-          {announcement.content.replace(/[#*`_]/g, '')} {/* Strip basic markdown for preview */}
+          {announcement.content.replace(/[#*`_]/g, '')}
         </p>
-        
+
         <div className="mt-6 flex items-center text-blue-400 font-medium group-hover:text-blue-300 transition-colors">
           Read full announcement <ChevronRight size={18} className="ml-1 group-hover:translate-x-1 transition-transform" />
         </div>

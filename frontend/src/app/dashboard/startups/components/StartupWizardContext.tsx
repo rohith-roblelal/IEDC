@@ -16,7 +16,7 @@ interface StartupWizardContextType {
   nextStep: () => void;
   prevStep: () => void;
   setStep: (step: number) => void;
-  form: UseFormReturn<StartupFormData>;
+  form: any;
   isSubmitting: boolean;
   submitForm: (data: StartupFormData) => Promise<void>;
   batches: Batch[];
@@ -132,7 +132,7 @@ export function StartupWizardProvider({
 
   const nextStep = useCallback(async () => {
     // Validate current step fields before moving to next step
-    let fieldsToValidate: any[] = [];
+    let fieldsToValidate: string[] = [];
     
     switch(currentStep) {
       case 1:
@@ -151,8 +151,7 @@ export function StartupWizardProvider({
         fieldsToValidate = ['is_published', 'is_featured', 'status', 'registration_status'];
         break;
     }
-    
-    const isValid = await form.trigger(fieldsToValidate);
+    const isValid = await form.trigger(fieldsToValidate as any);
     if (isValid) {
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     }
@@ -186,9 +185,9 @@ export function StartupWizardProvider({
       }
       router.push('/dashboard/startups');
       router.refresh();
-    } catch (error: any) {
-      console.error('Error submitting startup:', error);
-      toast(error.response?.data?.detail || 'Failed to save startup', 'error');
+    } catch (error: unknown) {
+      const e = error as { message?: string };
+      toast(e.message || 'Failed to save startup', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -202,7 +201,7 @@ export function StartupWizardProvider({
         nextStep, 
         prevStep, 
         setStep,
-        form: form as any, 
+        form: form, 
         isSubmitting, 
         submitForm,
         batches,

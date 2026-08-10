@@ -155,7 +155,7 @@ export function CustomFormBuilder({ fields, onChange }: CustomFormBuilderProps) 
                     <div className="bg-blue-500/5 p-4 rounded-lg border border-blue-500/20 mt-2">
                       <label className="block text-sm font-medium text-blue-400 mb-2">Non-Member Payment QR Code</label>
                       <p className="text-xs text-[#C4C4D4] mb-4">
-                        If the user selects "No", this QR code will be displayed for them to pay before proceeding.
+                        If the user selects &quot;No&quot;, this QR code will be displayed for them to pay before proceeding.
                       </p>
                       <ImageUpload 
                         value={field.qr_image_url || ""}

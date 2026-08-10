@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     
     # Security / JWT
     SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 8  # 8 hours — reduce further in high-security environments
     
     # CORS
     FRONTEND_URLS: str = "http://localhost:3000,http://127.0.0.1:3000"

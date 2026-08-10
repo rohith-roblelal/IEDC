@@ -8,13 +8,28 @@ import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { clientFetch, ApiError } from "@/lib/api/client";
 
+interface TeamMember {
+  id: string;
+  name: string;
+  role_title: string;
+  category: string;
+  department?: string | null;
+  year?: string | null;
+  linkedin_url?: string | null;
+  instagram_url?: string | null;
+  email?: string | null;
+  photo_url?: string | null;
+  display_order: number;
+  is_published: boolean;
+}
+
 export default function TeamPage() {
   const { toast } = useToast();
   const confirm = useConfirm();
-  const [team, setTeam] = useState<any[]>([]);
+  const [team, setTeam] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState<any>(null);
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,7 +63,7 @@ export default function TeamPage() {
     fetchTeam();
   }, []);
 
-  const openModal = (member: any = null) => {
+  const openModal = (member: TeamMember | null = null) => {
     setFormError(null);
     if (member) {
       setEditingMember(member);
@@ -183,7 +198,7 @@ const method = editingMember ? "PUT" : "POST";
                 </tr>
               </thead>
               <tbody>
-                {team.map((member: any, idx) => (
+                {team.map((member, idx) => (
                   <motion.tr 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}

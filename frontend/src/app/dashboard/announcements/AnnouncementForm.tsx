@@ -95,9 +95,9 @@ export function AnnouncementForm({ initialData, onClose, onSaved, showToast }: A
         showToast("Announcement created successfully!", "success");
       }
       onSaved();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      showToast(err.message || "Failed to save announcement", "error");
+    } catch (err: unknown) {
+      const apiError = err as { message?: string };
+      showToast(apiError.message || "Failed to save announcement", "error");
     } finally {
       setIsSaving(false);
     }

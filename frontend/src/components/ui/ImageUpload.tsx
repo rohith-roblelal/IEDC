@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { UploadCloud, X, Loader2 } from "lucide-react";
 
 interface ImageUploadProps {
-  value: string;
+  value: string | null | undefined;
   onChange: (url: string) => void;
   folder: string; // e.g. "team/123"
 }

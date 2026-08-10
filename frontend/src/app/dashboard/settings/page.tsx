@@ -19,7 +19,7 @@ const TABS = [
   { id: "advanced", label: "Advanced", icon: <Sliders size={18} /> },
 ];
 
-const SaveButton = ({ keys, isSaving, onSave }: any) => (
+const SaveButton = ({ keys, isSaving, onSave }: { keys: string[], isSaving: boolean, onSave: (keys: string[]) => void }) => (
   <button
     onClick={() => onSave(keys)}
     disabled={isSaving}
@@ -30,7 +30,7 @@ const SaveButton = ({ keys, isSaving, onSave }: any) => (
   </button>
 );
 
-const Field = ({ label, name, type = "text", placeholder = "", settings, onChange }: any) => (
+const Field = ({ label, name, type = "text", placeholder = "", settings, onChange }: { label: string, name: string, type?: string, placeholder?: string, settings: Record<string, any> | null, onChange: (name: string, value: string) => void }) => (
   <div>
     <label className="block text-sm font-medium text-[#C4C4D4] mb-1.5">{label}</label>
     {type === "textarea" ? (
@@ -53,7 +53,7 @@ const Field = ({ label, name, type = "text", placeholder = "", settings, onChang
   </div>
 );
 
-const ImageUploadField = ({ label, urlKey, inputRef, endpoint, settings, onUpload }: any) => (
+const ImageUploadField = ({ label, urlKey, inputRef, endpoint, settings, field, onUpload }: { label: string, urlKey: string, inputRef: React.RefObject<HTMLInputElement | null>, endpoint: string, settings: Record<string, any> | null, field?: string, onUpload: (endpoint: string, ref: React.RefObject<HTMLInputElement | null>) => void }) => (
   <div>
     <label className="block text-sm font-medium text-[#C4C4D4] mb-1.5">{label}</label>
     <div className="flex items-center gap-4">
@@ -83,7 +83,7 @@ const ImageUploadField = ({ label, urlKey, inputRef, endpoint, settings, onUploa
 export default function SettingsPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("branding");
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [statsJson, setStatsJson] = useState<Array<{ label: string; value: string }>>([]);
@@ -109,16 +109,16 @@ export default function SettingsPage() {
     fetchSettings();
   }, []);
 
-  const handleChange = (key: string, value: any) => {
-    setSettings((prev: any) => ({ ...prev, [key]: value }));
+  const handleChange = (key: string, value: string) => {
+    setSettings((prev) => prev ? { ...prev, [key]: value } : null);
   };
 
   const handleSave = async (keys: string[]) => {
     setIsSaving(true);
-    const payload: any = {};
+    const payload: Record<string, unknown> = {};
     keys.forEach(k => {
       if (k === "about_stats_json") payload[k] = statsJson;
-      else payload[k] = settings[k];
+      else payload[k] = settings?.[k];
     });
     try {
       const data = await clientFetch("api/v1/settings", {
@@ -330,7 +330,7 @@ export default function SettingsPage() {
                     <p className="text-[#C4C4D4] text-xs mt-0.5">When enabled, the site will show a maintenance notice to visitors.</p>
                   </div>
                   <button
-                    onClick={() => handleChange("maintenance_mode", !settings?.maintenance_mode)}
+                    onClick={() => handleChange("maintenance_mode", String(!settings?.maintenance_mode))}
                     className={`relative w-12 h-6 rounded-full transition-colors ${settings?.maintenance_mode ? "bg-yellow-500" : "bg-white/20"}`}
                   >
                     <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${settings?.maintenance_mode ? "translate-x-6" : ""}`} />

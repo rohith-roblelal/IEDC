@@ -5,7 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, MapPin, Clock, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { RegistrationForm } from "@/components/RegistrationForm";
+import dynamic from "next/dynamic";
+const RegistrationForm = dynamic(() => import("@/components/RegistrationForm").then(mod => mod.RegistrationForm), {
+  loading: () => <div className="p-8 text-center bg-white/5 animate-pulse rounded-2xl h-64 border border-white/10" />
+});
 import { EventResponse } from "@/lib/api/events";
 import { getStatusDisplay } from "@/lib/event-utils";
 

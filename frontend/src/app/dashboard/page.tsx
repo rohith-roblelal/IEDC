@@ -24,13 +24,14 @@ export default function DashboardOverview() {
       try {
         const data = await clientFetch("api/v1/dashboard");
         setStats(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Dashboard fetch error:", err);
         // Only set error if we don't have existing stats to fall back on
         if (!stats) {
-          setError(err.message === "Failed to fetch" 
+          const e = err as Error;
+          setError(e.message === "Failed to fetch" 
             ? "Network error: Make sure the backend server is running." 
-            : err.message);
+            : e.message);
         }
       } finally {
         setIsLoading(false);

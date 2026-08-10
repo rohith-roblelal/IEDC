@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   let tagline = 'Innovation and Entrepreneurship Development Cell';
   
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
     const settings = await fetch(`${baseUrl}/api/v1/settings`).then(r => r.json());
     if (settings) {
       siteName = settings.site_name || siteName;

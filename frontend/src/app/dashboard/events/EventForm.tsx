@@ -51,7 +51,8 @@ export function EventForm({ initialData, onClose, onSaved, showToast }: EventFor
 
   // Initialize React Hook Form
   const { register, handleSubmit, watch, setValue, formState: { errors, isDirty } } = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema as any),
+    // @ts-expect-error Zod schema transforms cause a type mismatch with hook-form's expected type
+    resolver: zodResolver(eventSchema),
     defaultValues: initialData ? {
       title: initialData.title,
       slug: initialData.slug,
@@ -62,7 +63,7 @@ export function EventForm({ initialData, onClose, onSaved, showToast }: EventFor
       start_datetime: new Date(initialData.start_datetime).toISOString().slice(0, 16),
       end_datetime: new Date(initialData.end_datetime).toISOString().slice(0, 16),
       is_published: initialData.is_published,
-      banner_url: (initialData as any).banner_url || "",
+      banner_url: initialData.banner_url || "",
       registration_deadline: initialData.registration_deadline ? new Date(initialData.registration_deadline).toISOString().slice(0, 16) : "",
       max_participants: initialData.max_participants || undefined,
       registration_link: initialData.registration_link || "",
@@ -127,9 +128,9 @@ export function EventForm({ initialData, onClose, onSaved, showToast }: EventFor
         showToast("Event created successfully!", "success");
       }
       onSaved();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      showToast(err.message || "Failed to save event", "error");
+    } catch (err: unknown) {
+      const apiError = err as { message?: string };
+      showToast(apiError.message || "Failed to save event", "error");
     } finally {
       setIsSaving(false);
     }
@@ -164,7 +165,7 @@ export function EventForm({ initialData, onClose, onSaved, showToast }: EventFor
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Event Banner</label>
             <ImageUpload 

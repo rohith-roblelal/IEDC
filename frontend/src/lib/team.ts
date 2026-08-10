@@ -1,11 +1,11 @@
 export interface StartupFounder {
   id?: string;
   name: string;
-  role?: string;
-  [key: string]: any;
+  role?: string | null;
+  [key: string]: unknown;
 }
 
-export const normalizeRole = (role: string | undefined): string => {
+export const normalizeRole = (role: string | null | undefined): string => {
   if (!role) return "Team Member";
   const normalized = role.trim().replace(/\s+/g, " ").replace(/-/g, " ").toLowerCase();
   

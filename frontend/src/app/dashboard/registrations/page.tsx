@@ -4,15 +4,30 @@ import { useEffect, useState } from "react";
 import { Users, Calendar, ArrowLeft, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { clientFetch } from "@/lib/api/client";
+import { EventResponse } from "@/lib/api/events";
+
+interface Participant {
+  id: string;
+  name?: string;
+  full_name?: string;
+  email: string;
+  phone: string;
+  department: string;
+  year: string;
+  custom_answers?: Record<string, string>;
+  payment_status?: string;
+  transaction_id?: string;
+  qr_screenshot_url?: string;
+}
 
 export default function RegistrationsPage() {
-  const [events, setEvents] = useState<any[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
-  const [participants, setParticipants] = useState<any[]>([]);
+  const [events, setEvents] = useState<EventResponse[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<EventResponse | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [isLoadingParticipants, setIsLoadingParticipants] = useState(false);
   const [filterTab, setFilterTab] = useState<"ALL" | "IEDC_MEMBER" | "NON_MEMBER">("ALL");
-  const [selectedParticipant, setSelectedParticipant] = useState<any | null>(null);
+  const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -28,7 +43,7 @@ export default function RegistrationsPage() {
     fetchEvents();
   }, []);
 
-  const handleSelectEvent = async (event: any) => {
+  const handleSelectEvent = async (event: EventResponse) => {
     setSelectedEvent(event);
     setIsLoadingParticipants(true);
     setParticipants([]);
@@ -106,7 +121,7 @@ export default function RegistrationsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredParticipants.map((reg: any, idx) => {
+              {filteredParticipants.map((reg, idx) => {
                 const isMember = iedcFieldId && reg.custom_answers?.[iedcFieldId] === "Yes";
                 return (
                   <motion.tr 
@@ -276,12 +291,12 @@ export default function RegistrationsPage() {
               <div>
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <span className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-sm">
-                    {selectedEvent.custom_fields.length}
+                    {selectedEvent?.custom_fields?.length}
                   </span>
                   Additional Information
                 </h3>
                 <div className="space-y-4">
-                  {selectedEvent.custom_fields.map((field: any) => {
+                  {selectedEvent?.custom_fields?.map((field: any) => {
                     const answer = selectedParticipant.custom_answers?.[field.id];
                     const screenshot = selectedParticipant.custom_answers?.[`${field.id}_screenshot`];
                     

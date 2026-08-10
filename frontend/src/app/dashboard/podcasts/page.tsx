@@ -8,17 +8,25 @@ import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { clientFetch, ApiError } from "@/lib/api/client";
 
+interface Podcast {
+  id: string;
+  title: string;
+  description: string;
+  date_str: string;
+  video_url?: string | null;
+  image_url?: string | null;
+  is_active: boolean;
+}
+
 export default function PodcastsPage() {
   const { toast } = useToast();
   const confirm = useConfirm();
-  const [podcasts, setPodcasts] = useState<any[]>([]);
+  const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [editingPodcast, setEditingPodcast] = useState<any | null>(null);
+  const [editingPodcast, setEditingPodcast] = useState<Podcast | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -44,14 +52,13 @@ export default function PodcastsPage() {
     fetchPodcasts();
   }, []);
 
-  const handleOpenModal = (podcast: any = null) => {
+  const handleOpenModal = (podcast: Podcast | null = null) => {
     if (podcast) {
       setEditingPodcast(podcast);
       setFormData({
         title: podcast.title,
         description: podcast.description,
         date_str: podcast.date_str,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         video_url: podcast.video_url || "",
         image_url: podcast.image_url || "",
         is_active: podcast.is_active,
@@ -126,7 +133,7 @@ try {
     }
   };
 
-  const setAsActive = async (id: string, podcast: any) => {
+  const setAsActive = async (id: string, podcast: Podcast) => {
     try {
       await clientFetch(`/api/v1/podcasts/${id}`, {
         method: "PUT",
@@ -176,8 +183,7 @@ try {
                 </tr>
               </thead>
               <tbody>
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {podcasts.map((pod: any, idx) => (
+                {podcasts.map((pod, idx) => (
                   <motion.tr 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}

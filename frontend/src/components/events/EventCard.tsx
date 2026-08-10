@@ -1,6 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { EventResponse } from "@/lib/api/events";
@@ -16,9 +13,8 @@ export function EventCard({ event }: EventCardProps) {
   
   return (
     <Link href={`/events/${event.slug}`} key={event.id} className="block group">
-      <motion.article 
-        whileHover={{ y: -5 }}
-        className="bg-gradient-to-br from-[#3A2065]/55 to-[#0D1030]/90 border border-white/10 rounded-[18px] p-7 flex flex-col gap-3.5 shadow-xl h-full"
+      <article 
+        className="bg-gradient-to-br from-[#3A2065]/55 to-[#0D1030]/90 border border-white/10 rounded-[18px] p-7 flex flex-col gap-3.5 shadow-xl h-full transition-transform duration-300 hover:-translate-y-1.5"
       >
         {event.banner_url ? (
           <div className="w-full h-40 relative rounded-xl mb-2 bg-black/20 overflow-hidden">
@@ -52,7 +48,7 @@ export function EventCard({ event }: EventCardProps) {
         >
           {isRegistrationOpen ? 'View & Register' : 'View Details'}
         </div>
-      </motion.article>
+      </article>
     </Link>
   );
 }

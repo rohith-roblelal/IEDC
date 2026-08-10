@@ -65,9 +65,9 @@ export default function EditStartupPage() {
           is_featured: startup.is_featured,
           verification_status: startup.verification_status,
           display_order: startup.display_order,
-          internal_notes: (startup as any).internal_notes, // admin only field
+          internal_notes: (startup as Record<string, unknown>).internal_notes as string | undefined, // admin only field
           batch_id: startup.batch?.id || undefined,
-          assigned_mentor_id: (startup as any).assigned_mentor_id,
+          assigned_mentor_id: (startup as Record<string, unknown>).assigned_mentor_id as string | undefined,
           founders: startup.founders || [],
           awards: startup.awards || [],
           funding: startup.funding || [],
@@ -78,7 +78,7 @@ export default function EditStartupPage() {
         setInitialData(formData);
         setBatches(batchesRes.data);
         setTechnologies(techRes.data);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Failed to fetch startup data", error);
         toast("Failed to load startup for editing", "error");
         router.push('/dashboard/startups');
