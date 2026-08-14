@@ -346,7 +346,7 @@ export default function EventsPage() {
                     />
                   </div>
 
-                  {editingEvent && (
+
                     <div className="md:col-span-2 bg-[#111432]/50 border border-[#3A2065]/50 p-4 rounded-xl mt-4">
                       <h3 className="text-white font-medium mb-3 flex items-center gap-2">
                         <svg className="w-5 h-5 text-[#4F7DF9]" viewBox="0 0 24 24" fill="currentColor">
@@ -422,7 +422,7 @@ export default function EventsPage() {
                         )}
                       </AnimatePresence>
                     </div>
-                  )}
+
 
                   <div className="md:col-span-2 bg-[#111432]/50 border border-white/10 p-5 rounded-xl mt-4">
                     <h3 className="text-white font-medium mb-1">Custom Registration Fields</h3>
