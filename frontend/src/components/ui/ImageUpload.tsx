@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { UploadCloud, X, Loader2 } from "lucide-react";
+import { clientFetch } from "@/lib/api/client";
 
 interface ImageUploadProps {
   value: string | null | undefined;
@@ -28,21 +29,15 @@ export function ImageUpload({ value, onChange, folder }: ImageUploadProps) {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", folder);
-const res = await fetch("/api/v1/upload", {
+      const data = await clientFetch("/api/v1/upload", {
         method: "POST",
         body: formData,
       });
 
-      if (!res.ok) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        throw new Error(await res.text());
-      }
-
-      const data = await res.json();
       onChange(data.url);
     } catch (err: any) {
       console.error(err);
-      setError("Failed to upload image");
+      setError(err.message || "Failed to upload image");
     } finally {
       setIsUploading(false);
     }
