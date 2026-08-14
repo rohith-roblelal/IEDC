@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useRef, useEffect, ReactNode, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X } from "lucide-react";
 
@@ -33,23 +33,23 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isOpen]);
 
-  const confirm = (msg: string): Promise<boolean> => {
+  const confirm = useCallback((msg: string): Promise<boolean> => {
     setMessage(msg);
     setIsOpen(true);
     return new Promise((resolve) => {
       resolvePromiseRef.current = resolve as (value: boolean) => void;
     });
-  };
+  }, []);
 
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     setIsOpen(false);
     if (resolvePromiseRef.current) resolvePromiseRef.current(true);
-  };
+  }, []);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setIsOpen(false);
     if (resolvePromiseRef.current) resolvePromiseRef.current(false);
-  };
+  }, []);
 
   return (
     <ConfirmContext.Provider value={{ confirm }}>
