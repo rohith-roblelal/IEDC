@@ -15,6 +15,13 @@ The IEDC SNMIMT Platform has completed its comprehensive Production Release Audi
 - No exposed debugging tools or sensitive console logs.
 - Next.js security headers and CSP are configured.
 
+## 3.5 Pre-Flight Audit Findings
+During the pre-deployment verification (Gates 1-3), the following critical issues were identified and successfully remediated:
+1. **High (Configuration)**: A Supabase bucket typo (`IEDC gallary`) in `config.py` was preventing uploads. **(Fixed)**
+2. **Critical (Access Control)**: Unauthenticated `{public}` RLS policies on the Storage bucket were allowing arbitrary writes and deletes. **(Destroyed)**
+3. **High (Validation)**: Pydantic `extra="forbid"` was omitted from the base schema, allowing API payload tampering. **(Fixed)**
+4. **Medium (Dependencies)**: Backend packages `cryptography` and `h2` had known CVEs. **(Patched)**
+
 ## 4. Performance Status
 **Status: Passed (Optimized)**
 - Webpack bundle is optimized via dynamic imports.

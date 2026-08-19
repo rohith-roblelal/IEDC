@@ -15,7 +15,7 @@ Use this checklist for every production deployment to ensure consistency, stabil
 - [ ] **Rollback Artifact:** Previous production Docker image verified and available for immediate rollback.
 - [ ] **Database Migrations:** Run `alembic upgrade head` in Staging. Verify they are idempotent and succeed without errors.
 - [ ] **Dependency Freeze:** Ensure `requirements.txt` and `package-lock.json` have no pending unpinned dependencies.
-- [ ] **Secrets Rotation:** Verify no secrets were committed to Git or Docker images. Rotate any compromised secrets.
+- [x] **Secrets Rotation:** Verify no secrets were committed to Git or Docker images. Rotate any compromised secrets.
 
 ## 2. Staging Validation
 - [ ] **Smoke Tests:** Execute `k6 run load-tests/smoke.js` against the staging environment.
@@ -43,7 +43,7 @@ Use this checklist for every production deployment to ensure consistency, stabil
   - [ ] API documentation accessible
   - [ ] Event registration works
 - [ ] **External Integrations:**
-  - [ ] Supabase Storage
+  - [x] Supabase Storage
   - [ ] Email provider
   - [ ] OAuth providers
   - [ ] Analytics & Error reporting

@@ -117,6 +117,11 @@ This document tracks the ongoing development, features implemented, and upcoming
 - **Frontend Proxy Timeouts**: Fixed a `408 Request Timeout` on the Admin Team dashboard by adjusting the internal `clientFetch` timeout from an aggressive 8 seconds to a robust 30 seconds to accommodate Next.js Turbopack compilation and proxy delays.
 - **Production Build Port Conflict**: Diagnosed and resolved a fatal IPv6/IPv4 `localhost` routing conflict where the Next.js `npm run build` process was silently forwarding traffic to a background Docker/WSL ghost backend on `[::1]:8000` instead of the active Python `uvicorn` backend on `127.0.0.1:8000`. This completely eliminated the random 500 socket timeout errors during static page generation.
 
+#### Release Verification Sprint (Gates 1-3) ✅
+- **Gate 1 (Pydantic Strictness)**: Upgraded `SchemaBase` to use `extra="forbid"`, preventing API field-tampering.
+- **Gate 2 (Dependency Security)**: Patched backend `cryptography` to `50.0.0` and `h2` to `4.4.1` to resolve known vulnerabilities. Documented `ecdsa` as an accepted transitive risk.
+- **Gate 3 (Supabase Storage RLS)**: Fixed a typo in `config.py` that caused bucket name mismatches (`IEDC gallary` -> `IEDC gallery`). Rotated an exposed service-role key. Destroyed vulnerable Supabase SQL policies that allowed unauthorized `{public}` access to `INSERT`, `UPDATE`, and `DELETE`.
+
 
 ## In Progress / Next Steps (Production Roadmap)
 
