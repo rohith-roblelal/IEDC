@@ -16,7 +16,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 # Base config for all schemas
 class SchemaBase(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
 
 # -----------------
 # Users
@@ -222,7 +222,7 @@ class GalleryResponse(GalleryBase):
 # -----------------
 # Contact Messages
 # -----------------
-class ContactMessageBase(BaseModel):
+class ContactMessageBase(SchemaBase):
     name: str = Field(..., max_length=100)
     email: EmailStr
     subject: Optional[str] = Field(None, max_length=255)
@@ -237,12 +237,9 @@ class ContactMessageResponse(ContactMessageBase):
     is_archived: bool = False
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 # --- Podcast Schemas ---
 
-class PodcastBase(BaseModel):
+class PodcastBase(SchemaBase):
     title: str
     description: str
     date_str: str
@@ -253,7 +250,7 @@ class PodcastBase(BaseModel):
 class PodcastCreate(PodcastBase):
     pass
 
-class PodcastUpdate(BaseModel):
+class PodcastUpdate(SchemaBase):
     title: Optional[str] = None
     description: Optional[str] = None
     date_str: Optional[str] = None
@@ -266,12 +263,9 @@ class PodcastResponse(PodcastBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
-
 # --- Partner Schemas ---
 
-class PartnerBase(BaseModel):
+class PartnerBase(SchemaBase):
     name: str
     description: Optional[str] = None
     website_url: Optional[str] = None
@@ -281,7 +275,7 @@ class PartnerBase(BaseModel):
 class PartnerCreate(PartnerBase):
     pass
 
-class PartnerUpdate(BaseModel):
+class PartnerUpdate(SchemaBase):
     name: Optional[str] = None
     description: Optional[str] = None
     website_url: Optional[str] = None
@@ -292,28 +286,22 @@ class PartnerResponse(PartnerBase):
     id: uuid.UUID
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
 # -----------------
-# Tokens
-# -----------------
-class Token(BaseModel):
+class Token(SchemaBase):
     access_token: str
     token_type: str
 
-class TokenData(BaseModel):
+class TokenData(SchemaBase):
     email: Optional[str] = None
     role: Optional[Role] = None
 
 # -----------------
 # Password Reset
 # -----------------
-class ForgotPasswordRequest(BaseModel):
+class ForgotPasswordRequest(SchemaBase):
     email: EmailStr
 
-class ResetPasswordRequest(BaseModel):
+class ResetPasswordRequest(SchemaBase):
     token: str
     new_password: str = Field(
         ..., 

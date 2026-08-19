@@ -4,14 +4,14 @@ import StartupsClient from "./StartupsClient";
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return {
-    title: "Our Startups | IEDC SNMIMT",
-    description: "Discover the innovative startups incubated and nurtured at IEDC SNMIMT.",
+    title: "Startups",
+    description: "Explore the innovative student startups incubated at IEDC SNMIMT. Learn about our campus founders, their companies, industries, and technological disruptions.",
     alternates: {
       canonical: `${baseUrl}/startups`,
     },
     openGraph: {
       title: "Our Startups | IEDC SNMIMT",
-      description: "Discover the innovative startups incubated and nurtured at IEDC SNMIMT.",
+      description: "Explore the innovative student startups incubated at IEDC SNMIMT. Learn about our campus founders, their companies, industries, and technological disruptions.",
       url: `${baseUrl}/startups`,
     }
   };

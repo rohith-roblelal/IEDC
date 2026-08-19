@@ -4,20 +4,20 @@ import GalleryClient from "./GalleryClient";
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return {
-    title: "Event Gallery | IEDC SNMIMT",
-    description: "View posters and highlights from our incredible events, hackathons, and workshops at IEDC SNMIMT.",
+    title: "Gallery",
+    description: "Explore the IEDC SNMIMT event gallery. View highlights, photos, and posters from our recent hackathons, technical workshops, and entrepreneurship programs.",
     alternates: {
       canonical: `${baseUrl}/gallery`,
     },
     openGraph: {
       title: "Event Gallery | IEDC SNMIMT",
-      description: "View posters and highlights from our incredible events, hackathons, and workshops at IEDC SNMIMT.",
+      description: "Explore the IEDC SNMIMT event gallery. View highlights, photos, and posters from our recent hackathons, technical workshops, and entrepreneurship programs.",
       url: `${baseUrl}/gallery`,
     },
     twitter: {
       card: "summary_large_image",
       title: "Event Gallery | IEDC SNMIMT",
-      description: "View posters and highlights from our incredible events, hackathons, and workshops at IEDC SNMIMT.",
+      description: "Explore the IEDC SNMIMT event gallery. View highlights, photos, and posters from our recent hackathons, technical workshops, and entrepreneurship programs.",
     }
   };
 }

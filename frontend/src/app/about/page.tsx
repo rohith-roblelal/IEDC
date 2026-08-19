@@ -3,8 +3,8 @@ import AboutClient from "./AboutClient";
 
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-  const title = "About Us | IEDC SNMIMT";
-  let description = "IEDC has been developed to foster and nurture innovations combined with entrepreneurship amongst young minds at SNMIMT.";
+  const title = "About IEDC";
+  let description = "Learn about IEDC SNMIMT's mission to foster student innovation and entrepreneurship. Discover our initiatives, leadership team, and campus opportunities.";
   
   try {
     const settings = await fetch(`${baseUrl}/api/v1/settings`, { next: { revalidate: 60 } }).then(r => r.json());

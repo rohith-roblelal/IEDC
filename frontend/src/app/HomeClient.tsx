@@ -242,7 +242,7 @@ export default function HomeClient({ announcements = [], podcasts = [], partners
                 {podcast.image_url ? (
                   <Image 
                     src={podcast.image_url} 
-                    alt="Podcast Background" 
+                    alt="" 
                     fill 
                     className="object-cover block" 
                   />

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     
     return {
-      title: `${announcement.title} | IEDC SNMIMT`,
+      title: announcement.title,
       description: plainTextContent,
       alternates: {
         canonical: `${baseUrl}/announcements/${slug}`,

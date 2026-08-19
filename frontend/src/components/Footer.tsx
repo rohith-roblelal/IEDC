@@ -4,10 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useSettings } from "@/lib/settings-context";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function Footer() {
   const { toast } = useToast();
   const settings = useSettings();
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const socials = [
     { url: settings.facebook_url, label: "Facebook", icon: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/> },
@@ -49,11 +53,14 @@ export default function Footer() {
           className="bg-white rounded-[18px] p-8 max-w-[420px] mx-auto mt-6 shadow-2xl text-left"
           onSubmit={async (e) => {
             e.preventDefault();
+            if (isSubmitting) return; // Prevent duplicate submissions
+
             const form = e.target as HTMLFormElement;
             const name = (form.elements[0] as HTMLInputElement).value;
             const email = (form.elements[1] as HTMLInputElement).value;
             const message = (form.elements[2] as HTMLTextAreaElement).value;
             
+            setIsSubmitting(true);
             try {
               const res = await fetch("/api/v1/contact", {
                 method: "POST",
@@ -62,14 +69,17 @@ export default function Footer() {
               });
               
               if (res.ok) {
-                toast("Message sent - we'll get back to you soon!", "success");
+                // Remove transient toast, use dedicated route instead
                 form.reset();
+                router.push("/thank-you");
               } else {
                 toast("Failed to send message. Please try again.", "error");
               }
             } catch (err) {
               console.error(err);
               toast("An error occurred. Please try again later.", "error");
+            } finally {
+              setIsSubmitting(false);
             }
           }}
         >
@@ -80,7 +90,8 @@ export default function Footer() {
               type="text"
               placeholder="Your Name"
               required
-              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              disabled={isSubmitting}
+              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50"
             />
           </div>
           <div className="space-y-1 mb-3.5">
@@ -90,7 +101,8 @@ export default function Footer() {
               type="email"
               placeholder="Your Email"
               required
-              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              disabled={isSubmitting}
+              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50"
             />
           </div>
           <div className="space-y-1 mb-3.5">
@@ -99,14 +111,21 @@ export default function Footer() {
               id="footer-message"
               placeholder="Your Enquiry"
               required
-              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[90px] resize-y"
+              disabled={isSubmitting}
+              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[90px] resize-y disabled:opacity-50"
             ></textarea>
           </div>
           <button
             type="submit"
-            className="w-full bg-[#4F7DF9] text-white font-bold py-3.5 rounded-full hover:-translate-y-0.5 transition-transform"
+            disabled={isSubmitting}
+            className="w-full bg-[#4F7DF9] text-white font-bold py-3.5 rounded-full hover:-translate-y-0.5 transition-transform disabled:opacity-70 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
           >
-            Send
+            {isSubmitting ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                Sending...
+              </>
+            ) : "Send"}
           </button>
         </form>
 
@@ -129,7 +148,9 @@ export default function Footer() {
           </div>
         )}
 
-        <div className="mt-6 flex justify-center gap-6 text-[#C4C4D4] text-[0.85rem]">
+        <div className="mt-6 flex flex-wrap justify-center gap-6 text-[#C4C4D4] text-[0.85rem]">
+          <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
         </div>
 
         <p className="mt-6 text-[#6B6B7C] text-[0.8rem]">

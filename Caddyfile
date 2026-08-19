@@ -8,7 +8,7 @@
     reverse_proxy backend:8000
     
     # Optional: Enable HSTS after verifying HTTPS works
-    # header Strict-Transport-Security max-age=31536000;
+    header Strict-Transport-Security max-age=31536000;
 }
 
 # Grafana (Internal Observability)

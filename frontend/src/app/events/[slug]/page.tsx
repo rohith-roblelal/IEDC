@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     return {
-      title: `${event.title} | IEDC SNMIMT`,
+      title: event.title,
       description: event.short_description || event.description.substring(0, 160),
       alternates: {
         canonical: `${baseUrl}/events/${slug}`,

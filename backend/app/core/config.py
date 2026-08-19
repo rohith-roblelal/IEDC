@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # Supabase Storage
     SUPABASE_URL: str
     SUPABASE_SERVICE_ROLE_KEY: str
-    SUPABASE_BUCKET: str = "IEDC gallary"
+    SUPABASE_BUCKET: str = "IEDC gallery"
     MAX_UPLOAD_SIZE_MB: int = 5
 
     # Email

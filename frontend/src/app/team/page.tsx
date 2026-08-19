@@ -4,20 +4,20 @@ import TeamClient from "./TeamClient";
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return {
-    title: "Our Team | IEDC SNMIMT",
-    description: "Meet the dedicated team behind IEDC SNMIMT, driving innovation and entrepreneurship on campus.",
+    title: "Team",
+    description: "Meet the dedicated executive committee, nodal officers, and student leaders behind IEDC SNMIMT who are driving innovation and entrepreneurship on our campus.",
     alternates: {
       canonical: `${baseUrl}/team`,
     },
     openGraph: {
       title: "Our Team | IEDC SNMIMT",
-      description: "Meet the dedicated team behind IEDC SNMIMT, driving innovation and entrepreneurship on campus.",
+      description: "Meet the dedicated executive committee, nodal officers, and student leaders behind IEDC SNMIMT who are driving innovation and entrepreneurship on our campus.",
       url: `${baseUrl}/team`,
     },
     twitter: {
       card: "summary",
       title: "Our Team | IEDC SNMIMT",
-      description: "Meet the dedicated team behind IEDC SNMIMT, driving innovation and entrepreneurship on campus.",
+      description: "Meet the dedicated executive committee, nodal officers, and student leaders behind IEDC SNMIMT who are driving innovation and entrepreneurship on our campus.",
     }
   };
 }

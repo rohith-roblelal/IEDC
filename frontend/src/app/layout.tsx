@@ -9,6 +9,9 @@ import { ToastProvider } from "@/components/ui/ToastProvider";
 import { ConfirmProvider } from "@/components/ui/ConfirmProvider";
 import { SettingsProvider } from "@/lib/settings-context";
 
+import { StickyMobileCTA } from "@/components/StickyMobileCTA";
+import { CookieDisclosure } from "@/components/CookieDisclosure";
+
 const poppins = Poppins({ 
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
@@ -110,7 +113,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body suppressHydrationWarning className={`${poppins.variable} font-sans bg-[radial-gradient(circle_at_75%_20%,#3D1A5C,#0D1030_70%)] bg-fixed bg-[#0D1030] text-white antialiased min-h-screen flex flex-col`}>
+      <body suppressHydrationWarning className={`${poppins.variable} font-sans bg-[radial-gradient(circle_at_75%_20%,#3D1A5C,#0D1030_70%)] bg-fixed bg-[#0D1030] text-white antialiased min-h-screen flex flex-col relative`}>
         {/* Skip navigation - WCAG 2.4.1 */}
         <a
           href="#main-content"
@@ -124,12 +127,14 @@ export default async function RootLayout({
               <ConditionalWrapper excludePaths={["/dashboard"]}>
                 <Navbar />
               </ConditionalWrapper>
-              <main id="main-content" className="flex-1">
+              <main id="main-content" className="flex-1 relative z-10">
                 {children}
               </main>
               <ConditionalWrapper excludePaths={["/dashboard"]}>
                 <Footer />
               </ConditionalWrapper>
+              <StickyMobileCTA />
+              <CookieDisclosure />
             </SettingsProvider>
           </ConfirmProvider>
         </ToastProvider>

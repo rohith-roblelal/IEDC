@@ -5,14 +5,14 @@ import { EventsAPI } from "@/lib/api/events";
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return {
-    title: "Events | IEDC SNMIMT",
-    description: "Register for open events, hackathons, and workshops hosted by IEDC SNMIMT.",
+    title: "Events",
+    description: "Discover upcoming and past events hosted by IEDC SNMIMT. Register for our hackathons, technical workshops, ideathons, and exclusive student innovation programs.",
     alternates: {
       canonical: `${baseUrl}/events`,
     },
     openGraph: {
       title: "Events | IEDC SNMIMT",
-      description: "Register for open events, hackathons, and workshops hosted by IEDC SNMIMT.",
+      description: "Discover upcoming and past events hosted by IEDC SNMIMT. Register for our hackathons, technical workshops, ideathons, and exclusive student innovation programs.",
       url: `${baseUrl}/events`,
     }
   };

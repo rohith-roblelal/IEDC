@@ -6,14 +6,14 @@ import { AnnouncementsAPI, AnnouncementResponse } from "@/lib/api/announcements"
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return {
-    title: "Announcements | IEDC SNMIMT",
-    description: "Stay updated with the latest news, announcements, and notices from IEDC SNMIMT.",
+    title: "Announcements",
+    description: "Stay updated with the latest news, announcements, and important notices from IEDC SNMIMT. Get notified about upcoming deadlines, funding, and campus events.",
     alternates: {
       canonical: `${baseUrl}/announcements`,
     },
     openGraph: {
       title: "Announcements | IEDC SNMIMT",
-      description: "Stay updated with the latest news, announcements, and notices from IEDC SNMIMT.",
+      description: "Stay updated with the latest news, announcements, and important notices from IEDC SNMIMT. Get notified about upcoming deadlines, funding, and campus events.",
       url: `${baseUrl}/announcements`,
     }
   };
