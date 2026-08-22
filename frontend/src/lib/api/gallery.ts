@@ -7,6 +7,7 @@ export interface GalleryImage {
   id: string;
   url: string;
   caption?: string | null;
+  description?: string | null;
   category?: string | null;
   is_published?: boolean;
   event_id?: string | null;
@@ -15,6 +16,7 @@ export interface GalleryImage {
 
 export interface GalleryImageUpdate {
   caption?: string;
+  description?: string;
   category?: string;
   is_published?: boolean;
 }
