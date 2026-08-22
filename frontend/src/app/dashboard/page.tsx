@@ -48,13 +48,14 @@ export default function DashboardOverview() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     const fetchStats = async () => {
       try {
         const data = await clientFetch("api/v1/dashboard");
         setStats(data);
       } catch (err: unknown) {
         console.error("Dashboard fetch error:", err);
-        // Only set error if we don't have existing stats to fall back on
         if (!stats) {
           const e = err as Error;
           setError(e.message === "Failed to fetch" 
@@ -100,13 +101,9 @@ export default function DashboardOverview() {
           });
         }
 
-        // Sort by timestamp descending
         newActivities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-        // Keep top 5
         setActivities(newActivities.slice(0, 5));
         
-        // If both failed
         if (eventsRes.status === "rejected" && registrationsRes.status === "rejected") {
           setActivitiesError(true);
         } else {
@@ -118,16 +115,16 @@ export default function DashboardOverview() {
       } finally {
         setIsActivitiesLoading(false);
       }
+      
+      // Schedule next poll only AFTER current one finishes (prevents overlapping requests)
+      timeoutId = setTimeout(fetchStats, 30000);
     };
 
     // Fetch immediately on mount
     fetchStats();
 
-    // Poll for live updates every 5 seconds
-    const interval = setInterval(fetchStats, 5000);
-
-    // Cleanup interval on unmount
-    return () => clearInterval(interval);
+    // Cleanup timeout on unmount
+    return () => clearTimeout(timeoutId);
   }, []);
 
   if (isLoading) {
