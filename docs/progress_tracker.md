@@ -117,6 +117,15 @@ This document tracks the ongoing development, features implemented, and upcoming
 - **Frontend Proxy Timeouts**: Fixed a `408 Request Timeout` on the Admin Team dashboard by adjusting the internal `clientFetch` timeout from an aggressive 8 seconds to a robust 30 seconds to accommodate Next.js Turbopack compilation and proxy delays.
 - **Production Build Port Conflict**: Diagnosed and resolved a fatal IPv6/IPv4 `localhost` routing conflict where the Next.js `npm run build` process was silently forwarding traffic to a background Docker/WSL ghost backend on `[::1]:8000` instead of the active Python `uvicorn` backend on `127.0.0.1:8000`. This completely eliminated the random 500 socket timeout errors during static page generation.
 
+#### Security & Resilience Hardening ✅
+- **DDoS/DoS Risk Audit**: Conducted a comprehensive 10-point audit identifying risks in missing rate limits, unbounded endpoints, and DB connection starvation.
+- **Global Request Size Limits**: Added a `ContentLengthLimitMiddleware` to `main.py` to hard-limit standard request payloads to 1MB, preventing memory exhaustion attacks, with explicit exceptions for `/upload` endpoints.
+- **Multi-Dimensional Rate Limiting**: Upgraded `slowapi` to rate limit based on `IP Address + JWT User ID` to prevent a single malicious authenticated user from taking down the API, while ensuring users on shared NATs aren't unfairly blocked.
+- **Strict Route-Level Limits**: Applied explicit `@limiter.limit` decorators to highly-abusable public mutations (`/contact` [5/min] and `/register` [10/min]).
+- **Database Layered Timeouts**: Connected to the Neon Postgres database and ran `ALTER ROLE CURRENT_USER SET statement_timeout = '15s';`. This creates a robust layered timeout architecture preventing connection pool starvation if expensive unbounded queries occur.
+- **Origin Shielding Guidelines**: Documented the necessary Render/Vercel shared-secret configuration in `ORIGIN_SHIELDING.md` to prevent attackers from bypassing the Vercel Edge CDN by hitting the Render URL directly.
+- **Controlled Load Testing**: Created a production-safe k6 load-testing script (`k6/load_test.js`) that strictly fails-closed if `TARGET_ENV=staging` is not explicitly set, ensuring safe and isolated resilience testing.
+
 #### Release Verification Sprint (Gates 1-3) ✅
 - **Gate 1 (Pydantic Strictness)**: Upgraded `SchemaBase` to use `extra="forbid"`, preventing API field-tampering.
 - **Gate 2 (Dependency Security)**: Patched backend `cryptography` to `50.0.0` and `h2` to `4.4.1` to resolve known vulnerabilities. Documented `ecdsa` as an accepted transitive risk.

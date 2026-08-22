@@ -159,6 +159,35 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 
+class ContentLengthLimitMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, default_limit: int = 1_048_576, upload_limit: int = 10_485_760):
+        super().__init__(app)
+        self.default_limit = default_limit
+        self.upload_limit = upload_limit
+
+    async def dispatch(self, request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length is not None:
+            try:
+                content_length = int(content_length)
+                
+                # Check if this is an upload endpoint
+                is_upload = "/upload" in request.url.path
+                limit = self.upload_limit if is_upload else self.default_limit
+                
+                if content_length > limit:
+                    logger.warning("content_length_exceeded", path=request.url.path, size=content_length, limit=limit)
+                    return JSONResponse(
+                        status_code=413,
+                        content={"detail": "Request body too large"}
+                    )
+            except ValueError:
+                return JSONResponse(status_code=400, content={"detail": "Invalid content-length header"})
+                
+        return await call_next(request)
+
+app.add_middleware(ContentLengthLimitMiddleware)
+
 class CSRFOriginMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         if request.method in ["POST", "PUT", "PATCH", "DELETE"]:

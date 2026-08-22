@@ -1,18 +1,21 @@
 import uuid
-from typing import List
-from fastapi import APIRouter, Depends
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
 from app.models.models import User
-from app.schemas.schemas import ContactMessageResponse, ContactMessageCreate
+from app.schemas.schemas import ContactMessageResponse, ContactMessageCreate, PaginatedResponse
 from app.api.dependencies import get_current_super_admin
+from app.core.rate_limit import limiter
 from app.services.contact import ContactService
 
 router = APIRouter()
 
 @router.post("", response_model=ContactMessageResponse)
+@limiter.limit("5/minute")
 async def create_contact_message(
+    request: Request,
     message_in: ContactMessageCreate,
     db: AsyncSession = Depends(get_db),
 ):

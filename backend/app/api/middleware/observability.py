@@ -47,9 +47,13 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
         response.headers["Server-Timing"] = f"total;dur={duration_ms}"
         
         # 6. Log the completed request
-        # Only log info for typical API/web requests, skip typical healthchecks/metrics if they are too noisy,
-        # but for now we log all.
-        log_level = logger.info if response.status_code < 400 else logger.warning
+        if response.status_code >= 500:
+            log_level = logger.error
+        elif response.status_code >= 400:
+            log_level = logger.warning
+        else:
+            log_level = logger.info
+            
         log_level(
             "request_completed",
             status_code=response.status_code,

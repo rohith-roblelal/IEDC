@@ -1,18 +1,21 @@
 import uuid
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
 from app.models.models import User
-from app.schemas.schemas import RegistrationResponse, RegistrationCreate
+from app.schemas.schemas import RegistrationResponse, RegistrationCreate, PaginatedResponse
 from app.api.dependencies import get_current_super_admin
 from app.services.registration import RegistrationService
+from app.core.rate_limit import limiter
 
 router = APIRouter()
 
 @router.post("/events/{event_id}/register", response_model=RegistrationResponse)
+@limiter.limit("10/minute")
 async def register_for_event(
+    request: Request,
     event_id: uuid.UUID,
     reg_in: RegistrationCreate,
     db: AsyncSession = Depends(get_db)

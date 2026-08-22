@@ -57,6 +57,14 @@ Following multiple rounds of remediation, the application now exhibits strong se
 - **Previous Vulnerability**: Logout only cleared the client-side cookie, leaving the token valid on the server.
 - **Remediation**: A `TokenBlocklist` table was created. During logout, the token's `jti` is inserted into the blocklist. `get_current_user` checks this list to reject revoked tokens.
 
+### 3.9 [Resolved] Denial of Service (DoS) via Unprotected Endpoints & Connection Starvation
+- **Previous Vulnerability**: Public endpoints (like `/contact` and `/register`) were susceptible to spam/abuse. Attackers could also exhaust database connections by triggering expensive unbounded operations.
+- **Remediation**: 
+  - Added global request payload limits (1MB default).
+  - Deployed `slowapi` with multi-dimensional rate limiting (IP + User ID).
+  - Configured Postgres layered timeouts (`statement_timeout = 15s`) to forcefully terminate hung queries.
+  - Implemented Origin Shielding on the Render backend to prevent Vercel CDN bypass.
+
 ---
 
 ## 4. Secure Coding Recommendations & Next Steps

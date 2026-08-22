@@ -16,9 +16,11 @@ Use this checklist for every production deployment to ensure consistency, stabil
 - [ ] **Database Migrations:** Run `alembic upgrade head` in Staging. Verify they are idempotent and succeed without errors.
 - [ ] **Dependency Freeze:** Ensure `requirements.txt` and `package-lock.json` have no pending unpinned dependencies.
 - [x] **Secrets Rotation:** Verify no secrets were committed to Git or Docker images. Rotate any compromised secrets.
+- [ ] **Origin Shielding:** Verify that Render/Backend origin is protected by the `X-Backend-Secret` configuration and cannot be accessed directly bypassing the CDN.
 
 ## 2. Staging Validation
 - [ ] **Smoke Tests:** Execute `k6 run load-tests/smoke.js` against the staging environment.
+- [ ] **Resilience Tests:** Execute `k6 run k6/load_test.js` against the staging environment to verify rate limits and DoS protections.
 - [ ] **E2E Validation:** Run Playwright E2E suite against staging to confirm core user flows.
 - [ ] **Observability Verification:**
   - [ ] Metrics populate in Prometheus/Grafana.

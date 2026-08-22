@@ -126,6 +126,7 @@ All High Priority issues (CORS Precedence Flaws, API N+1 Queries) were resolved 
 * **Enterprise Testing Strategy:** The integration of k6 (for load testing), Playwright (for E2E), and explicit chaos testing scripts puts this project in the top 1% of platforms of its size.
 * **Security Posture:** Enforcing strict MyPy, `pip-audit`, `bandit`, and `npm audit` in CI ensures that security is a continuous gate, not an afterthought.
 * **Scalability Foundation:** Decoupling the rate limiter and background tasks (ARQ) to Redis guarantees that the backend can be horizontally scaled infinitely behind a load balancer.
+* **DoS/DDoS Hardening**: The recent addition of global request size limits, multi-dimensional rate limiting, and database-level query timeouts provides exceptional resilience against both volumetric and application-layer resource exhaustion attacks.
 
 ---
 

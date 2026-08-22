@@ -93,7 +93,6 @@ export default function SettingsPage() {
   const [statsJson, setStatsJson] = useState<Array<{ label: string; value: string }>>([]);
 
   const logoRef = useRef<HTMLInputElement>(null);
-  const faviconRef = useRef<HTMLInputElement>(null);
   const heroImageRef = useRef<HTMLInputElement>(null);
   const ogImageRef = useRef<HTMLInputElement>(null);
 
@@ -245,9 +244,8 @@ export default function SettingsPage() {
               <h2 className="text-xl font-bold text-white mb-2">Branding</h2>
               <Field settings={settings} onChange={handleChange} label="Site Name" name="site_name" placeholder="IEDC SNMIMT" />
               <Field settings={settings} onChange={handleChange} label="Site Tagline" name="site_tagline" placeholder="Innovation and Entrepreneurship..." />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="max-w-md">
                 <ImageUploadField settings={settings} onUpload={handleFileUpload} label="Logo" field="logo_url" urlKey="logo_url" inputRef={logoRef} endpoint="logo" isUploading={uploadingFields.has("logo_url")} />
-                <ImageUploadField settings={settings} onUpload={handleFileUpload} label="Favicon" field="favicon_url" urlKey="favicon_url" inputRef={faviconRef} endpoint="favicon" isUploading={uploadingFields.has("favicon_url")} />
               </div>
               <SaveButton tabId="branding" isSaving={savingTabs.has("branding")} onSave={handleSave} keys={["site_name", "site_tagline"]} />
             </>
