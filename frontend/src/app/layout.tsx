@@ -80,6 +80,8 @@ export default async function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <head suppressHydrationWarning>
+      </head>
+      <body suppressHydrationWarning className={`${poppins.variable} font-sans bg-[radial-gradient(circle_at_75%_20%,#3D1A5C,#0D1030_70%)] bg-fixed bg-[#0D1030] text-white antialiased min-h-screen flex flex-col relative`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -112,8 +114,6 @@ export default async function RootLayout({
             })
           }}
         />
-      </head>
-      <body suppressHydrationWarning className={`${poppins.variable} font-sans bg-[radial-gradient(circle_at_75%_20%,#3D1A5C,#0D1030_70%)] bg-fixed bg-[#0D1030] text-white antialiased min-h-screen flex flex-col relative`}>
         {/* Skip navigation - WCAG 2.4.1 */}
         <a
           href="#main-content"

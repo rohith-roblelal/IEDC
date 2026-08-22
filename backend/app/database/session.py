@@ -3,25 +3,14 @@ from sqlalchemy.orm import declarative_base
 from app.core.config import settings
 
 connect_args = {}
-if "asyncpg" in settings.DATABASE_URL:
-    connect_args["server_settings"] = {
-        "statement_timeout": "15000",
-        "lock_timeout": "10000",
-        "idle_in_transaction_session_timeout": "60000"
-    }
-else:
-    connect_args["options"] = "-c statement_timeout=15000 -c lock_timeout=10000 -c idle_in_transaction_session_timeout=60000"
 
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=False,
-    future=True,
     pool_size=5,
     max_overflow=10,
     pool_recycle=1800,
     pool_pre_ping=True,
     pool_timeout=30,
-    connect_args=connect_args,
 )
 
 from sqlalchemy import event
