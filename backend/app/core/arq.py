@@ -17,8 +17,6 @@ async def init_arq_pool(app: FastAPI):
         logger.info("arq_pool_initialized")
     except Exception as e:
         logger.error("arq_pool_initialization_failed", error=str(e))
-        if settings.ENVIRONMENT != "development":
-            raise
 
 async def close_arq_pool():
     global arq_pool

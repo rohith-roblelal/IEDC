@@ -35,7 +35,7 @@ class StartupRepository:
         result = await self.session.execute(query)
         return result.scalars().first()
 
-    async def get_by_slug(self, slug: str) -> Optional[Startup]:
+    async def get_by_slug(self, slug: str, include_deleted: bool = False) -> Optional[Startup]:
         query = select(Startup).options(
             selectinload(Startup.batch),
             selectinload(Startup.gallery_images),
@@ -44,12 +44,16 @@ class StartupRepository:
             selectinload(Startup.funding),
             selectinload(Startup.press_links),
             selectinload(Startup.technologies)
-        ).where(Startup.slug == slug, Startup.deleted_at.is_(None))
+        ).where(Startup.slug == slug)
+        
+        if not include_deleted:
+            query = query.where(Startup.deleted_at.is_(None))
         result = await self.session.execute(query)
         return result.scalars().first()
 
     async def get_by_name(self, name: str) -> Optional[Startup]:
-        query = select(Startup).where(Startup.name == name, Startup.deleted_at.is_(None))
+        # Ignores deleted_at to properly validate unique constraints
+        query = select(Startup).where(Startup.name == name)
         result = await self.session.execute(query)
         return result.scalars().first()
 
@@ -97,8 +101,7 @@ class StartupRepository:
     
     async def add_gallery_image(self, image: StartupGalleryImage) -> StartupGalleryImage:
         self.session.add(image)
-        await self.session.commit()
-        await self.session.refresh(image)
+        await self.session.flush()
         return image
         
     async def get_gallery_image(self, image_id: uuid.UUID) -> Optional[StartupGalleryImage]:
@@ -109,5 +112,4 @@ class StartupRepository:
         result = await self.session.execute(
             update(StartupGalleryImage).where(StartupGalleryImage.id == image_id).values(deleted_at=utcnow(), deleted_by=user_id)
         )
-        await self.session.commit()
         return result.rowcount > 0

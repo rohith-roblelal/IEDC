@@ -2,6 +2,7 @@ import os
 import uuid
 import filetype
 from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from app.core.config import settings
 from app.models.models import User
 from app.models.enums import Role
@@ -58,11 +59,13 @@ async def upload_image(
     path = path.replace("//", "/")
     
     try:
-        res = supabase_client.storage.from_(SUPABASE_BUCKET).upload(
-            file=file_bytes,
-            path=path,
-            file_options={"content-type": mime}
-        )
+        def _upload():
+            return supabase_client.storage.from_(SUPABASE_BUCKET).upload(
+                file=file_bytes,
+                path=path,
+                file_options={"content-type": mime}
+            )
+        res = await run_in_threadpool(_upload)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload to Supabase: {str(e)}")
 
@@ -80,7 +83,9 @@ async def delete_image(
     if ".." in path or path.startswith("/") or "\\" in path:
         raise HTTPException(status_code=400, detail="Invalid path")
     try:
-        res = supabase_client.storage.from_(SUPABASE_BUCKET).remove([path])
+        def _remove():
+            return supabase_client.storage.from_(SUPABASE_BUCKET).remove([path])
+        res = await run_in_threadpool(_remove)
         # Supabase API usually returns a list of deleted objects or an error
         if not res:
             raise Exception("File not found or couldn't be deleted")

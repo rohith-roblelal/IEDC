@@ -39,23 +39,25 @@ setup_sentry()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup validation
+    # Initialize ARQ Pool
+    await init_arq_pool(app)
+    
+    # Validate Redis connection
     try:
-        # Initialize ARQ Pool
-        await init_arq_pool(app)
-        
-        # Validate Redis connection
         redis_pool = get_redis_pool()
-        logger.info("redis_connected", max_connections=settings.REDIS_MAX_CONNECTIONS)
-        
-        # Test DB connection (Fail fast)
+        logger.info("redis_configured", max_connections=settings.REDIS_MAX_CONNECTIONS)
+    except Exception as e:
+        logger.error("redis_initialization_degraded", error=str(e))
+    
+    # Test DB connection (Fail fast)
+    try:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         logger.info("database_connected")
     except Exception as e:
-        logger.critical("startup_validation_failed", error=str(e))
+        logger.critical("database_startup_validation_failed", error=str(e))
         if settings.ENVIRONMENT != "development":
-            raise RuntimeError(f"Critical startup dependency failed: {e}")
+            raise RuntimeError(f"Critical startup dependency failed: PostgreSQL {e}")
 
     yield
 

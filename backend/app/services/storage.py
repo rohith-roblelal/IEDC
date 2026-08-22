@@ -2,6 +2,7 @@ import uuid
 import filetype
 from typing import Optional, List
 from datetime import datetime
+import httpx
 from fastapi import UploadFile, HTTPException, status
 from app.core.supabase import supabase_client
 from app.core.config import settings
@@ -88,6 +89,18 @@ class StorageService:
                 path=storage_path,
                 file_options={"content-type": file.content_type}
             )
+        except httpx.TimeoutException:
+            storage_logger.error("upload_timeout", filename=file.filename, folder=folder)
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="Storage service timed out. Please try again later."
+            )
+        except httpx.RequestError as e:
+            storage_logger.error("upload_network_error", filename=file.filename, folder=folder, error=str(e))
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Storage service is currently unavailable."
+            )
         except Exception as e:
             storage_logger.error("upload_failed", filename=file.filename, folder=folder, error=str(e))
             raise HTTPException(
@@ -103,6 +116,16 @@ class StorageService:
         try:
             res = self.client.storage.from_(self.bucket_name).remove([storage_path])
             return True
+        except httpx.TimeoutException:
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="Storage service timed out."
+            )
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Storage service is currently unavailable."
+            )
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

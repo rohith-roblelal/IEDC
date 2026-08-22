@@ -78,7 +78,7 @@ export default async function Page() {
   try {
     const [annData, podData, partData] = await Promise.all([
       clientFetch("api/v1/announcements", { next: { revalidate: 60 } }).catch(() => null),
-      clientFetch("api/v1/podcasts/active", { next: { revalidate: 3600 } }).catch(() => null),
+      clientFetch("api/v1/podcasts/active", { next: { revalidate: 60 } }).catch(() => null),
       clientFetch("api/v1/partners", { next: { revalidate: 3600 } }).catch(() => null)
     ]);
 

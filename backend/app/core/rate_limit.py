@@ -10,5 +10,8 @@ from app.core.config import settings
 limiter = Limiter(
     key_func=get_remote_address, 
     default_limits=["200/minute"],
-    storage_uri=settings.REDIS_URL
+    storage_uri=settings.REDIS_URL,
+    swallow_errors=True,
+    in_memory_fallback_enabled=True,
+    in_memory_fallback=["200/minute"]
 )

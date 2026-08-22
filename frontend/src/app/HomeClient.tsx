@@ -244,6 +244,7 @@ export default function HomeClient({ announcements = [], podcasts = [], partners
                     src={podcast.image_url} 
                     alt="" 
                     fill 
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover block" 
                   />
                 ) : (
@@ -319,7 +320,7 @@ export default function HomeClient({ announcements = [], podcasts = [], partners
                   className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl h-[140px] flex items-center justify-center text-white font-bold text-sm text-center p-4 transition-colors overflow-hidden cursor-pointer shadow-lg"
                 >
                   {partner.image_url ? (
-                    <div className="relative w-full h-full p-2">
+                    <div className="relative w-[70%] h-[70%]">
                       <Image 
                         src={partner.image_url} 
                         alt={partner.name} 

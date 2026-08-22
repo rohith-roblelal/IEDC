@@ -52,7 +52,7 @@ class StartupService:
 
     async def create_startup(self, startup_in: StartupCreate, user_id: uuid.UUID) -> Startup:
         # Check if slug exists
-        existing = await self.repo.get_by_slug(startup_in.slug)
+        existing = await self.repo.get_by_slug(startup_in.slug, include_deleted=True)
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -93,7 +93,7 @@ class StartupService:
         startup = await self.get_startup(str(startup_id))
         
         if startup_in.slug and startup_in.slug != startup.slug:
-            existing = await self.repo.get_by_slug(startup_in.slug)
+            existing = await self.repo.get_by_slug(startup_in.slug, include_deleted=True)
             if existing:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -146,6 +146,27 @@ class StartupService:
         startup = await self.get_startup(str(startup_id))
         try:
             await self.repo.delete(startup_id, user_id)
+            await self.session.commit()
+        except Exception as e:
+            await self.session.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def add_gallery_image(self, image: StartupGalleryImage) -> StartupGalleryImage:
+        try:
+            created_image = await self.repo.add_gallery_image(image)
+            await self.session.commit()
+            await self.session.refresh(created_image)
+            return created_image
+        except Exception as e:
+            await self.session.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def delete_gallery_image(self, image_id: uuid.UUID, user_id: uuid.UUID) -> None:
+        image = await self.repo.get_gallery_image(image_id)
+        if not image:
+            raise HTTPException(status_code=404, detail="Image not found")
+        try:
+            await self.repo.delete_gallery_image(image_id, user_id)
             await self.session.commit()
         except Exception as e:
             await self.session.rollback()

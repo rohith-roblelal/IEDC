@@ -11,10 +11,10 @@ function getInitials(name: string) {
 function TeamCard({ member, featured }: { member: any, featured?: boolean }) {
   return (
     <motion.article
-      whileHover={{ y: -5, borderColor: "rgba(139, 127, 232, 0.35)" }}
-      className={`border border-white/10 rounded-[18px] text-center transition-colors ${featured
-          ? "bg-[radial-gradient(circle_at_50%_0%,rgba(79,125,249,0.2),rgba(13,16,48,0.95))] border-[#4F7DF9]/25 py-8 px-6"
-          : "bg-gradient-to-br from-[#3A2065]/40 to-[#0D1030]/85 py-7 px-5"
+      whileHover={{ y: -5 }}
+      className={`border rounded-[18px] text-center transition-colors ${featured
+          ? "bg-[radial-gradient(circle_at_50%_0%,rgba(79,125,249,0.2),rgba(13,16,48,0.95))] border-[#4F7DF9]/25 hover:border-[#4F7DF9]/50 py-8 px-6"
+          : "bg-gradient-to-br from-[#3A2065]/40 to-[#0D1030]/85 border-white/10 hover:border-[#8B7FE8]/35 py-7 px-5"
         }`}
     >
       <div className={`mx-auto mb-4 flex items-center justify-center font-bold text-white bg-gradient-to-br from-[#3B82F6] to-[#A855F7] rounded-full overflow-hidden ${featured ? "w-[88px] h-[88px] text-[1.6rem]" : "w-[72px] h-[72px] text-[1.35rem]"

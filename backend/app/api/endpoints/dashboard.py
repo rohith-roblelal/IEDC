@@ -19,34 +19,22 @@ async def get_dashboard_stats(
     """
     Retrieve aggregated statistics for the admin dashboard. Only accessible by Admin.
     """
-    # Total Events (excluding deleted)
-    events_result = await db.execute(select(func.count(Event.id)).where(Event.deleted_at.is_(None)))
-    total_events = events_result.scalar_one()
-
-    # Active Registrations (only for non-deleted events)
-    regs_result = await db.execute(
-        select(func.count(Registration.id))
-        .join(Event, Registration.event_id == Event.id)
-        .where(Event.deleted_at.is_(None))
+    # Consolidate into a single query using scalar_subquery to prevent DB pool starvation
+    query = select(
+        select(func.count(Event.id)).where(Event.deleted_at.is_(None)).scalar_subquery().label("total_events"),
+        select(func.count(Registration.id)).join(Event, Registration.event_id == Event.id).where(Event.deleted_at.is_(None)).scalar_subquery().label("total_registrations"),
+        select(func.count(ContactMessage.id)).where(ContactMessage.is_read == False).scalar_subquery().label("unread_messages"),
+        select(func.count(TeamMember.id)).where(TeamMember.deleted_at.is_(None)).scalar_subquery().label("total_team_members"),
+        select(func.count(Startup.id)).where(Startup.deleted_at.is_(None)).scalar_subquery().label("total_startups")
     )
-    total_registrations = regs_result.scalar_one()
-
-    # Unread Messages
-    unread_msg_result = await db.execute(select(func.count(ContactMessage.id)).where(ContactMessage.is_read == False))
-    unread_messages = unread_msg_result.scalar_one()
-
-    # Total Team Members (excluding deleted)
-    team_result = await db.execute(select(func.count(TeamMember.id)).where(TeamMember.deleted_at.is_(None)))
-    total_team_members = team_result.scalar_one()
-
-    # Total Startups (excluding deleted)
-    startups_result = await db.execute(select(func.count(Startup.id)).where(Startup.deleted_at.is_(None)))
-    total_startups = startups_result.scalar_one()
+    
+    result = await db.execute(query)
+    row = result.first()
 
     return {
-        "total_events": total_events,
-        "total_registrations": total_registrations,
-        "unread_messages": unread_messages,
-        "total_team_members": total_team_members,
-        "total_startups": total_startups
+        "total_events": row.total_events if row else 0,
+        "total_registrations": row.total_registrations if row else 0,
+        "unread_messages": row.unread_messages if row else 0,
+        "total_team_members": row.total_team_members if row else 0,
+        "total_startups": row.total_startups if row else 0
     }

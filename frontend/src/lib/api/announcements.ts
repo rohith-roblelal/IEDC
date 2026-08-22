@@ -39,9 +39,7 @@ export const AnnouncementsAPI = {
     const urlParams = new URLSearchParams(
       Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
     ).toString();
-    const endpoint = publicOnly
-      ? `/api/v1/announcements/public${urlParams ? `?${urlParams}` : ''}`
-      : `/api/v1/announcements${urlParams ? `?${urlParams}` : ''}`;
+    const endpoint = `/api/v1/announcements${urlParams ? `?${urlParams}` : ''}`;
     return clientFetch(endpoint, options);
   },
 
@@ -50,9 +48,7 @@ export const AnnouncementsAPI = {
     publicOnly: boolean = false,
     options: RequestInit & { next?: { revalidate?: number } } = {}
   ): Promise<AnnouncementResponse> => {
-    const endpoint = publicOnly
-      ? `/api/v1/announcements/public/${slug}`
-      : `/api/v1/announcements/${slug}`;
+    const endpoint = `/api/v1/announcements/${slug}`;
     return clientFetch(endpoint, options);
   },
 

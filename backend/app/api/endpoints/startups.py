@@ -166,7 +166,7 @@ async def upload_startup_gallery_image(
         uploaded_by=current_user.id
     )
     
-    return await startup_service.repo.add_gallery_image(gallery_image)
+    return await startup_service.add_gallery_image(gallery_image)
 
 @router.delete("/gallery/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_startup_gallery_image(
@@ -176,9 +176,4 @@ async def delete_startup_gallery_image(
 ):
     """Delete a gallery image."""
     startup_service = StartupService(db)
-    image = await startup_service.repo.get_gallery_image(image_id)
-    if not image:
-        raise HTTPException(status_code=404, detail="Image not found")
-        
-    # Soft delete in database
-    await startup_service.repo.delete_gallery_image(image_id, current_user.id)
+    await startup_service.delete_gallery_image(image_id, current_user.id)

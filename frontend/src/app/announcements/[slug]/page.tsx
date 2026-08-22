@@ -13,7 +13,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
-    const announcement = await AnnouncementsAPI.getAnnouncement(slug, true, { next: { revalidate: 60 } });
+    const announcement = await AnnouncementsAPI.getAnnouncement(slug, true);
     if (!announcement || !announcement.is_published) {
       return { title: "Announcement Not Found | IEDC SNMIMT" };
     }
@@ -55,7 +55,7 @@ export default async function AnnouncementDetailPage({ params }: Props) {
   let fetchError: Error | null = null;
 
   try {
-    announcement = await AnnouncementsAPI.getAnnouncement(slug, true, { next: { revalidate: 60 } });
+    announcement = await AnnouncementsAPI.getAnnouncement(slug, true);
   } catch (error) {
     fetchError = error instanceof Error ? error : new Error("Unknown error");
   }

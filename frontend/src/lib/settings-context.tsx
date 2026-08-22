@@ -91,7 +91,7 @@ export function SettingsProvider({ children, initialSettings }: { children: Reac
     // Only fetch on demand (e.g. after a dashboard save)
     const fetchSettings = async () => {
       try {
-        const data = await clientFetch("api/v1/settings", { cache: "no-store" });
+        const data = await clientFetch(`api/v1/settings?t=${Date.now()}`, { cache: "no-store" });
         const cleanData = Object.fromEntries(
           Object.entries(data).filter(([_, v]) => v !== null)
         );
@@ -102,7 +102,16 @@ export function SettingsProvider({ children, initialSettings }: { children: Reac
     };
 
     // Listen for updates from the dashboard settings page
-    const handleUpdate = () => fetchSettings();
+    const handleUpdate = (e: Event) => {
+      if (e instanceof CustomEvent && e.detail) {
+        const cleanData = Object.fromEntries(
+          Object.entries(e.detail).filter(([_, v]) => v !== null)
+        );
+        setSettings(prev => ({ ...prev, ...cleanData }));
+      } else {
+        fetchSettings();
+      }
+    };
     window.addEventListener("settings-updated", handleUpdate);
     return () => window.removeEventListener("settings-updated", handleUpdate);
   }, []);

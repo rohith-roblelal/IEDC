@@ -1,0 +1,27 @@
+# IEDC SNMIMT
+
+> Innovation and Entrepreneurship Development Centre at SNM Institute of Management and Technology.
+
+The official public digital presence of IEDC at SNMIMT. This website provides public information about our programmes, events, startups, and community activities.
+
+## Main Pages
+
+- [Home](https://iedc-snmimt.vercel.app/): Official homepage and primary contact point.
+- [About](https://iedc-snmimt.vercel.app/about): Information about our vision, mission, and organizational context.
+- [Events](https://iedc-snmimt.vercel.app/events): Public listing of upcoming and past IEDC events and programmes.
+- [Announcements](https://iedc-snmimt.vercel.app/announcements): Official public announcements and updates.
+- [Startups](https://iedc-snmimt.vercel.app/startups): Public profiles and information about startups incubated or associated with IEDC.
+- [Gallery](https://iedc-snmimt.vercel.app/gallery): Public media gallery of events and activities.
+- [Team](https://iedc-snmimt.vercel.app/team): Public roster of the IEDC executive committee, members, and mentors.
+
+## Legal
+
+- [Privacy Policy](https://iedc-snmimt.vercel.app/privacy-policy): Website privacy policy.
+- [Terms of Service](https://iedc-snmimt.vercel.app/terms): Website terms and conditions.
+
+## Content Sources
+
+- **Events Detail**: Detailed information for specific events is available at https://iedc-snmimt.vercel.app/events/[slug].
+- **Startups Detail**: Detailed profiles for specific startups are available at https://iedc-snmimt.vercel.app/startups/[slug].
+- **Announcements Detail**: Detailed announcements are available at https://iedc-snmimt.vercel.app/announcements/[slug].
+

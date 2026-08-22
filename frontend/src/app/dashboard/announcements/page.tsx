@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Megaphone, X, Trash2, Edit, Share2 } from "lucide-react";
+import { Megaphone, X, Trash2, Pencil, Share2, Plus, Filter, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
 import { clientFetch, ApiError } from "@/lib/api/client";
 import { AnnouncementResponse } from "@/lib/api/announcements";
+
+// ─── Shared input className ──────────────────────────────────────────────────
+const inputCls =
+  "w-full bg-[#111127] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-[#C4C4D4]/40 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors";
+const labelCls = "block text-xs font-semibold uppercase tracking-wider text-[#C4C4D4]/70 mb-1.5";
 
 export default function AnnouncementsPage() {
   const { toast } = useToast();
@@ -16,11 +21,13 @@ export default function AnnouncementsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<AnnouncementResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     is_pinned: false,
+    is_published: true, // Default to true so they are visible when created
   });
 
   const fetchAnnouncements = async () => {
@@ -46,6 +53,7 @@ export default function AnnouncementsPage() {
         title: announcement.title,
         content: announcement.content,
         is_pinned: announcement.is_pinned,
+        is_published: announcement.is_published,
       });
     } else {
       setEditingAnnouncement(null);
@@ -53,6 +61,7 @@ export default function AnnouncementsPage() {
         title: "",
         content: "",
         is_pinned: false,
+        is_published: true,
       });
     }
     setIsModalOpen(true);
@@ -77,7 +86,8 @@ export default function AnnouncementsPage() {
       });
       
       handleCloseModal();
-      fetchAnnouncements();
+      await fetchAnnouncements();
+      toast(editingAnnouncement ? "Announcement updated successfully!" : "Announcement created successfully!", "success");
     } catch (err) {
       console.error(err);
       if (err instanceof ApiError) {
@@ -91,12 +101,15 @@ export default function AnnouncementsPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (processingIds.has(id)) return;
     if (!(await confirm("Are you sure you want to delete this announcement?"))) return;
+    setProcessingIds(prev => new Set(prev).add(id));
     try {
       await clientFetch(`/api/v1/announcements/${id}`, {
         method: "DELETE",
       });
-      fetchAnnouncements();
+      await fetchAnnouncements();
+      toast("Announcement deleted", "success");
     } catch (err) {
       console.error(err);
       if (err instanceof ApiError) {
@@ -104,6 +117,12 @@ export default function AnnouncementsPage() {
       } else {
         toast("An unexpected error occurred", "error");
       }
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -146,76 +165,125 @@ export default function AnnouncementsPage() {
     }
   };
 
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+
+      {/* ── Page header ── */}
+      <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Megaphone className="text-pink-400" /> Announcements
+          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+            <Megaphone size={28} className="text-[#A855F7]" />
+            Announcements
           </h1>
-          <p className="text-[#C4C4D4] mt-2">Manage alerts and news items.</p>
+          <p className="text-sm text-[#C4C4D4] mt-1.5 font-medium">Manage alerts and news items.</p>
         </div>
-        <button 
+        <button
           onClick={() => handleOpenModal()}
-          className="bg-pink-600 hover:bg-pink-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 bg-[#E9D5FF] hover:bg-[#D8B4FE] text-[#581C87] text-sm font-bold px-5 py-2.5 rounded-lg transition-colors shadow-lg"
         >
-          Create Announcement
+          <Plus size={16} strokeWidth={3} />
+          New Announcement
         </button>
       </div>
 
-      <div className="bg-[#111432] rounded-2xl border border-white/10 p-6">
+      {/* ── Announcements table card ── */}
+      <div className="bg-[#111127] rounded-xl border border-white/5 overflow-hidden shadow-2xl">
+        <div className="flex justify-between items-center p-6 border-b border-white/5">
+          <h2 className="text-lg font-bold text-white">All Announcements</h2>
+          <button className="p-2 bg-white/5 rounded-lg text-[#C4C4D4] hover:text-white transition-colors">
+            <Filter size={16} />
+          </button>
+        </div>
+
+        {/* Table states */}
         {isLoading ? (
-          <div className="text-center text-[#C4C4D4] py-8">Loading announcements...</div>
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+          </div>
         ) : announcements.length === 0 ? (
-          <div className="text-center text-[#C4C4D4] py-8">No announcements found.</div>
+          <div className="text-center py-16 text-[#C4C4D4]/50 text-sm font-medium">
+            No announcements found. Create one to get started.
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-white/10 text-[#C4C4D4]">
-                  <th className="pb-3 font-medium">Title</th>
-                  <th className="pb-3 font-medium">Content</th>
-                  <th className="pb-3 font-medium">Pinned</th>
-                  <th className="pb-3 font-medium text-right">Actions</th>
+                <tr className="border-b border-white/5">
+                  {["Title", "Content", "Status", "Actions"].map((h) => (
+                    <th
+                      key={h}
+                      className={`px-6 py-4 text-[0.7rem] font-bold uppercase tracking-wider text-[#C4C4D4] ${h === "Actions" ? "text-right" : ""}`}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {announcements.map((ann, idx) => (
-                  <motion.tr 
-                    initial={{ opacity: 0, y: 10 }}
+                  <motion.tr
+                    key={ann.id}
+                    initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    key={ann.id} 
-                    className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                    transition={{ delay: idx * 0.03 }}
+                    className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors"
                   >
-                    <td className="py-4 font-medium">{ann.title}</td>
-                    <td className="py-4 text-[#C4C4D4] truncate max-w-xs">{ann.content}</td>
-                    <td className="py-4">
-                      {ann.is_pinned ? (
-                        <span className="px-2 py-1 text-xs rounded-full bg-pink-500/20 text-pink-400">Pinned</span>
-                      ) : (
-                        <span className="text-[#C4C4D4]">-</span>
-                      )}
+                    <td className="px-6 py-5">
+                      <span className="text-sm font-bold text-white block max-w-[200px] truncate" title={ann.title}>
+                        {ann.title}
+                      </span>
                     </td>
-                    <td className="py-4">
+
+                    <td className="px-6 py-5">
+                      <p className="text-sm text-[#C4C4D4] max-w-sm truncate" title={ann.content}>
+                        {ann.content}
+                      </p>
+                    </td>
+
+                    <td className="px-6 py-5">
+                      <div className="flex gap-2 items-center">
+                        {ann.is_pinned && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold tracking-wider uppercase border bg-purple-500/10 text-purple-400 border-purple-500/25">
+                            PINNED
+                          </span>
+                        )}
+                        {ann.is_published ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold tracking-wider uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/25">
+                            PUBLISHED
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold tracking-wider uppercase border bg-white/5 text-[#C4C4D4] border-white/10">
+                            DRAFT
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-5">
                       <div className="flex items-center justify-end gap-3">
-                        <button 
+                        <button
                           onClick={() => handleShare(ann.id)}
-                          className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1"
+                          className="p-1.5 text-[#C4C4D4]/70 hover:text-blue-400 transition-colors"
+                          title="Share announcement"
                         >
-                          <Share2 size={16} /> Share
+                          <Share2 size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleOpenModal(ann)}
-                          className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1"
+                          disabled={processingIds.has(ann.id)}
+                          className="p-1.5 text-[#C4C4D4]/70 hover:text-indigo-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Edit announcement"
                         >
-                          <Edit size={16} /> Edit
+                          <Pencil size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDelete(ann.id)}
-                          className="text-red-400 hover:text-red-300 text-sm font-medium flex items-center gap-1"
+                          disabled={processingIds.has(ann.id)}
+                          className="p-1.5 text-[#C4C4D4]/70 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                          title="Delete announcement"
                         >
-                          <Trash2 size={16} /> Delete
+                          {processingIds.has(ann.id) ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                         </button>
                       </div>
                     </td>
@@ -227,83 +295,116 @@ export default function AnnouncementsPage() {
         )}
       </div>
 
+      {/* ══════════════════════════════════════════════════════════════════════
+          Create / Edit Modal
+      ══════════════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#1A1D3D] border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative"
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleCloseModal}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0, y: 8 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+              className="bg-[#0A0E27] border border-white/10 rounded-2xl w-full max-w-lg relative z-10 shadow-2xl"
             >
-              <button 
-                onClick={handleCloseModal}
-                className="absolute top-4 right-4 text-[#C4C4D4] hover:text-white"
-              >
-                <X size={24} />
-              </button>
-              
-              <h2 className="text-2xl font-bold mb-6 text-white">
-                {editingAnnouncement ? "Edit Announcement" : "Create Announcement"}
-              </h2>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="flex justify-between items-center px-6 py-5 border-b border-white/5">
                 <div>
-                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Title *</label>
-                  <input 
+                  <h2 className="text-lg font-bold text-white">
+                    {editingAnnouncement ? "Edit Announcement" : "Create Announcement"}
+                  </h2>
+                  <p className="text-xs text-[#C4C4D4]/60 mt-1">
+                    {editingAnnouncement ? "Update announcement details below." : "Fill in the details for your new announcement."}
+                  </p>
+                </div>
+                <button
+                  onClick={handleCloseModal}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-[#C4C4D4]/60 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
+                <div>
+                  <label className={labelCls}>Title *</label>
+                  <input
                     required
-                    type="text" 
+                    type="text"
                     value={formData.title}
-                    onChange={e => setFormData({...formData, title: e.target.value})}
-                    className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-pink-500"
-                    placeholder="E.g., Event Postponed"
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className={inputCls}
+                    placeholder="E.g., Tech Fest Registration Open!"
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-[#C4C4D4] mb-1">Content *</label>
-                  <textarea 
+                  <label className={labelCls}>Content *</label>
+                  <textarea
                     required
-                    value={formData.content}
-                    onChange={e => setFormData({...formData, content: e.target.value})}
                     rows={4}
-                    className="w-full bg-[#111432] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-pink-500 resize-none"
+                    value={formData.content}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    className={`${inputCls} resize-y`}
                     placeholder="Write your announcement here..."
                   />
                 </div>
 
-                <div className="flex items-center gap-2 pt-2">
-                  <input 
-                    type="checkbox" 
-                    id="is_pinned"
-                    checked={formData.is_pinned}
-                    onChange={e => setFormData({...formData, is_pinned: e.target.checked})}
-                    className="w-4 h-4 rounded bg-[#111432] border-white/10 text-pink-500 focus:ring-pink-500"
-                  />
-                  <label htmlFor="is_pinned" className="text-sm font-medium text-[#C4C4D4]">
-                    Pin this announcement to the top
-                  </label>
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="flex items-center gap-3 bg-white/5 p-4 rounded-lg border border-white/5">
+                    <input
+                      type="checkbox"
+                      id="is_pinned"
+                      checked={formData.is_pinned}
+                      onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })}
+                      className="w-4 h-4 rounded bg-[#111127] border-white/10 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-[#0A0E27]"
+                    />
+                    <div>
+                      <label htmlFor="is_pinned" className="text-sm font-bold text-white cursor-pointer select-none">
+                        Pin to top
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 bg-white/5 p-4 rounded-lg border border-white/5">
+                    <input
+                      type="checkbox"
+                      id="is_published"
+                      checked={formData.is_published}
+                      onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+                      className="w-4 h-4 rounded bg-[#111127] border-white/10 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-[#0A0E27]"
+                    />
+                    <div>
+                      <label htmlFor="is_published" className="text-sm font-bold text-white cursor-pointer select-none">
+                        Publish now
+                      </label>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="pt-4 flex gap-3">
-                  <button 
+
+                <div className="flex justify-end gap-3 pt-6 border-t border-white/5">
+                  <button
                     type="button"
                     onClick={handleCloseModal}
                     disabled={isSubmitting}
-                    className="flex-1 bg-white/5 hover:bg-white/10 text-white py-2.5 rounded-lg font-medium transition-colors"
+                    className="px-5 py-2.5 text-sm font-medium text-[#C4C4D4]/70 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                   >
                     Cancel
                   </button>
-                  <button 
+                  <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 bg-pink-600 hover:bg-pink-500 text-white py-2.5 rounded-lg font-medium transition-colors disabled:opacity-70 flex justify-center items-center gap-2"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white text-sm font-bold rounded-lg transition-colors shadow-lg shadow-indigo-900/30 disabled:opacity-70"
                   >
-                    {isSubmitting ? (
-                      <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      editingAnnouncement ? "Save Changes" : "Create Announcement"
-                    )}
+                    {isSubmitting && <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
+                    {editingAnnouncement ? "Save Changes" : "Create"}
                   </button>
                 </div>
               </form>

@@ -78,8 +78,8 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
-      <head>
+    <html lang="en" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
+      <head suppressHydrationWarning>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

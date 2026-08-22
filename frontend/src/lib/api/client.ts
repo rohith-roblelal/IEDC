@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 export class ApiError extends Error {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(public status: number, public message: string, public data?: any) {
+  constructor(public status: number, public message: string, public data?: any, public code?: string) {
     super(message);
     this.name = "ApiError";
   }
@@ -44,10 +44,19 @@ async function handleResponse(response: Response) {
       errorData = { detail: response.statusText };
     }
     
+    let code = "UNKNOWN_ERROR";
+    if (response.status === 401) code = "UNAUTHORIZED";
+    else if (response.status === 403) code = "FORBIDDEN";
+    else if (response.status === 404) code = "NOT_FOUND";
+    else if (response.status === 422) code = "VALIDATION_ERROR";
+    else if (response.status === 503) code = "SERVICE_UNAVAILABLE";
+    else if (response.status === 504) code = "GATEWAY_TIMEOUT";
+
     throw new ApiError(
       response.status,
       errorData.detail || "An error occurred",
-      errorData
+      errorData,
+      code
     );
   }
 
@@ -60,7 +69,7 @@ async function handleResponse(response: Response) {
 type FetchOptions = RequestInit & { timeout?: number };
 
 async function fetchWithTimeout(url: string, options: FetchOptions = {}) {
-  const { timeout = 30000, ...fetchOptions } = options;
+  const { timeout = 10000, ...fetchOptions } = options;
   
   // Do not use AbortController on the server as it disables Next.js fetch memoization
   const isServer = typeof window === "undefined";
@@ -80,7 +89,11 @@ async function fetchWithTimeout(url: string, options: FetchOptions = {}) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     if (error.name === "AbortError") {
-      throw new ApiError(408, "Request Timeout");
+      throw new ApiError(408, "Request Timeout", null, "API_TIMEOUT");
+    }
+    // Also catch network errors (e.g. failed to fetch)
+    if (error instanceof TypeError && error.message.includes("fetch")) {
+      throw new ApiError(0, "Network Error - Backend is unreachable", null, "NETWORK_ERROR");
     }
     throw error;
   } finally {
