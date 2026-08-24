@@ -66,7 +66,6 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
       gender: z.enum(["Male", "Female"]),
       year: z.enum(["1", "2", "3", "4"]),
       department: z.enum(["ICE", "ECE", "EEE", "CIVIL", "MECH", "CSE (Ai)", "CSE (Cyber)", "CSE"]),
-      has_laptop: z.string().min(1, "Please select an option"),
       custom_answers: z.object(customAnswersSchema).optional(),
     });
   };
@@ -113,7 +112,6 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          has_laptop: data.has_laptop.toString() === "true",
           is_iedc_member: false,
           custom_answers: data.custom_answers || {},
         }),
@@ -140,12 +138,13 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderCustomField = (field: any) => {
+    console.log("Field:", field.id, "Options:", field.options); // add this
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const error = (errors.custom_answers as any)?.[field.id]?.message;
 
     return (
       <div key={field.id} className="mt-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-white mb-1">
           {field.label} {field.required && "*"}
         </label>
         
@@ -154,19 +153,19 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
             type={field.type === "short_text" ? "text" : field.type}
             placeholder={field.placeholder}
             {...register(`custom_answers.${field.id}`)} 
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
           />
         ) : field.type === "long_text" ? (
           <textarea 
             placeholder={field.placeholder}
             {...register(`custom_answers.${field.id}`)} 
             rows={3}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
           />
         ) : field.type === "dropdown" ? (
           <select 
             {...register(`custom_answers.${field.id}`)} 
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all bg-white"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all bg-[#111432]"
           >
             <option value="">Select an option</option>
             {field.options?.map((opt: string, i: number) => (
@@ -183,7 +182,7 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
                   {...register(`custom_answers.${field.id}`)} 
                   className="w-4 h-4 text-[#4F7DF9]" 
                 />
-                <span className="text-gray-700">{opt}</span>
+                <span className="text-white">{opt}</span>
               </label>
             ))}
           </div>
@@ -201,7 +200,7 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
                     onChange={(e) => handleCheckboxChange(field.id, opt, e.target.checked)}
                     className="w-4 h-4 text-[#4F7DF9] rounded" 
                   />
-                  <span className="text-gray-700">{opt}</span>
+                  <span className="text-white">{opt}</span>
                 </label>
               );
             })}
@@ -210,16 +209,20 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
           <input 
             type="date"
             {...register(`custom_answers.${field.id}`)} 
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
           />
         ) : field.type === "file_upload" ? (
-          <div className="text-sm text-gray-500">
-            <input 
-              type="text" 
-              placeholder="Paste file URL here (e.g. Google Drive link)"
-              {...register(`custom_answers.${field.id}`)} 
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
+          <div className="mt-1">
+            <ImageUpload
+              value={(customAnswersWatch as any)[field.id] || ""}
+              onChange={(url) => setValue(`custom_answers.${field.id}`, url, { shouldValidate: true })}
+              folder="events/uploads"
             />
+            {field.placeholder && (
+              <p className="text-xs text-gray-500 mt-1">
+                Accepted formats: {field.placeholder}
+              </p>
+            )}
           </div>
         ) : field.type === "iedc_member_check" ? (
           <div className="mt-2 flex flex-col gap-2">
@@ -232,7 +235,7 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
                     {...register(`custom_answers.${field.id}`)} 
                     className="w-4 h-4 text-[#4F7DF9]" 
                   />
-                  <span className="text-gray-700">{opt}</span>
+                  <span className="text-white">{opt}</span>
                 </label>
               ))}
             </div>
@@ -250,7 +253,7 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
                     <Image src={field.qr_image_url} alt="Payment QR Code" fill sizes="150px" className="object-contain" />
                   </div>
                   <div className="flex-1 w-full">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Upload Payment Screenshot *</label>
+                    <label className="block text-sm font-medium text-white mb-2">Upload Payment Screenshot *</label>
                     <ImageUpload 
                       value={(customAnswersWatch as any)[`${field.id}_screenshot`] || ""}
                       onChange={(url) => setValue(`custom_answers.${field.id}_screenshot`, url, { shouldValidate: true })}
@@ -277,29 +280,29 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+        <label className="block text-sm font-medium text-white mb-1">Name *</label>
         <input 
           {...register("name")} 
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
         />
         {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email ID *</label>
+          <label className="block text-sm font-medium text-white mb-1">Email ID *</label>
           <input 
             type="email"
             {...register("email")} 
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
           />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone no. *</label>
+          <label className="block text-sm font-medium text-white mb-1">Phone no. *</label>
           <input 
             {...register("phone")} 
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all"
           />
           {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
         </div>
@@ -307,10 +310,10 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
+          <label className="block text-sm font-medium text-white mb-1">Gender *</label>
           <select 
             {...register("gender")} 
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all bg-white"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all bg-[#111432]"
           >
             <option value="">Select Gender</option>
             <option value="Male">Male</option>
@@ -319,10 +322,10 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
           {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender.message}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Year *</label>
+          <label className="block text-sm font-medium text-white mb-1">Year *</label>
           <select 
             {...register("year")} 
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all bg-white"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all bg-[#111432]"
           >
             <option value="">Select Year</option>
             <option value="1">1</option>
@@ -335,10 +338,10 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+        <label className="block text-sm font-medium text-white mb-1">Department *</label>
         <select 
           {...register("department")} 
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all bg-white"
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-[#4F7DF9] focus:border-[#4F7DF9] outline-none transition-all bg-[#111432]"
         >
           <option value="">Select Department</option>
           <option value="ICE">ICE</option>
@@ -353,28 +356,12 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
         {errors.department && <p className="text-red-500 text-xs mt-1">{errors.department.message}</p>}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Are you able to bring your laptop? *</label>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" value="true" {...register("has_laptop")} className="w-4 h-4 text-[#4F7DF9]" />
-              <span className="text-gray-700">Yes</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" value="false" {...register("has_laptop")} className="w-4 h-4 text-[#4F7DF9]" />
-              <span className="text-gray-700">No</span>
-            </label>
-          </div>
-          {errors.has_laptop && <p className="text-red-500 text-xs mt-1">{errors.has_laptop.message}</p>}
-        </div>
-      </div>
+
 
       {/* Render Dynamic Custom Fields */}
       {customFields.length > 0 && (
-        <div className="border-t border-gray-200 pt-4 mt-6">
-          <h4 className="text-lg font-bold text-gray-900 mb-2">Additional Information</h4>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <div className="mt-4">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {customFields.map((field: any) => renderCustomField(field))}
         </div>
       )}
@@ -384,7 +371,7 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
           type="button" 
           onClick={onCancel}
           disabled={isSubmitting}
-          className="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+          className="flex-1 py-3 px-4 bg-white/5 text-[#C4C4D4] border border-white/10 rounded-lg font-medium hover:bg-white/10 hover:text-white transition-colors"
         >
           Cancel
         </button>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X, Lock, Trash2, GripVertical, QrCode } from "lucide-react";
+import { Plus, X, Lock, Trash2, GripVertical, QrCode, Laptop } from "lucide-react";
 import { motion, Reorder } from "framer-motion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 
@@ -32,14 +32,20 @@ const STANDARD_FIELDS = [
 export function CustomFormBuilder({ fields, onChange }: CustomFormBuilderProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const addField = (type: FieldType) => {
+  const addField = (type: FieldType | "laptop_requirement") => {
     const isIedcCheck = type === "iedc_member_check";
+    const isLaptop = type === "laptop_requirement";
+    const actualType = isLaptop ? "radio" : (type as FieldType);
+
     const newField: CustomField = {
       id: Math.random().toString(36).substring(7),
-      label: isIedcCheck ? "Are you an IEDC member?" : "New Question",
-      type,
-      required: isIedcCheck ? true : false,
-      options: ["radio", "checkbox", "dropdown"].includes(type) ? ["Option 1"] : (isIedcCheck ? ["Yes", "No"] : []),
+      label: isIedcCheck ? "Are you an IEDC member?" : isLaptop ? "Are you able to bring your laptop?" : "New Question",
+      type: actualType,
+      required: isIedcCheck || isLaptop,
+      placeholder: ["short_text", "long_text", "number"].includes(actualType) ? "" : undefined,
+      options: ["radio", "checkbox", "dropdown", "iedc_member_check"].includes(actualType)
+        ? (isIedcCheck || isLaptop ? ["Yes", "No"] : ["Option 1"])
+        : undefined,
     };
     onChange([...(fields || []), newField]);
     setEditingId(newField.id);
@@ -79,17 +85,18 @@ export function CustomFormBuilder({ fields, onChange }: CustomFormBuilderProps) 
         <button type="button" onClick={() => addField("dropdown")} className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 rounded-md text-sm border border-transparent hover:border-white/10 transition-colors flex items-center justify-between group">
           <span>Dropdown</span> <Plus size={14} className="opacity-0 group-hover:opacity-100" />
         </button>
-        <button type="button" onClick={() => addField("date")} className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 rounded-md text-sm border border-transparent hover:border-white/10 transition-colors flex items-center justify-between group">
-          <span>Date Picker</span> <Plus size={14} className="opacity-0 group-hover:opacity-100" />
-        </button>
+
         <button type="button" onClick={() => addField("file_upload")} className="w-full text-left px-3 py-2 bg-white/5 hover:bg-white/10 rounded-md text-sm border border-transparent hover:border-white/10 transition-colors flex items-center justify-between group">
           <span>File Upload</span> <Plus size={14} className="opacity-0 group-hover:opacity-100" />
         </button>
         
         <div className="pt-2 mt-2 border-t border-white/10">
           <h4 className="text-[10px] font-semibold text-[#4F7DF9] uppercase tracking-wider mb-2">Special Fields</h4>
-          <button type="button" onClick={() => addField("iedc_member_check")} className="w-full text-left px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-md text-sm border border-transparent hover:border-blue-500/30 transition-colors flex items-center justify-between group">
+          <button type="button" onClick={() => addField("iedc_member_check")} className="w-full text-left px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-md text-sm border border-transparent hover:border-blue-500/30 transition-colors flex items-center justify-between group mb-2">
             <span className="flex items-center gap-1.5"><QrCode size={14} /> IEDC Check & QR</span> <Plus size={14} className="opacity-0 group-hover:opacity-100" />
+          </button>
+          <button type="button" onClick={() => addField("laptop_requirement")} className="w-full text-left px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-md text-sm border border-transparent hover:border-blue-500/30 transition-colors flex items-center justify-between group">
+            <span className="flex items-center gap-1.5"><Laptop size={14} /> Laptop Required</span> <Plus size={14} className="opacity-0 group-hover:opacity-100" />
           </button>
         </div>
       </div>
@@ -148,6 +155,24 @@ export function CustomFormBuilder({ fields, onChange }: CustomFormBuilderProps) 
                     <div>
                       <label className="block text-xs font-medium text-[#C4C4D4] mb-1">Placeholder Text (Optional)</label>
                       <input type="text" value={field.placeholder || ""} onChange={e => updateField(field.id, { placeholder: e.target.value })} className="w-full bg-[#111432] border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none" />
+                    </div>
+                  )}
+
+                  {field.type === "file_upload" && (
+                    <div className="bg-white/5 p-4 rounded-lg border border-white/10 mt-2">
+                      <label className="block text-xs font-medium text-[#C4C4D4] mb-2">
+                        Accepted File Types (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. .pdf, .jpg, .png"
+                        value={field.placeholder || ""}
+                        onChange={e => updateField(field.id, { placeholder: e.target.value })}
+                        className="w-full bg-[#111432] border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-blue-500 outline-none"
+                      />
+                      <p className="text-xs text-[#C4C4D4]/50 mt-2">
+                        Leave empty to accept all file types. The registrant will see a file picker when filling the form.
+                      </p>
                     </div>
                   )}
 

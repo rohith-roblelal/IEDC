@@ -6,7 +6,8 @@ from fastapi.concurrency import run_in_threadpool
 from app.core.config import settings
 from app.models.models import User
 from app.models.enums import Role
-from app.api.dependencies import get_current_super_admin, get_optional_current_user
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.api.dependencies import get_current_super_admin, get_optional_current_user, get_db
 from app.services.audit import log_audit_event
 from app.core.supabase import supabase_client
 from app.core.rate_limit import limiter
@@ -47,7 +48,8 @@ async def upload_image(
     request: Request,
     file: UploadFile = File(...),
     folder: str = Form(...),
-    current_user: User | None = Depends(get_optional_current_user)
+    current_user: User | None = Depends(get_optional_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     if ".." in folder or folder.startswith("/") or "\\" in folder:
         raise HTTPException(status_code=400, detail="Invalid folder path (directory traversal blocked)")
@@ -116,7 +118,8 @@ async def upload_image(
 async def delete_image(
     request: Request,
     path: str,
-    current_user: User = Depends(get_current_super_admin)
+    current_user: User = Depends(get_current_super_admin),
+    db: AsyncSession = Depends(get_db)
 ):
     if ".." in path or path.startswith("/") or "\\" in path:
         raise HTTPException(status_code=400, detail="Invalid path (directory traversal blocked)")
