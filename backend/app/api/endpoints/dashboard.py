@@ -79,7 +79,7 @@ async def generate_annual_report(
         db=db,
         start_date=start_date,
         end_date=end_date,
-        generated_by_name=current_user.email
+        generated_by_name=str(current_user.email)
     )
 
     # Generate PDF
