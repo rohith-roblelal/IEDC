@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 import jwt
 from app.core.config import settings
-from typing import Any, Union
+from typing import Any, Union, Optional
 import uuid
 
 # Use argon2 as the primary scheme for new passwords, with bcrypt as deprecated

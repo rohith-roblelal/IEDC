@@ -6,9 +6,8 @@ from fastapi.concurrency import run_in_threadpool
 from app.core.config import settings
 from app.models.models import User
 from app.models.enums import Role
-from app.api.dependencies import get_current_super_admin
+from app.api.dependencies import get_current_super_admin, get_optional_current_user
 from app.services.audit import log_audit_event
-from fastapi import Request, get_optional_current_user
 from app.core.supabase import supabase_client
 from app.core.rate_limit import limiter
 
@@ -45,7 +44,6 @@ def get_namespace_config(path: str) -> tuple[str, bool]:
 @router.post("")
 @limiter.limit("20/minute")
 async def upload_image(
-    request: Request,
     request: Request,
     file: UploadFile = File(...),
     folder: str = Form(...),
@@ -116,7 +114,6 @@ async def upload_image(
 @router.delete("")
 @limiter.limit("20/minute")
 async def delete_image(
-    request: Request,
     request: Request,
     path: str,
     current_user: User = Depends(get_current_super_admin)
