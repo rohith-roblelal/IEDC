@@ -180,7 +180,7 @@ export default function AboutClient() {
           <h2 className="text-3xl md:text-4xl font-bold">Our Values</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {values.map((val, i) => (
+          {values.map((val: any, i: number) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}

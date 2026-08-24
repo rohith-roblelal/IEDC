@@ -17,7 +17,12 @@ export interface SiteSettings {
   hero_image_url: string | null;
   about_description: string | null;
   about_vision: string | null;
-  about_stats_json: Array<{ label: string; value: string }> | null;
+  about_stats_json: Array<{ label: string; source?: string; value: string; suffix?: string }> | null;
+  about_values_json: Array<{ title: string; desc: string; icon: string }> | null;
+  about_inspiration_quote: string | null;
+  about_inspiration_author: string | null;
+  about_inspiration_image_url: string | null;
+  derived_stats: { events: number; projects: number; workshops: number; partners: number };
   contact_email: string | null;
   contact_phone: string | null;
   contact_address: string | null;
@@ -56,6 +61,11 @@ const DEFAULTS: SiteSettings = {
   about_vision:
     "To dive into the inner potential and to promote technological disruptions when proffering the nurturing mind to think laterally and divergently.",
   about_stats_json: [{ label: "Events In The Last Year", value: "46+" }],
+  about_values_json: null,
+  about_inspiration_quote: null,
+  about_inspiration_author: null,
+  about_inspiration_image_url: null,
+  derived_stats: { events: 0, projects: 0, workshops: 0, partners: 0 },
   contact_email: null,
   contact_phone: null,
   contact_address: "Maliankara P.O, Moothankunnam, Ernakulam Dt. Kerala-683516, India",
