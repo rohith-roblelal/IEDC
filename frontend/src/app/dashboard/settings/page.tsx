@@ -100,7 +100,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const data = await clientFetch("api/v1/settings");
+        const data = await clientFetch("/api/v1/settings");
         setSettings(data);
         setStatsJson(data.about_stats_json || []);
       } catch {
@@ -125,7 +125,7 @@ export default function SettingsPage() {
       else payload[k] = settings?.[k];
     });
     try {
-      const data = await clientFetch("api/v1/settings", {
+      const data = await clientFetch("/api/v1/settings", {
         method: "PATCH",
         headers: {},
         body: JSON.stringify(payload),

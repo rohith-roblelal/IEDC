@@ -52,7 +52,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
               alt={event.title || "Event Banner"} 
               fill
               sizes="100vw"
-              className="object-cover" 
+              className="object-contain p-4 md:p-8" 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A0E27] to-transparent"></div>
           </div>

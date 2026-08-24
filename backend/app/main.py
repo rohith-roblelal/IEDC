@@ -175,8 +175,8 @@ class ContentLengthLimitMiddleware(BaseHTTPMiddleware):
             try:
                 content_length = int(content_length)
                 
-                # Check if this is an upload endpoint
-                is_upload = "/upload" in request.url.path
+                # Check if this is an upload endpoint or a multipart request
+                is_upload = "/upload" in request.url.path or "multipart/form-data" in request.headers.get("content-type", "")
                 limit = self.upload_limit if is_upload else self.default_limit
                 
                 if content_length > limit:

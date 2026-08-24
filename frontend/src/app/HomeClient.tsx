@@ -141,15 +141,15 @@ export default function HomeClient({ announcements = [], podcasts = [], partners
                initial={{ scale: 0.95, opacity: 0 }}
                animate={{ scale: 1, opacity: 1 }}
                transition={{ delay: 0.3, duration: 0.8 }}
-               className="mt-11 mx-auto w-[min(800px,100%)] h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative"
+               className="mt-11 mx-auto w-[min(400px,100%)] flex items-center justify-center"
             >
               <Image 
-                src={settings.hero_image_url} 
+                src={settings.hero_image_url || "/hero_banner.jpg"} 
                 alt={`${settings.site_name || 'IEDC'} Hero Banner`} 
-                fill
+                width={400}
+                height={400}
                 priority={true}
-                sizes="(max-width: 800px) 100vw, 800px"
-                className="object-cover" 
+                className="object-contain w-full max-w-[400px] h-auto mix-blend-screen" 
               />
             </motion.div>
           ) : (
