@@ -2,8 +2,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import UploadFile
 
 from app.repositories.settings import SettingsRepository
-from app.models.models import WebsiteSettings
+from app.models.models import WebsiteSettings, Event, Startup, Partner
 from app.schemas.settings import WebsiteSettingsUpdate
+from sqlalchemy import select, func
 
 
 class SettingsService:
@@ -11,7 +12,22 @@ class SettingsService:
         self.repo = SettingsRepository(session)
 
     async def get_settings(self) -> WebsiteSettings:
-        return await self.repo.get_or_create()
+        settings = await self.repo.get_or_create()
+        
+        # Calculate derived impact statistics
+        session = self.repo.session
+        events_count = await session.scalar(select(func.count(Event.id)).where(Event.is_published == True, Event.deleted_at.is_(None)))
+        projects_count = await session.scalar(select(func.count(Startup.id)).where(Startup.is_published == True, Startup.deleted_at.is_(None)))
+        workshops_count = await session.scalar(select(func.count(Event.id)).where(Event.is_published == True, Event.deleted_at.is_(None), Event.category == "WORKSHOP"))
+        partners_count = await session.scalar(select(func.count(Partner.id)))
+
+        settings.derived_stats = {
+            "events": events_count or 0,
+            "projects": projects_count or 0,
+            "workshops": workshops_count or 0,
+            "partners": partners_count or 0
+        }
+        return settings
 
     async def update_settings(self, data: WebsiteSettingsUpdate) -> WebsiteSettings:
         update_data = data.model_dump(exclude_none=True)
@@ -30,6 +46,7 @@ class SettingsService:
             "favicon_url": "settings/favicon",
             "hero_image_url": "settings/hero",
             "og_image_url": "settings/og",
+            "about_inspiration_image_url": "settings/about"
         }
         folder = folder_map.get(field, "settings/misc")
         storage_path = await storage_service.upload_file(file, folder=folder)

@@ -267,6 +267,10 @@ class WebsiteSettings(Base):
     about_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     about_vision: Mapped[str | None] = mapped_column(Text, nullable=True)
     about_stats_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    about_inspiration_quote: Mapped[str | None] = mapped_column(Text, nullable=True)
+    about_inspiration_author: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    about_inspiration_image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    about_values_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     # Contact Info
     contact_email: Mapped[str | None] = mapped_column(String(255), nullable=True)

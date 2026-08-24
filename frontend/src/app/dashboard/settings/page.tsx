@@ -90,11 +90,20 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [savingTabs, setSavingTabs] = useState<Set<string>>(new Set());
   const [uploadingFields, setUploadingFields] = useState<Set<string>>(new Set());
-  const [statsJson, setStatsJson] = useState<Array<{ label: string; value: string }>>([]);
+  const [valuesJson, setValuesJson] = useState<Array<{ title: string; desc: string; icon: string }>>([]);
+  const [statsJson, setStatsJson] = useState<Array<{ label: string; source: string; value: string; suffix: string }>>([]);
 
   const logoRef = useRef<HTMLInputElement>(null);
   const heroImageRef = useRef<HTMLInputElement>(null);
   const ogImageRef = useRef<HTMLInputElement>(null);
+  const inspirationImageRef = useRef<HTMLInputElement>(null);
+
+  const ICON_ALLOWLIST = [
+    { key: "lightbulb", label: "Lightbulb" },
+    { key: "users", label: "Users" },
+    { key: "globe-2", label: "Globe2" },
+    { key: "rocket", label: "Rocket" }
+  ];
 
 
   useEffect(() => {
@@ -102,6 +111,7 @@ export default function SettingsPage() {
       try {
         const data = await clientFetch("/api/v1/settings");
         setSettings(data);
+        setValuesJson(data.about_values_json || []);
         setStatsJson(data.about_stats_json || []);
       } catch {
         toast("Failed to load settings", "error");
@@ -121,7 +131,8 @@ export default function SettingsPage() {
     setSavingTabs(prev => new Set(prev).add(tabId));
     const payload: Record<string, unknown> = {};
     keys.forEach(k => {
-      if (k === "about_stats_json") payload[k] = statsJson;
+      if (k === "about_values_json") payload[k] = valuesJson;
+      else if (k === "about_stats_json") payload[k] = statsJson;
       else payload[k] = settings?.[k];
     });
     try {
@@ -273,34 +284,66 @@ export default function SettingsPage() {
               <h2 className="text-xl font-bold text-white mb-2">About Section</h2>
               <Field settings={settings} onChange={handleChange} label="About Description" name="about_description" type="textarea" />
               <Field settings={settings} onChange={handleChange} label="Vision Statement" name="about_vision" type="textarea" />
-              <div className="pt-2">
-                <label className="block text-sm font-medium text-[#C4C4D4] mb-3">Stats / Highlights</label>
+              
+              <div className="pt-6">
+                <label className="block text-sm font-medium text-[#C4C4D4] mb-3">Impact Statistics</label>
                 <div className="space-y-3">
                   {statsJson.map((stat, i) => (
-                    <div key={i} className="flex gap-3 items-center">
-                      <input
-                        value={stat.value}
-                        onChange={e => {
-                          const next = [...statsJson];
-                          next[i] = { ...next[i], value: e.target.value };
-                          setStatsJson(next);
-                        }}
-                        placeholder="46+"
-                        className="w-24 bg-[#0A0E27] border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
-                      />
-                      <input
-                        value={stat.label}
-                        onChange={e => {
-                          const next = [...statsJson];
-                          next[i] = { ...next[i], label: e.target.value };
-                          setStatsJson(next);
-                        }}
-                        placeholder="Events This Year"
-                        className="flex-1 bg-[#0A0E27] border border-white/5 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
-                      />
+                    <div key={i} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white/5 p-4 rounded-xl border border-white/10">
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                        <input
+                          value={stat.label}
+                          onChange={e => {
+                            const next = [...statsJson];
+                            next[i] = { ...next[i], label: e.target.value };
+                            setStatsJson(next);
+                          }}
+                          placeholder="Label (e.g. Events)"
+                          className="bg-[#0A0E27] border border-white/5 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                        />
+                        <select
+                          value={stat.source || "manual"}
+                          onChange={e => {
+                            const next = [...statsJson];
+                            next[i] = { ...next[i], source: e.target.value };
+                            setStatsJson(next);
+                          }}
+                          className="bg-[#0A0E27] border border-white/5 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                        >
+                          <option value="manual">Manual Value</option>
+                          <option value="auto_events">Auto: Events Count</option>
+                          <option value="auto_projects">Auto: Projects Count</option>
+                          <option value="auto_workshops">Auto: Workshops Count</option>
+                          <option value="auto_partners">Auto: Partners Count</option>
+                        </select>
+                        
+                        {(!stat.source || stat.source === "manual") && (
+                          <input
+                            value={stat.value || ""}
+                            onChange={e => {
+                              const next = [...statsJson];
+                              next[i] = { ...next[i], value: e.target.value };
+                              setStatsJson(next);
+                            }}
+                            placeholder="Value (e.g. 46)"
+                            className="bg-[#0A0E27] border border-white/5 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                          />
+                        )}
+                        
+                        <input
+                          value={stat.suffix || ""}
+                          onChange={e => {
+                            const next = [...statsJson];
+                            next[i] = { ...next[i], suffix: e.target.value };
+                            setStatsJson(next);
+                          }}
+                          placeholder="Suffix (e.g. +)"
+                          className="bg-[#0A0E27] border border-white/5 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                        />
+                      </div>
                       <button 
                         onClick={() => setStatsJson(statsJson.filter((_, j) => j !== i))} 
-                        className="text-red-400 hover:text-red-300 p-3 hover:bg-red-500/10 rounded-xl border border-transparent hover:border-red-500/20 transition-colors"
+                        className="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/10 rounded-xl border border-transparent hover:border-red-500/20 transition-colors self-end sm:self-center"
                         aria-label="Remove Stat"
                       >
                         <Trash2 size={18} />
@@ -308,14 +351,79 @@ export default function SettingsPage() {
                     </div>
                   ))}
                   <button 
-                    onClick={() => setStatsJson([...statsJson, { value: "", label: "" }])} 
+                    onClick={() => setStatsJson([...statsJson, { label: "", source: "manual", value: "", suffix: "" }])} 
                     className="flex items-center gap-2 text-sm font-bold text-purple-400 hover:text-purple-300 mt-4 transition-colors"
                   >
                     <Plus size={16} /> Add Stat
                   </button>
                 </div>
               </div>
-              <SaveButton tabId="about" isSaving={savingTabs.has("about")} onSave={handleSave} keys={["about_description", "about_vision", "about_stats_json"]} />
+
+              <h2 className="text-xl font-bold text-white mb-2 mt-8">Inspiration Section</h2>
+              <Field settings={settings} onChange={handleChange} label="Inspiration Quote" name="about_inspiration_quote" type="textarea" placeholder='"Creativity is just connecting things"' />
+              <Field settings={settings} onChange={handleChange} label="Inspiration Author" name="about_inspiration_author" placeholder="Steve Jobs" />
+              <ImageUploadField settings={settings} onUpload={handleFileUpload} label="Inspiration Image" field="about_inspiration_image_url" urlKey="about_inspiration_image_url" inputRef={inspirationImageRef} endpoint="about-inspiration" isUploading={uploadingFields.has("about_inspiration_image_url")} />
+              
+              <div className="pt-6">
+                <label className="block text-sm font-medium text-[#C4C4D4] mb-3">Our Values</label>
+                <div className="space-y-3">
+                  {valuesJson.map((val, i) => (
+                    <div key={i} className="flex gap-3 items-start">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex gap-2">
+                          <input
+                            value={val.title}
+                            onChange={e => {
+                              const next = [...valuesJson];
+                              next[i] = { ...next[i], title: e.target.value };
+                              setValuesJson(next);
+                            }}
+                            placeholder="Value Title (e.g. Creativity)"
+                            className="flex-1 bg-[#0A0E27] border border-white/5 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                          />
+                          <select
+                            value={val.icon || "lightbulb"}
+                            onChange={e => {
+                              const next = [...valuesJson];
+                              next[i] = { ...next[i], icon: e.target.value };
+                              setValuesJson(next);
+                            }}
+                            className="bg-[#0A0E27] border border-white/5 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                          >
+                            {ICON_ALLOWLIST.map(icon => (
+                              <option key={icon.key} value={icon.key}>{icon.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <input
+                          value={val.desc}
+                          onChange={e => {
+                            const next = [...valuesJson];
+                            next[i] = { ...next[i], desc: e.target.value };
+                            setValuesJson(next);
+                          }}
+                          placeholder="Short Description"
+                          className="w-full bg-[#0A0E27] border border-white/5 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                        />
+                      </div>
+                      <button 
+                        onClick={() => setValuesJson(valuesJson.filter((_, j) => j !== i))} 
+                        className="mt-1 text-red-400 hover:text-red-300 p-2 hover:bg-red-500/10 rounded-xl border border-transparent hover:border-red-500/20 transition-colors"
+                        aria-label="Remove Value"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ))}
+                  <button 
+                    onClick={() => setValuesJson([...valuesJson, { title: "", desc: "", icon: "lightbulb" }])} 
+                    className="flex items-center gap-2 text-sm font-bold text-purple-400 hover:text-purple-300 mt-4 transition-colors"
+                  >
+                    <Plus size={16} /> Add Value
+                  </button>
+                </div>
+              </div>
+              <SaveButton tabId="about" isSaving={savingTabs.has("about")} onSave={handleSave} keys={["about_description", "about_vision", "about_stats_json", "about_inspiration_quote", "about_inspiration_author", "about_values_json"]} />
             </>
           )}
 

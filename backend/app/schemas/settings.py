@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from pydantic import BaseModel, ConfigDict
 
 class StatItem(BaseModel):
@@ -24,6 +24,10 @@ class WebsiteSettingsUpdate(BaseModel):
     about_description: Optional[str] = None
     about_vision: Optional[str] = None
     about_stats_json: Optional[List[StatItem]] = None
+    about_inspiration_quote: Optional[str] = None
+    about_inspiration_author: Optional[str] = None
+    about_inspiration_image_url: Optional[str] = None
+    about_values_json: Optional[List[dict]] = None
 
     # Contact Info
     contact_email: Optional[str] = None
@@ -65,3 +69,4 @@ class WebsiteSettingsResponse(WebsiteSettingsUpdate):
     og_image_url: Optional[str] = None
     maintenance_mode: bool = False
     updated_at: Optional[datetime] = None
+    derived_stats: Optional[Dict[str, int]] = None
