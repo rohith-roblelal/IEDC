@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Calendar, Users, MessageSquare, Rocket } from "lucide-react";
 import { clientFetch } from "@/lib/api/client";
 import Link from "next/link";
+import ReportGenerationModal from "@/components/dashboard/ReportGenerationModal";
 
 interface DashboardStats {
   total_events: number;
@@ -45,7 +46,47 @@ export default function DashboardOverview() {
   const [isActivitiesLoading, setIsActivitiesLoading] = useState(true);
   const [activitiesError, setActivitiesError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleGenerateReport = async (startDate: string, endDate: string) => {
+    setIsGenerating(true);
+    try {
+      const res = await fetch(`/api/v1/dashboard/report?start_date=${startDate}&end_date=${endDate}`, {
+        method: "GET",
+        credentials: "include"
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to generate report");
+      }
+
+      const blob = await res.blob();
+      const contentDisposition = res.headers.get("Content-Disposition");
+      let filename = "iedc_annual_report.pdf";
+      if (contentDisposition && contentDisposition.includes("filename=")) {
+        const matches = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (matches && matches[1]) {
+          filename = matches[1];
+        }
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error("Failed to generate report:", err);
+      throw new Error(err.message || "Failed to generate report. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -152,7 +193,10 @@ export default function DashboardOverview() {
           <p className="text-[#C4C4D4] mt-2 text-sm md:text-base">Welcome back, Admin. Here's what's happening today.</p>
         </div>
         <div className="flex items-center gap-4">
-          <button className="px-4 py-2 border border-white/20 text-white rounded-lg hover:bg-white/5 transition-colors text-sm font-medium">
+          <button 
+            onClick={() => setShowReportModal(true)}
+            className={`px-4 py-2 border border-white/20 text-white rounded-lg hover:bg-white/5 transition-colors text-sm font-medium flex items-center gap-2`}
+          >
             Generate Report
           </button>
           <Link href="/dashboard/events">
@@ -329,6 +373,13 @@ export default function DashboardOverview() {
           </motion.div>
         )}
       </div>
+
+      <ReportGenerationModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onGenerate={handleGenerateReport}
+        isGenerating={isGenerating}
+      />
     </div>
   );
 }
