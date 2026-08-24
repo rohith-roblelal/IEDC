@@ -1,12 +1,12 @@
 import asyncio
 import httpx
 from datetime import datetime, timedelta, timezone
-from jose import jwt
+import jwt
 from app.core.config import settings
 
 def create_access_token(subject: str, role: str):
     expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode = {"exp": expire, "sub": str(subject), "role": role}
+    to_encode = {"exp": expire, "sub": subject, "role": role}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
     return encoded_jwt
 

@@ -42,7 +42,8 @@ class Settings(BaseSettings):
     EMAIL_FROM_NAME: str = "IEDC SNMIMT"
     
     # Observability
-    SENTRY_DSN: Optional[str] = None
+    RESEND_API_KEY: Optional[str] = None
+    TURNSTILE_SECRET_KEY: Optional[str] = None
     OTEL_EXPORTER_OTLP_ENDPOINT: Optional[str] = None
     
     # Optional Debug settings (must be False in production)

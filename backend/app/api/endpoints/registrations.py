@@ -7,7 +7,10 @@ from app.database.session import get_db
 from app.models.models import User
 from app.schemas.schemas import RegistrationResponse, RegistrationCreate, PaginatedResponse
 from app.api.dependencies import get_current_super_admin
+from app.services.audit import log_audit_event
+from fastapi import Request
 from app.services.registration import RegistrationService
+from app.api.middleware.turnstile import verify_bot_token
 from app.core.rate_limit import limiter
 
 router = APIRouter()
@@ -18,7 +21,8 @@ async def register_for_event(
     request: Request,
     event_id: uuid.UUID,
     reg_in: RegistrationCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _bot: bool = Depends(verify_bot_token)
 ):
     """
     Public endpoint to register for an event.
@@ -58,6 +62,7 @@ async def read_event_participants(
 
 @router.delete("/registrations/{registration_id}", status_code=204)
 async def delete_registration(
+    request: Request,
     registration_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_super_admin)

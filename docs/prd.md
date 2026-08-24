@@ -60,10 +60,10 @@ The platform is designed primarily for college students of SNM Institute of Mana
   - Registration forms for students to enroll in events using their college register number.
   - Validation to prevent duplicate registrations for the same event by the same student.
 - **Multi-Page Layout**:
-  - `index.html`: The landing page with hero banner and quick access to events.
-  - `events.html`: Dedicated page for listing events and handling registrations.
-  - `about.html`: Information about the IEDC, its vision, and statistics.
-  - `team.html`: Profiles of faculty and student leadership.
+  - `/`: The landing page with hero banner and quick access to events.
+  - `/events`: Dedicated page for listing events and handling registrations.
+  - `/about`: Information about the IEDC, its vision, and statistics.
+  - `/team`: Profiles of faculty and student leadership.
 - **Responsive Design**:
   - The website must be fully responsive and optimized for mobile and desktop screens.
 

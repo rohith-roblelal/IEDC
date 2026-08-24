@@ -1,13 +1,10 @@
 import asyncio
 import httpx
 from datetime import datetime, timedelta, timezone
-from jose import jwt
+import jwt
 from sqlalchemy import select
 import sys
 import time
-
-if sys.platform == 'win32':
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from app.core.config import settings
 from app.models.models import User
@@ -28,7 +25,7 @@ async def test():
         print("No user found in DB to test with")
         return
         
-    token = create_access_token(user.id, user.role.value if hasattr(user.role, 'value') else user.role)
+    token = create_access_token(str(user.id), user.role.value if hasattr(user.role, 'value') else str(user.role))
     
     async with httpx.AsyncClient() as client:
         start = time.time()

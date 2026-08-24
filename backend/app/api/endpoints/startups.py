@@ -12,6 +12,8 @@ from app.schemas.startups import (
     BatchResponse, TechnologyResponse
 )
 from app.api.dependencies import get_current_super_admin
+from app.services.audit import log_audit_event
+from fastapi import Request
 from app.services.startups import StartupService
 from app.schemas.schemas import PaginatedResponse
 from app.services.storage import storage_service
@@ -86,16 +88,20 @@ async def get_startup_admin(
 
 @router.post("", response_model=StartupAdminResponse, status_code=status.HTTP_201_CREATED)
 async def create_startup(
+    request: Request,
     startup_in: StartupCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_super_admin),
 ):
     """Create a new startup. Only accessible by Admin."""
     startup_service = StartupService(db)
-    return await startup_service.create_startup(startup_in, current_user.id)
+    obj = await startup_service.create_startup(startup_in, current_user.id) # type: ignore
+    await log_audit_event(db, "startup.create", user_id=current_user.id, resource_type="startup", resource_id=str(obj.id), ip_address=request.client.host if request.client else None)
+    return obj
 
 @router.put("/{startup_id}", response_model=StartupAdminResponse)
 async def update_startup(
+    request: Request,
     startup_id: uuid.UUID,
     startup_in: StartupUpdate,
     db: AsyncSession = Depends(get_db),
@@ -103,22 +109,27 @@ async def update_startup(
 ):
     """Update a startup. Only accessible by Admin."""
     startup_service = StartupService(db)
-    return await startup_service.update_startup(startup_id, startup_in)
+    obj = await startup_service.update_startup(startup_id, startup_in)
+    await log_audit_event(db, "startup.update", user_id=current_user.id, resource_type="startup", resource_id=str(obj.id), ip_address=request.client.host if request.client else None)
+    return obj
 
 @router.delete("/{startup_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_startup(
+    request: Request,
     startup_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_super_admin),
 ):
     """Delete a startup. Only accessible by Admin."""
     startup_service = StartupService(db)
-    await startup_service.delete_startup(startup_id, current_user.id)
+    await startup_service.delete_startup(startup_id, current_user.id) # type: ignore
+    await log_audit_event(db, "startup.delete", user_id=current_user.id, resource_type="startup", resource_id=str(startup_id), ip_address=request.client.host if request.client else None)
 
 # --- Media Upload Endpoints ---
 
 @router.post("/{startup_id}/logo", response_model=StartupAdminResponse)
 async def upload_startup_logo(
+    request: Request,
     startup_id: uuid.UUID,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
@@ -134,7 +145,9 @@ async def upload_startup_logo(
         
     # Update startup
     startup_in = StartupUpdate(logo_url=public_url)
-    return await startup_service.update_startup(startup_id, startup_in)
+    obj = await startup_service.update_startup(startup_id, startup_in)
+    await log_audit_event(db, "startup.update", user_id=current_user.id, resource_type="startup", resource_id=str(obj.id), ip_address=request.client.host if request.client else None)
+    return obj
 
 @router.post("/{startup_id}/gallery", response_model=StartupGalleryImageBase, status_code=status.HTTP_201_CREATED)
 async def upload_startup_gallery_image(
@@ -176,4 +189,4 @@ async def delete_startup_gallery_image(
 ):
     """Delete a gallery image."""
     startup_service = StartupService(db)
-    await startup_service.delete_gallery_image(image_id, current_user.id)
+    await startup_service.delete_gallery_image(image_id, current_user.id) # type: ignore

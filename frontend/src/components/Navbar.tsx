@@ -28,6 +28,7 @@ export default function Navbar() {
     { name: "Startups", href: "/startups" },
     { name: "Team", href: "/team" },
     { name: "Poster", href: "/gallery" },
+    { name: "Contact", href: "/contact" },
   ];
 
   return (

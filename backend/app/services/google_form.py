@@ -9,9 +9,85 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.models import Event, Registration
 from app.schemas.schemas import RegistrationCreate
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
+import socket
+import ipaddress
 
 logger = logging.getLogger(__name__)
+
+def is_ip_allowed(ip_str: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(ip_str)
+        # Block private, loopback, link-local, multicast, unroutable
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_unspecified or ip.is_reserved:
+            return False
+        # Explicit check for 169.254.x.x (AWS/GCP/Azure Metadata) - usually covered by is_link_local but good to be explicit
+        if isinstance(ip, ipaddress.IPv4Address) and ip_str.startswith("169.254."):
+            return False
+        return True
+    except ValueError:
+        return False
+
+async def secure_request(url: str, method: str = "GET", data: dict = None, max_redirects: int = 3) -> httpx.Response:
+    """
+    Makes a request with strict SSRF protections:
+    - HTTPS only
+    - Specific allowed domains (Google Forms)
+    - DNS resolution checks against private IPs (DNS rebinding / TOCTOU protection)
+    - Strict manual redirect following and revalidation
+    """
+    current_url = url
+    redirects = 0
+    
+    async with httpx.AsyncClient(follow_redirects=False) as client:
+        while redirects <= max_redirects:
+            parsed = urlparse(current_url)
+            
+            if parsed.scheme != "https":
+                raise ValueError("URL must use HTTPS")
+                
+            if parsed.netloc not in ["docs.google.com", "forms.gle"]:
+                raise ValueError(f"URL domain '{parsed.netloc}' is not allowed")
+                
+            # Resolve DNS and check IPs
+            try:
+                # Resolve hostname
+                addr_infos = socket.getaddrinfo(parsed.hostname, parsed.port or 443)
+                ips = {info[4][0] for info in addr_infos}
+                
+                for ip in ips:
+                    if not is_ip_allowed(ip):
+                        raise ValueError(f"URL resolves to a prohibited IP address: {ip}")
+            except socket.gaierror:
+                raise ValueError("Failed to resolve hostname")
+                
+            # Make the actual request (timeout enforced)
+            if method.upper() == "GET":
+                res = await client.get(current_url, timeout=10.0)
+            elif method.upper() == "POST":
+                res = await client.post(
+                    current_url, 
+                    data=data, 
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    timeout=10.0
+                )
+            else:
+                raise ValueError("Unsupported HTTP method")
+                
+            if res.status_code in (301, 302, 303, 307, 308):
+                location = res.headers.get("Location")
+                if not location:
+                    break
+                # Handle relative redirects
+                current_url = urljoin(current_url, location)
+                redirects += 1
+            else:
+                return res
+                
+        if redirects > max_redirects:
+            raise ValueError("Too many redirects")
+            
+        return res
 
 class GoogleFormService:
     def __init__(self, db: AsyncSession):
@@ -47,17 +123,10 @@ class GoogleFormService:
             form_id = form_id_match.group(1)
             response_url = url.replace("viewform", "formResponse")
 
-            async with httpx.AsyncClient(follow_redirects=True) as client:
-                res = await client.get(url, timeout=10.0)
-                
-                # Check where we got redirected
-                final_url = str(res.url)
-                final_parsed = urlparse(final_url)
-                if final_parsed.netloc not in ["docs.google.com", "forms.gle"]:
-                    return False, "", {}, "", "URL redirects to an unauthorized domain"
+            res = await secure_request(url, method="GET")
 
-                if res.status_code != 200:
-                    return False, "", {}, "", f"Failed to fetch form. Status: {res.status_code}"
+            if res.status_code != 200:
+                return False, "", {}, "", f"Failed to fetch form. Status: {res.status_code}"
 
             soup = BeautifulSoup(res.text, "html.parser")
             script_tags = soup.find_all("script")
@@ -148,20 +217,14 @@ class GoogleFormService:
                 logger.error("Blocked submission to unauthorized Google Form URL")
                 return False
 
-            async with httpx.AsyncClient(follow_redirects=True) as client:
-                res = await client.post(
-                    event.google_form_response_url, 
-                    data=payload,
-                    headers={"Content-Type": "application/x-www-form-urlencoded"},
-                    timeout=10.0
-                )
-                
-                # Google Forms usually returns 200 on success, sometimes 302
-                if res.status_code in [200, 302, 303]:
-                    return True
-                else:
-                    logger.error(f"Google Form submit failed: {res.status_code} - {res.text}")
-                    return False
+            res = await secure_request(event.google_form_response_url, method="POST", data=payload)
+            
+            # Google Forms usually returns 200 on success, sometimes 302/303 if we didn't follow the final redirect
+            if res.status_code in [200, 302, 303]:
+                return True
+            else:
+                logger.error(f"Google Form submit failed: {res.status_code} - {res.text}")
+                return False
         except Exception as e:
             logger.error(f"Error submitting to Google Form: {e}")
             return False

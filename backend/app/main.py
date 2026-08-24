@@ -102,6 +102,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 async def generic_exception_handler(request: Request, exc: Exception):
     error_id = f"ERR-{uuid.uuid4().hex[:6].upper()}"
     logger.error("unhandled_exception", error_id=error_id, exc_info=exc)
+    import sentry_sdk
+    with sentry_sdk.push_scope() as scope:
+        scope.set_tag("error_id", error_id)
+        sentry_sdk.capture_exception(exc)
     return JSONResponse(
         status_code=500, 
         content={"detail": "Internal server error", "error_id": error_id}
@@ -111,7 +115,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 # Rate Limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
 
 # 1. Trust proxies (X-Forwarded-For) before rate limiting or observability
 trusted_hosts = [h.strip() for h in settings.TRUSTED_PROXIES.split(",")] if settings.TRUSTED_PROXIES else []

@@ -1,7 +1,7 @@
 import secrets
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
-from jose import jwt
+import jwt
 from app.core.config import settings
 from typing import Any, Union
 import uuid
@@ -10,20 +10,24 @@ import uuid
 pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bool(pwd_context.verify(plain_password, hashed_password))
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return str(pwd_context.hash(password))
 
 def needs_password_rehash(hashed_password: str) -> bool:
-    return pwd_context.needs_update(hashed_password)
+    return bool(pwd_context.needs_update(hashed_password))
 
 def generate_reset_token() -> str:
     return secrets.token_urlsafe(32)
 
 import uuid
 
-def create_access_token(subject: Union[str, Any], role: str, expires_delta: timedelta = None) -> str:
+def create_access_token(
+    subject: str,
+    role: str,
+    expires_delta: Optional[timedelta] = None
+) -> str:
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:

@@ -1,7 +1,8 @@
 import uuid
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+import jwt
+from jwt.exceptions import PyJWTError
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -15,7 +16,7 @@ from app.schemas.schemas import TokenData
 
 class OAuth2PasswordBearerWithCookie(OAuth2PasswordBearer):
     async def __call__(self, request: Request) -> Optional[str]:
-        authorization: str = request.headers.get("Authorization")
+        authorization: Optional[str] = request.headers.get("Authorization")
         if not authorization:
             authorization = request.cookies.get("access_token")
             
@@ -67,7 +68,7 @@ async def get_current_user(
             blocked_token = await db.execute(select(TokenBlocklist).where(TokenBlocklist.jti == jti))
             if blocked_token.scalars().first():
                 raise HTTPException(status_code=401, detail="Token has been revoked")
-    except (JWTError, ValidationError):
+    except (PyJWTError, ValidationError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -116,7 +117,7 @@ async def get_optional_current_user(
             blocked_token = await db.execute(select(TokenBlocklist).where(TokenBlocklist.jti == jti))
             if blocked_token.scalars().first():
                 return None
-    except (JWTError, ValidationError):
+    except (PyJWTError, ValidationError):
         return None
         
     result = await db.execute(select(User).where(User.email == token_data.email, User.deleted_at.is_(None)))

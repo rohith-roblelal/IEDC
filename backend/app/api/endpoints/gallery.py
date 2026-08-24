@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from typing import List, Optional
@@ -46,6 +46,7 @@ async def get_gallery_images(
 
 @router.post("/upload", response_model=GalleryImageResponse, status_code=status.HTTP_201_CREATED)
 async def upload_gallery_image(
+    request: Request,
     file: UploadFile = File(...),
     title: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
@@ -114,6 +115,7 @@ async def update_gallery_image(
 
 @router.delete("/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_gallery_image(
+    request: Request,
     image_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_super_admin)
@@ -135,7 +137,8 @@ async def delete_gallery_image(
     # aligns with the soft-delete philosophy. In a real system, a cron job might purge soft-deleted files.
     # For now, we will delete from storage to ensure we don't leak space since Supabase storage costs money.
     try:
-        await storage_service.delete_file(image.storage_path)
+        if image.storage_path:
+            await storage_service.delete_file(storage_path=str(image.storage_path))
     except Exception as e:
         logger.error(f"Failed to delete file from storage: {e}")
         # Proceed with DB soft delete even if storage delete fails

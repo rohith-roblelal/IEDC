@@ -68,7 +68,7 @@ async def create_event(
     Create a new event. Only accessible by Super Admin.
     """
     event_service = EventService(db)
-    return await event_service.create_event(event_in, creator_id=current_user.id)
+    return await event_service.create_event(event_in, creator_id=current_user.id) # type: ignore
 
 @router.put("/{event_id}", response_model=EventResponse)
 async def update_event(

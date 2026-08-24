@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from typing import Any
-from jose import jwt, JWTError
+import jwt
 from datetime import datetime, timezone, timedelta
 import secrets
 import uuid
@@ -16,6 +16,7 @@ from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.api.dependencies import oauth2_scheme, get_current_user
 from app.models.models import TokenBlocklist, PasswordResetToken
+from app.api.middleware.turnstile import verify_bot_token
 from app.services.audit import log_audit_event
 from app.services.email import email_service
 import structlog
@@ -31,7 +32,10 @@ LOCKOUT_DURATION_MINUTES = 15
 @router.post("/login")
 @limiter.limit("5/minute")
 async def login_access_token(
-    request: Request, response: Response, db: AsyncSession = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
+    request: Request, response: Response, 
+    db: AsyncSession = Depends(get_db), 
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    _bot: bool = Depends(verify_bot_token)
 ) -> Any:
     """
     OAuth2 compatible token login, get an access token for future requests.
@@ -55,7 +59,7 @@ async def login_access_token(
         raise HTTPException(status_code=400, detail="Account locked due to too many failed attempts. Try again later.")
 
     # Verify password
-    if not verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(plain_password=form_data.password, hashed_password=str(user.hashed_password)):
         user.failed_login_attempts += 1
         if user.failed_login_attempts >= MAX_FAILED_ATTEMPTS:
             user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
@@ -72,7 +76,7 @@ async def login_access_token(
     user.locked_until = None
 
     # Transparently upgrade password hash if needed (e.g. bcrypt -> argon2)
-    if needs_password_rehash(user.hashed_password):
+    if needs_password_rehash(str(user.hashed_password)):
         user.hashed_password = get_password_hash(form_data.password)
         logger.info(f"Upgraded password hash for user {user.email}")
     
@@ -92,6 +96,7 @@ async def login_access_token(
         httponly=True,
         secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False,
         samesite="lax",
+        path="/",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     
@@ -143,7 +148,7 @@ async def logout(
             auth_logger.info("logout", user_id=str(user_id) if user_id else "unknown")
             await log_audit_event(db, "LOGOUT", user_id=user_id, ip_address=client_ip)
             await db.commit()
-    except JWTError:
+    except jwt.InvalidTokenError:
         auth_logger.warning("logout_failed", reason="Invalid token")
         await log_audit_event(db, "LOGOUT_FAILED", ip_address=client_ip, metadata_json={"reason": "Invalid token"})
         
@@ -151,6 +156,7 @@ async def logout(
         key="access_token",
         secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False,
         samesite="lax",
+        path="/",
     )
     return {"status": "success", "message": "Logged out successfully"}
 
@@ -159,7 +165,8 @@ async def logout(
 async def forgot_password(
     request: Request,
     body: ForgotPasswordRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _bot: bool = Depends(verify_bot_token)
 ):
     """
     Generate a password reset token and send it via email.
@@ -180,8 +187,8 @@ async def forgot_password(
     ).values(used_at=datetime.now(timezone.utc))
     await db.execute(invalidate_stmt)
 
-    reset_secret = secrets.token_urlsafe(32)
-    token_hash = get_password_hash(reset_secret)
+    reset_token_raw = secrets.token_urlsafe(32)
+    token_hash = get_password_hash(reset_token_raw)
     
     # Store token hash in db, valid for 15 minutes
     db_token = PasswordResetToken(
@@ -197,8 +204,7 @@ async def forgot_password(
     await log_audit_event(db, "PASSWORD_RESET_REQUESTED", user_id=user.id, ip_address=client_ip)
     
     # Send email
-    full_token = f"{db_token.id}.{reset_secret}"
-    await email_service.send_password_reset_email(user.email, full_token)
+    await email_service.send_password_reset_email(to_email=str(user.email), reset_token=reset_token_raw)
     
     return {"status": "success", "message": "If that email is registered, a password reset link has been sent."}
 
@@ -207,7 +213,8 @@ async def forgot_password(
 async def reset_password(
     request: Request,
     body: ResetPasswordRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _bot: bool = Depends(verify_bot_token)
 ):
     """
     Reset password using a valid reset token.
@@ -255,13 +262,13 @@ async def reset_password(
         
     # Valid token found, update password
     user_repo = UserRepository(db)
-    user = await user_repo.get_by_id(valid_token_obj.user_id)
-    if not user:
+    updated_user = await user_repo.get_by_id(user_id=valid_token_obj.user_id) # type: ignore
+    if not updated_user:
         raise HTTPException(status_code=400, detail="User not found")
         
-    user.hashed_password = get_password_hash(body.new_password)
-    user.failed_login_attempts = 0
-    user.locked_until = None
+    updated_user.hashed_password = get_password_hash(body.new_password)
+    updated_user.failed_login_attempts = 0
+    updated_user.locked_until = None
     
     # Invalidate token
     valid_token_obj.used_at = datetime.now(timezone.utc)

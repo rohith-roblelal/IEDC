@@ -131,6 +131,13 @@ This document tracks the ongoing development, features implemented, and upcoming
 - **Gate 2 (Dependency Security)**: Patched backend `cryptography` to `50.0.0` and `h2` to `4.4.1` to resolve known vulnerabilities. Documented `ecdsa` as an accepted transitive risk.
 - **Gate 3 (Supabase Storage RLS)**: Fixed a typo in `config.py` that caused bucket name mismatches (`IEDC gallary` -> `IEDC gallery`). Rotated an exposed service-role key. Destroyed vulnerable Supabase SQL policies that allowed unauthorized `{public}` access to `INSERT`, `UPDATE`, and `DELETE`.
 
+#### Sprint 9 — Final Security Engineering Gate ✅
+- **Dependency Hardening**: Migrated from `python-jose` to `PyJWT` to eliminate vulnerable dependencies.
+- **Bot Protection**: Integrated Cloudflare Turnstile across public CUD endpoints to prevent automated abuse without leaking account existence.
+- **Audit Logging**: Injected robust, recursive PII-redacting audit logging into all 11 backend CUD endpoints.
+- **SSRF & XSS**: Implemented strict `nh3` HTML sanitization and `httpx` redirect validation to block SSRF and XSS vectors.
+- **Secret Scanning**: Executed comprehensive deep git history scans to verify zero high-entropy secret leakage.
+
 
 ## In Progress / Next Steps (Production Roadmap)
 

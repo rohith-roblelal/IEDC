@@ -7,6 +7,8 @@ import { Play, Megaphone, Settings, X, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useSettings } from "@/lib/settings-context";
+import { FAQAccordion } from "@/components/ui/accordion";
+import { FAQ_DATA } from "@/lib/faq-data";
 
 interface Announcement {
   id: string;
@@ -284,23 +286,10 @@ export default function HomeClient({ announcements = [], podcasts = [], partners
         </div>
       </section>
 
-      {/* Frequently Asked Questions (AEO) */}
+      {/* Frequently Asked Questions */}
       <section className="px-6 pb-24 max-w-[800px] mx-auto">
         <h2 className="text-center text-[clamp(1.8rem,4vw,2.4rem)] font-bold mb-10">Frequently Asked Questions</h2>
-        <div className="space-y-6">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-2">What is IEDC SNMIMT?</h3>
-            <p className="text-[#C4C4D4]">IEDC SNMIMT is the Innovation and Entrepreneurship Development Cell at SNMIMT. It is a student-run community that fosters innovation, provides mentorship, and helps incubate student startups.</p>
-          </div>
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-2">Who can join the IEDC SNMIMT Beta initiative?</h3>
-            <p className="text-[#C4C4D4]">Any student with an innovative idea can join Beta to receive resources, mentorship, and potential funding opportunities for their early-stage startup.</p>
-          </div>
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-white mb-2">What kind of events does IEDC SNMIMT organize?</h3>
-            <p className="text-[#C4C4D4]">We organize hackathons, ideathons, workshops, technical talks, and networking events connecting students with industry leaders and successful founders.</p>
-          </div>
-        </div>
+        <FAQAccordion items={FAQ_DATA} />
       </section>
 
       {/* Partners Section */}
@@ -399,6 +388,24 @@ export default function HomeClient({ announcements = [], podcasts = [], partners
           </div>
         )}
       </AnimatePresence>
+
+      {/* Contact CTA Section */}
+      <section className="px-6 py-12 text-center mt-8">
+        <div className="max-w-[700px] mx-auto border-t border-b border-white/10 py-16">
+          <h2 className="text-[clamp(1.5rem,3vw,2rem)] font-bold mb-3 text-white">
+            Have a question or an idea?
+          </h2>
+          <p className="text-[#C4C4D4] text-base mb-8 max-w-[400px] mx-auto">
+            Connect with IEDC SNMIMT.
+          </p>
+          <Link 
+            href="/contact" 
+            className="inline-block bg-[#22D46B] text-[#1A1A2E] font-bold py-3.5 px-8 rounded-full hover:-translate-y-0.5 transition-transform shadow-[0_0_15px_rgba(34,212,107,0.3)]"
+          >
+            Contact Us
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

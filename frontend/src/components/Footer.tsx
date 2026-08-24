@@ -2,16 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useToast } from "@/components/ui/ToastProvider";
 import { useSettings } from "@/lib/settings-context";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export default function Footer() {
-  const { toast } = useToast();
   const settings = useSettings();
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const socials = [
     { url: settings.facebook_url, label: "Facebook", icon: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/> },
@@ -23,139 +17,83 @@ export default function Footer() {
   ].filter(s => s.url);
 
   return (
-    <footer className="bg-[#0A0A0F] rounded-t-[28px] px-6 pt-16 pb-10 mt-10">
-      <div className="max-w-[700px] mx-auto text-center">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          {settings.logo_url && (
-            <div className="relative h-[28px] w-[28px]">
-              <Image 
-                src={settings.logo_url} 
-                alt={`${settings.site_name} Logo`} 
-                fill
-                sizes="28px"
-                className="object-contain"
-              />
+    <footer className="bg-[#0A0A0F] border-t border-white/5 pt-12 pb-8 mt-10">
+      <div className="max-w-[1100px] mx-auto px-6">
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8">
+          
+          {/* Identity & Address */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="flex items-center gap-3 mb-4">
+              {settings.logo_url && (
+                <div className="relative h-6 w-6">
+                  <Image 
+                    src={settings.logo_url} 
+                    alt={`${settings.site_name} Logo`} 
+                    fill
+                    sizes="24px"
+                    className="object-contain"
+                  />
+                </div>
+              )}
+              <span className="text-xl font-bold text-white">{settings.site_name}</span>
             </div>
-          )}
-          <p className="text-2xl font-bold text-white">{settings.site_name}</p>
-        </div>
-        {settings.contact_address && (
-          <p className="text-[#C4C4D4] font-medium mt-3.5 text-[0.95rem]">
-            {settings.contact_address}
-          </p>
-        )}
-
-        <div className="w-px h-[60px] bg-white/15 mx-auto my-10"></div>
-
-        <h2 className="text-2xl font-bold text-white">Contact</h2>
-        
-        <form 
-          className="bg-white rounded-[18px] p-8 max-w-[420px] mx-auto mt-6 shadow-2xl text-left"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (isSubmitting) return; // Prevent duplicate submissions
-
-            const form = e.target as HTMLFormElement;
-            const name = (form.elements[0] as HTMLInputElement).value;
-            const email = (form.elements[1] as HTMLInputElement).value;
-            const message = (form.elements[2] as HTMLTextAreaElement).value;
             
-            setIsSubmitting(true);
-            try {
-              const res = await fetch("/api/v1/contact", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, message })
-              });
-              
-              if (res.ok) {
-                // Remove transient toast, use dedicated route instead
-                form.reset();
-                router.push("/thank-you");
-              } else {
-                toast("Failed to send message. Please try again.", "error");
-              }
-            } catch (err) {
-              console.error(err);
-              toast("An error occurred. Please try again later.", "error");
-            } finally {
-              setIsSubmitting(false);
-            }
-          }}
-        >
-          <div className="space-y-1 mb-3.5">
-            <label htmlFor="footer-name" className="block text-sm font-medium text-gray-700">Your Name</label>
-            <input
-              id="footer-name"
-              type="text"
-              placeholder="Your Name"
-              required
-              disabled={isSubmitting}
-              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50"
-            />
-          </div>
-          <div className="space-y-1 mb-3.5">
-            <label htmlFor="footer-email" className="block text-sm font-medium text-gray-700">Your Email</label>
-            <input
-              id="footer-email"
-              type="email"
-              placeholder="Your Email"
-              required
-              disabled={isSubmitting}
-              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-50"
-            />
-          </div>
-          <div className="space-y-1 mb-3.5">
-            <label htmlFor="footer-message" className="block text-sm font-medium text-gray-700">Your Enquiry</label>
-            <textarea
-              id="footer-message"
-              placeholder="Your Enquiry"
-              required
-              disabled={isSubmitting}
-              className="w-full border border-[#E0E0E8] bg-[#F4F4F8] rounded-[10px] p-3.5 text-[0.95rem] text-[#1A1A2E] outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[90px] resize-y disabled:opacity-50"
-            ></textarea>
-          </div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-[#4F7DF9] text-white font-bold py-3.5 rounded-full hover:-translate-y-0.5 transition-transform disabled:opacity-70 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
-          >
-            {isSubmitting ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                Sending...
-              </>
-            ) : "Send"}
-          </button>
-        </form>
+            {settings.contact_address && (
+              <p className="text-[#C4C4D4] text-sm max-w-[320px] leading-relaxed mb-3">
+                {settings.contact_address}
+              </p>
+            )}
 
-        {socials.length > 0 && (
-          <div className="mt-10 flex justify-center gap-4">
-            {socials.map((s) => (
-              <Link 
-                key={s.label}
-                href={s.url!.startsWith('http') ? s.url! : `https://${s.url}`} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                aria-label={s.label}
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-                  {s.icon}
-                </svg>
-              </Link>
-            ))}
+            {(settings.contact_email || settings.contact_phone) && (
+              <div className="flex flex-col gap-1.5 mt-1 text-[#C4C4D4] text-sm">
+                {settings.contact_email && (
+                  <a href={`mailto:${settings.contact_email}`} className="hover:text-white transition-colors">
+                    {settings.contact_email}
+                  </a>
+                )}
+                {settings.contact_phone && (
+                  <a href={`tel:${settings.contact_phone.replace(/[^0-9+]/g, '')}`} className="hover:text-white transition-colors">
+                    {settings.contact_phone}
+                  </a>
+                )}
+              </div>
+            )}
           </div>
-        )}
 
-        <div className="mt-6 flex flex-wrap justify-center gap-6 text-[#C4C4D4] text-[0.85rem]">
-          <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
-          <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+          {/* Social & Navigation */}
+          <div className="flex flex-col items-center md:items-end gap-6">
+            {socials.length > 0 && (
+              <div className="flex gap-3">
+                {socials.map((s) => (
+                  <Link 
+                    key={s.label}
+                    href={s.url!.startsWith('http') ? s.url! : `https://${s.url}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    aria-label={`${settings.site_name} on ${s.label}`}
+                    className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                      {s.icon}
+                    </svg>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-wrap justify-center md:justify-end gap-5 text-sm font-medium text-[#C4C4D4]">
+              <Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link>
+              <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            </div>
+          </div>
         </div>
 
-        <p className="mt-6 text-[#6B6B7C] text-[0.8rem]">
-          © {settings.site_name} {new Date().getFullYear()}-{new Date().getFullYear() + 1}. All rights reserved
-        </p>
+        <div className="w-full h-px bg-white/10 mt-10 mb-6"></div>
+        
+        <div className="text-center text-[#6B6B7C] text-[0.8rem]">
+          © {settings.site_name} {new Date().getFullYear()}. All rights reserved.
+        </div>
       </div>
     </footer>
   );

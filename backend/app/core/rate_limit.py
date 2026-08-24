@@ -15,17 +15,13 @@ def get_user_ip_and_id(request: Request) -> str:
     if auth and auth.startswith("Bearer "):
         token = auth.split(" ")[1]
         try:
-            import jwt # using jose or PyJWT depending on what's installed
-            try:
-                from jose import jwt as jose_jwt
-                payload = jose_jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_signature": False, "verify_aud": False, "verify_exp": False})
-            except ImportError:
-                payload = jwt.decode(token, options={"verify_signature": False})
-                
+            import jwt
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_signature": False, "verify_aud": False, "verify_exp": False})
+            
             user_id = payload.get("sub")
             if user_id:
                 return f"{ip}:{user_id}"
-        except Exception:
+        except jwt.InvalidTokenError:
             pass
     return ip
 

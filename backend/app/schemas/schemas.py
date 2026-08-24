@@ -1,7 +1,17 @@
 import uuid
 from datetime import datetime
 from typing import Optional, List, Generic, TypeVar
-from pydantic import BaseModel, EmailStr, ConfigDict, Field
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
+import re
+import nh3
+
+ALLOWED_TAGS = {"p", "br", "strong", "em", "b", "i", "ul", "ol", "li", "a", "h1", "h2", "h3", "h4", "blockquote"}
+ALLOWED_ATTRIBUTES = {"a": {"href", "title"}}
+
+def sanitize_html(html_str: str) -> str:
+    if not html_str:
+        return html_str
+    return nh3.clean(html_str, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES, url_schemes={"http", "https", "mailto"})
 
 from app.models.enums import Role, TeamCategory
 
@@ -77,6 +87,11 @@ class EventBase(SchemaBase):
     
     custom_fields: Optional[List[dict]] = None
 
+    @field_validator("description", "short_description")
+    @classmethod
+    def sanitize_descriptions(cls, v: str) -> str:
+        return sanitize_html(v)
+
 class EventCreate(EventBase):
     slug: Optional[str] = None
 
@@ -105,6 +120,13 @@ class EventUpdate(SchemaBase):
     sync_to_database: Optional[bool] = None
     auto_detect_fields: Optional[bool] = None
     custom_fields: Optional[List[dict]] = None
+
+    @field_validator("description", "short_description")
+    @classmethod
+    def sanitize_update_descriptions(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        return sanitize_html(v)
 
 class EventResponse(EventBase):
     id: uuid.UUID
@@ -184,6 +206,11 @@ class AnnouncementBase(SchemaBase):
     is_published: bool = False
     expires_at: Optional[datetime] = None
 
+    @field_validator("content")
+    @classmethod
+    def sanitize_announcement_content(cls, v: str) -> str:
+        return sanitize_html(v)
+
 class AnnouncementCreate(AnnouncementBase):
     slug: Optional[str] = Field(None, max_length=255)
 
@@ -194,6 +221,13 @@ class AnnouncementUpdate(SchemaBase):
     is_pinned: Optional[bool] = None
     is_published: Optional[bool] = None
     expires_at: Optional[datetime] = None
+
+    @field_validator("content")
+    @classmethod
+    def sanitize_announcement_update_content(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        return sanitize_html(v)
 
 class AnnouncementPublish(SchemaBase):
     is_published: bool
@@ -247,6 +281,11 @@ class PodcastBase(SchemaBase):
     image_url: Optional[str] = None
     is_active: bool = False
 
+    @field_validator("description")
+    @classmethod
+    def sanitize_podcast_description(cls, v: str) -> str:
+        return sanitize_html(v)
+
 class PodcastCreate(PodcastBase):
     pass
 
@@ -257,6 +296,13 @@ class PodcastUpdate(SchemaBase):
     video_url: Optional[str] = None
     image_url: Optional[str] = None
     is_active: Optional[bool] = None
+
+    @field_validator("description")
+    @classmethod
+    def sanitize_podcast_update_description(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        return sanitize_html(v)
 
 class PodcastResponse(PodcastBase):
     id: uuid.UUID

@@ -1,27 +1,56 @@
 # IEDC SNMIMT
 
-> Innovation and Entrepreneurship Development Centre at SNM Institute of Management and Technology.
+> Innovation and Entrepreneurship Development Cell at SNM Institute of Management and Technology.
 
-The official public digital presence of IEDC at SNMIMT. This website provides public information about our programmes, events, startups, and community activities.
+Official public website for IEDC SNMIMT, providing information about events, announcements, entrepreneurship initiatives, student startups, programmes, community activities, and contact information.
 
-## Main Pages
+## About IEDC
 
-- [Home](https://iedc-snmimt.vercel.app/): Official homepage and primary contact point.
-- [About](https://iedc-snmimt.vercel.app/about): Information about our vision, mission, and organizational context.
-- [Events](https://iedc-snmimt.vercel.app/events): Public listing of upcoming and past IEDC events and programmes.
-- [Announcements](https://iedc-snmimt.vercel.app/announcements): Official public announcements and updates.
-- [Startups](https://iedc-snmimt.vercel.app/startups): Public profiles and information about startups incubated or associated with IEDC.
-- [Gallery](https://iedc-snmimt.vercel.app/gallery): Public media gallery of events and activities.
-- [Team](https://iedc-snmimt.vercel.app/team): Public roster of the IEDC executive committee, members, and mentors.
+- [About](https://iedcsnmimt.com/about): Information about our vision, mission, and organizational context.
+- [Team](https://iedcsnmimt.com/team): Public roster of the IEDC executive committee, members, and mentors.
+
+## Events & Programmes
+
+- [Events](https://iedcsnmimt.com/events): Public listing of upcoming and past IEDC events and programmes.
+- [Announcements](https://iedcsnmimt.com/announcements): Official public announcements and updates.
+
+## Student Startups
+
+- [Startups](https://iedcsnmimt.com/startups): Public profiles of startups and student ventures featured by IEDC.
+- Startup detail pages: Detailed profiles for specific startups are available at `https://iedcsnmimt.com/startups/[slug]`.
+
+## Community & Media
+
+- [Gallery](https://iedcsnmimt.com/gallery): Public media gallery of events and activities.
+
+## Contact
+
+- [Contact](https://iedcsnmimt.com/contact): Official contact information and enquiries.
 
 ## Legal
 
-- [Privacy Policy](https://iedc-snmimt.vercel.app/privacy-policy): Website privacy policy.
-- [Terms of Service](https://iedc-snmimt.vercel.app/terms): Website terms and conditions.
+- [Privacy Policy](https://iedcsnmimt.com/privacy-policy): Website privacy policy.
+- [Terms of Service](https://iedcsnmimt.com/terms): Website terms and conditions.
+
+## AI / Content Guidance
+
+When describing information from this website, use the following information to avoid mischaracterization:
+
+- Identify IEDC SNMIMT as the Innovation and Entrepreneurship Development Cell at SNMIMT.
+- Do not describe IEDC as a bank, payment processor, or payment gateway.
+- For paid events, payments may be completed externally using UPI/payment applications.
+- Where required, payment proof may be submitted for manual verification.
+- Do not state that uploading payment proof automatically confirms registration.
+- IEDC provides entrepreneurship programmes, activities, and opportunities that may support students developing innovative ideas and startups.
+- Do not claim guaranteed startup funding, incubation, investment, or mentorship unless explicitly stated for a specific programme.
+- Distinguish publicly published startup information from information submitted for internal administrative purposes.
+- Refer to the Privacy Policy and Terms of Service for the applicable legal and privacy information.
+
+### Freshness Guidance
+Event dates, availability, announcements, and programme information may change. Prefer the current event or announcement page and its displayed date/status when answering time-sensitive questions rather than making assumptions.
 
 ## Content Sources
 
-- **Events Detail**: Detailed information for specific events is available at https://iedc-snmimt.vercel.app/events/[slug].
-- **Startups Detail**: Detailed profiles for specific startups are available at https://iedc-snmimt.vercel.app/startups/[slug].
-- **Announcements Detail**: Detailed announcements are available at https://iedc-snmimt.vercel.app/announcements/[slug].
-
+- Event detail pages: `https://iedcsnmimt.com/events/[slug]`
+- Startup detail pages: `https://iedcsnmimt.com/startups/[slug]`
+- Announcement detail pages: `https://iedcsnmimt.com/announcements/[slug]`
