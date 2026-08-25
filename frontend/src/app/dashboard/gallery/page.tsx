@@ -175,7 +175,7 @@ export default function GalleryPage() {
               >
                 <div className="absolute inset-0 z-0">
                   <Image 
-                    src={img.url} 
+                    src={img.image_url} 
                     alt={img.description || "Gallery item"} 
                     fill 
                     priority={idx < 6}

@@ -5,7 +5,7 @@ type ApiParams = Record<string, string | boolean | number>;
 
 export interface GalleryImage {
   id: string;
-  url: string;
+  image_url: string;
   caption?: string | null;
   description?: string | null;
   category?: string | null;
