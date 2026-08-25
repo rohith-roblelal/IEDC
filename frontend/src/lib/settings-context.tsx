@@ -15,6 +15,8 @@ export interface SiteSettings {
   hero_cta_text: string | null;
   hero_cta_link: string | null;
   hero_image_url: string | null;
+  about_hero_title: string | null;
+  about_hero_highlight: string | null;
   about_description: string | null;
   about_vision: string | null;
   about_stats_json: Array<{ label: string; source?: string; value: string; suffix?: string }> | null;
@@ -56,6 +58,8 @@ const DEFAULTS: SiteSettings = {
   hero_cta_text: "View Events",
   hero_cta_link: "/events",
   hero_image_url: null,
+  about_hero_title: null,
+  about_hero_highlight: null,
   about_description:
     "IEDC has been developed to foster and nurture innovations combined with entrepreneurship amongst young minds.",
   about_vision:
