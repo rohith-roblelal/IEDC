@@ -13,7 +13,7 @@ import logging
 logger = logging.getLogger(__name__)
 from app.api.cache import cache_control, ETagRoute
 
-router = APIRouter(route_class=ETagRoute)
+router = APIRouter()
 
 @router.get("", response_model=List[GalleryImageResponse], dependencies=[Depends(cache_control(max_age=900, s_maxage=3600))])
 async def get_gallery_images(
