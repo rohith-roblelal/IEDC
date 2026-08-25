@@ -106,6 +106,9 @@ This document tracks the ongoing development, features implemented, and upcoming
 #### UI & Bug Fixes ✅
 - **Global Styles**: Fixed a critical `CssSyntaxError: Unclosed block` in `globals.css` caused by malformed Tailwind v4 `:root` duplications, resolving the Turbopack build failure.
 - **Form Modals**: Upgraded standard `window.confirm` dialogs in the Startup Wizard to use the custom, animated `useConfirm` UI modal for a premium feel.
+- **Dynamic Grids**: Replaced hardcoded impact statistics padding and "Our Values" grid columns on the About page with a responsive flex/grid layout that gracefully centers content when the administrator sets fewer than 4 items.
+- **Dynamic Content Configuration**: Added database migrations and UI fields to allow administrators to dynamically set the "About Hero Title" and "About Hero Highlight Word", preventing the need for source-code edits when updating the landing copy.
+- **Schema Validation**: Patched the backend `StatItem` schema in `app/schemas/settings.py` to ensure `source` and `suffix` properties are safely parsed and saved to the database.
 
 #### Critical Production Bug Fixes ✅
 - **Backend**: Resolved Redis timeout issues (`ARQ Pool Initialization`) during local backend boot.

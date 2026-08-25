@@ -282,6 +282,8 @@ export default function SettingsPage() {
           {activeTab === "about" && (
             <>
               <h2 className="text-xl font-bold text-white mb-2">About Section</h2>
+              <Field settings={settings} onChange={handleChange} label="About Hero Title" name="about_hero_title" placeholder="Empowering the Next Generation of " />
+              <Field settings={settings} onChange={handleChange} label="About Hero Highlight Word" name="about_hero_highlight" placeholder="Innovators" />
               <Field settings={settings} onChange={handleChange} label="About Description" name="about_description" type="textarea" />
               <Field settings={settings} onChange={handleChange} label="Vision Statement" name="about_vision" type="textarea" />
               
@@ -423,7 +425,7 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
-              <SaveButton tabId="about" isSaving={savingTabs.has("about")} onSave={handleSave} keys={["about_description", "about_vision", "about_stats_json", "about_inspiration_quote", "about_inspiration_author", "about_values_json"]} />
+              <SaveButton tabId="about" isSaving={savingTabs.has("about")} onSave={handleSave} keys={["about_hero_title", "about_hero_highlight", "about_description", "about_vision", "about_stats_json", "about_inspiration_quote", "about_inspiration_author", "about_values_json"]} />
             </>
           )}
 

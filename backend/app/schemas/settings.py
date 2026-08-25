@@ -4,7 +4,9 @@ from pydantic import BaseModel, ConfigDict
 
 class StatItem(BaseModel):
     label: str
-    value: str
+    value: Optional[str] = None
+    source: Optional[str] = None
+    suffix: Optional[str] = None
 
 class WebsiteSettingsUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -21,6 +23,8 @@ class WebsiteSettingsUpdate(BaseModel):
     hero_cta_link: Optional[str] = None
 
     # About
+    about_hero_title: Optional[str] = None
+    about_hero_highlight: Optional[str] = None
     about_description: Optional[str] = None
     about_vision: Optional[str] = None
     about_stats_json: Optional[List[StatItem]] = None

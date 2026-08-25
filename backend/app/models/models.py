@@ -264,6 +264,8 @@ class WebsiteSettings(Base):
     hero_image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
 
     # About
+    about_hero_title: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    about_hero_highlight: Mapped[str | None] = mapped_column(String(100), nullable=True)
     about_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     about_vision: Mapped[str | None] = mapped_column(Text, nullable=True)
     about_stats_json: Mapped[list | None] = mapped_column(JSON, nullable=True)

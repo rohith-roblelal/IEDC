@@ -33,12 +33,7 @@ export default function AboutClient() {
     };
   });
 
-  // Pad the grid to 4 if needed
-  const stats = [...processedStats];
-  while (stats.length < 4) {
-    stats.push({ label: "", value: "0" });
-  }
-  const displayStats = stats.slice(0, 4);
+  const displayStats = processedStats;
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -109,7 +104,8 @@ export default function AboutClient() {
             ABOUT IEDC
           </span>
           <h1 className="text-[clamp(2.5rem,5vw,3.5rem)] font-extrabold leading-tight mb-6">
-            Empowering the Next Generation of <span className="text-[#8B7FE8]">Innovators</span>
+            {settings.about_hero_title || "Empowering the Next Generation of "}
+            <span className="text-[#8B7FE8]">{settings.about_hero_highlight || "Innovators"}</span>
           </h1>
           {settings.about_description?.trim() && (
             <p className="max-w-[720px] mx-auto text-[#C4C4D4] text-[1.1rem] leading-relaxed">
@@ -120,24 +116,31 @@ export default function AboutClient() {
       </section>
 
       {/* 2. IMPACT STATISTICS */}
-      <section className="px-6 mb-24 max-w-[1200px] mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {displayStats.map((stat, i) => (
-            <motion.div 
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -5 }}
-              className="bg-white/[0.03] backdrop-blur-md border border-white/10 border-t-purple-500/30 rounded-2xl py-8 px-6 text-center shadow-[0_4px_30px_rgba(0,0,0,0.1)] transition-all hover:shadow-[0_0_20px_rgba(139,127,232,0.15)]"
-            >
-              <div className="text-[2.5rem] font-extrabold text-white leading-none mb-2">{stat.value}</div>
-              <div className="text-[#C4C4D4] font-medium text-[0.9rem] uppercase tracking-wider">{stat.label}</div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      {displayStats.length > 0 && (
+        <section className="px-6 mb-24 max-w-[1200px] mx-auto">
+          <div className={`grid gap-4 md:gap-6 ${
+            displayStats.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' : 
+            displayStats.length === 2 ? 'grid-cols-2 max-w-2xl mx-auto' : 
+            displayStats.length === 3 ? 'grid-cols-2 md:grid-cols-3 max-w-4xl mx-auto' : 
+            'grid-cols-2 md:grid-cols-4'
+          }`}>
+            {displayStats.map((stat: any, i: number) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -5 }}
+                className="bg-white/[0.03] backdrop-blur-md border border-white/10 border-t-purple-500/30 rounded-2xl py-8 px-6 text-center shadow-[0_4px_30px_rgba(0,0,0,0.1)] transition-all hover:shadow-[0_0_20px_rgba(139,127,232,0.15)]"
+              >
+                <div className="text-[2.5rem] font-extrabold text-white leading-none mb-2">{stat.value}</div>
+                <div className="text-[#C4C4D4] font-medium text-[0.9rem] uppercase tracking-wider">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 3. INSPIRATION */}
       <section className="px-6 mb-24 max-w-[1000px] mx-auto">
@@ -179,7 +182,12 @@ export default function AboutClient() {
           </span>
           <h2 className="text-3xl md:text-4xl font-bold">Our Values</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className={`grid gap-6 ${
+          values.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' : 
+          values.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto' : 
+          values.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto' : 
+          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+        }`}>
           {values.map((val: any, i: number) => (
             <motion.div
               key={i}
