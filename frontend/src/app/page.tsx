@@ -62,7 +62,7 @@ export default async function Page() {
     const [annData, podData, partData] = await Promise.all([
       clientFetch("api/v1/announcements", { next: { revalidate: 60 } }).catch(() => null),
       clientFetch("api/v1/podcasts/active", { next: { revalidate: 60 } }).catch(() => null),
-      clientFetch("api/v1/partners", { next: { revalidate: 3600 } }).catch(() => null)
+      clientFetch("api/v1/partners", { next: { revalidate: 0 } }).catch(() => null)
     ]);
 
     if (annData) announcements = (annData.items || (Array.isArray(annData) ? annData : [])).slice(0, 3);

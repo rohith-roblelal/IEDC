@@ -38,7 +38,7 @@ export default function PartnersPage() {
   const fetchPartners = async () => {
     setIsLoading(true);
     try {
-      const data = await clientFetch("api/v1/partners");
+      const data = await clientFetch(`api/v1/partners?_t=${Date.now()}`);
       setPartners(data.items || (Array.isArray(data) ? data : []));
     } catch (err) {
       console.error(err);
