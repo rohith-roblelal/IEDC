@@ -51,7 +51,7 @@ export default function TeamPage() {
   const fetchTeam = async () => {
     setIsLoading(true);
     try {
-      const data = await clientFetch("/api/v1/team");
+      const data = await clientFetch(`/api/v1/team?_t=${Date.now()}`);
       setTeam(data.items || (Array.isArray(data) ? data : []));
     } catch (err) {
       console.error(err);

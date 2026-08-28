@@ -21,7 +21,7 @@ export default function TeamClient() {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const res = await fetch("/api/v1/team");
+        const res = await fetch(`/api/v1/team?_t=${Date.now()}`);
         if (res.ok) {
           const data = await res.json();
           setTeam(data.items || (Array.isArray(data) ? data : []));
