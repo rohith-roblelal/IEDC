@@ -2,7 +2,10 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Terms of Service and Acceptable Use Policy for IEDC SNMIMT",
+  description: "Read IEDC SNMIMT's Terms of Service covering acceptable use, event registration, payments, and your responsibilities as a user.",
+  alternates: {
+    canonical: '/terms',
+  },
 };
 
 export default function TermsPage() {

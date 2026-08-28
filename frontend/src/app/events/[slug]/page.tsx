@@ -1,10 +1,11 @@
+import { getBaseUrl } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { EventsAPI, EventResponse } from "@/lib/api/events";
 import EventDetailClient from "./EventDetailClient";
 import JsonLd from "@/components/seo/JsonLd";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://iedcsnmimt.com';
+const baseUrl = getBaseUrl();
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: event.title,
       description: event.short_description || event.description.substring(0, 160),
       alternates: {
-        canonical: `${baseUrl}/events/${slug}`,
+        canonical: `/events/${slug}`,
       },
       openGraph: {
         title: `${event.title} | IEDC SNMIMT`,

@@ -1,3 +1,4 @@
+import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import StartupsClient from "../StartupsClient";
@@ -16,26 +17,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       return { title: "Startup Not Found | IEDC SNMIMT" };
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const baseUrl = getBaseUrl();
     const description = startup.short_description || startup.description || `Discover ${startup.name}, a student startup incubated at IEDC SNMIMT.`;
 
     return {
       title: `${startup.name} | IEDC SNMIMT Startups`,
       description,
       alternates: {
-        canonical: `${baseUrl}/startups/${slug}`,
+        canonical: `/startups/${slug}`,
       },
       openGraph: {
         title: `${startup.name} | IEDC SNMIMT Startups`,
         description,
-        url: `${baseUrl}/startups/${slug}`,
-        images: startup.logo_url ? [startup.logo_url] : [],
+        url: `/startups/${slug}`,
+        images: startup.logo_url ? [{ url: startup.logo_url, alt: `${startup.name} logo` }] : [{ url: '/api/og', alt: 'IEDC SNMIMT — Innovation and Entrepreneurship Development Cell' }],
         type: "website",
       },
       twitter: {
+        card: "summary_large_image",
         title: `${startup.name} | IEDC SNMIMT Startups`,
         description,
-        images: startup.logo_url ? [startup.logo_url] : [],
+        images: startup.logo_url ? [startup.logo_url] : ['/api/og'],
       }
     };
   } catch {
@@ -68,7 +70,7 @@ export default async function StartupDetailPage({ params }: Props) {
     );
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
 
   const schema = {
     "@context": "https://schema.org",

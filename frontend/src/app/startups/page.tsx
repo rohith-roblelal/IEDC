@@ -1,18 +1,24 @@
+import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import StartupsClient from "./StartupsClient";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return {
     title: "Startups",
     description: "Explore the innovative student startups incubated at IEDC SNMIMT. Learn about our campus founders, their companies, industries, and technological disruptions.",
     alternates: {
-      canonical: `${baseUrl}/startups`,
+      canonical: '/startups',
     },
     openGraph: {
       title: "Our Startups | IEDC SNMIMT",
       description: "Explore the innovative student startups incubated at IEDC SNMIMT. Learn about our campus founders, their companies, industries, and technological disruptions.",
-      url: `${baseUrl}/startups`,
+      url: `${getBaseUrl()}/startups`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Our Startups | IEDC SNMIMT",
+      description: "Explore the innovative student startups incubated at IEDC SNMIMT. Learn about our campus founders, their companies, industries, and technological disruptions.",
     }
   };
 }
@@ -23,7 +29,7 @@ export default function StartupsPage() {
     "@type": "CollectionPage",
     "name": "IEDC SNMIMT Startups",
     "description": "Discover the innovative startups incubated and nurtured at IEDC SNMIMT.",
-    "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/startups`
+    "url": `${getBaseUrl()}/startups`
   };
 
   return (

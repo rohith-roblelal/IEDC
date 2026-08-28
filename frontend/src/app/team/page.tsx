@@ -1,21 +1,22 @@
+import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import TeamClient from "./TeamClient";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return {
     title: "Team",
     description: "Meet the dedicated executive committee, nodal officers, and student leaders behind IEDC SNMIMT who are driving innovation and entrepreneurship on our campus.",
     alternates: {
-      canonical: `${baseUrl}/team`,
+      canonical: '/team',
     },
     openGraph: {
       title: "Our Team | IEDC SNMIMT",
       description: "Meet the dedicated executive committee, nodal officers, and student leaders behind IEDC SNMIMT who are driving innovation and entrepreneurship on our campus.",
-      url: `${baseUrl}/team`,
+      url: `${getBaseUrl()}/team`,
+      type: "website",
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: "Our Team | IEDC SNMIMT",
       description: "Meet the dedicated executive committee, nodal officers, and student leaders behind IEDC SNMIMT who are driving innovation and entrepreneurship on our campus.",
     }
@@ -29,7 +30,7 @@ export default function TeamPage() {
     "@type": "CollectionPage",
     "name": "IEDC SNMIMT Team",
     "description": "Meet the dedicated team behind IEDC SNMIMT, driving innovation and entrepreneurship on campus.",
-    "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/team`,
+    "url": `${getBaseUrl()}/team`,
     "about": {
       "@type": "Organization",
       "name": "IEDC SNMIMT"

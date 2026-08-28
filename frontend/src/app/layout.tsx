@@ -19,7 +19,7 @@ const poppins = Poppins({
 });
 
 import { clientFetch } from "@/lib/api/client";
-import { cn } from "@/lib/utils";
+import { cn, getBaseUrl } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -31,15 +31,19 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const siteName = settings?.site_name || "IEDC SNMIMT";
   const tagline = settings?.site_tagline || "Innovation and Entrepreneurship Development Cell";
-  const defaultOgImage = "/api/og";
-  
+  const siteDescription = settings?.seo_description || settings?.about_description || "Fostering innovation and entrepreneurship amongst young minds at SNM Institute of Management and Technology, Kerala.";
+  const ogImage = settings?.og_image_url || "/api/og";
+
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+    metadataBase: new URL(getBaseUrl()),
     title: {
       default: `${siteName} | ${tagline}`,
       template: `%s | ${siteName}`,
     },
-    description: settings?.seo_description || settings?.about_description || "Fostering innovations combined with entrepreneurship amongst young minds.",
+    description: siteDescription,
+    alternates: {
+      canonical: '/',
+    },
     icons: settings?.favicon_url
       ? {
           icon: settings.favicon_url,
@@ -54,13 +58,20 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       locale: "en_IN",
-      siteName: siteName,
-      images: settings?.og_image_url ? [settings.og_image_url] : [defaultOgImage],
+      siteName,
+      title: `${siteName} | ${tagline}`,
+      description: siteDescription,
+      url: '/',
+      images: [{
+        url: ogImage,
+        alt: `${siteName} — Innovation and Entrepreneurship Development Cell`,
+      }],
     },
     twitter: {
       card: "summary_large_image",
-      site: "@iedcsnmimt",
-      images: settings?.og_image_url ? [settings.og_image_url] : [defaultOgImage],
+      title: `${siteName} | ${tagline}`,
+      description: siteDescription,
+      images: [ogImage],
     },
   };
 }
@@ -89,7 +100,7 @@ export default async function RootLayout({
               "@context": "https://schema.org",
               "@type": "EducationalOrganization",
               "name": initialSettings?.site_name || "IEDC SNMIMT",
-              "url": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+              "url": getBaseUrl(),
               "logo": initialSettings?.logo_url,
               "description": initialSettings?.about_description || "Innovation and Entrepreneurship Development Cell at SNMIMT",
               "sameAs": [
@@ -110,7 +121,7 @@ export default async function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               "name": initialSettings?.site_name || "IEDC SNMIMT",
-              "url": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+              "url": getBaseUrl(),
             })
           }}
         />

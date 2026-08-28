@@ -20,11 +20,17 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title,
     description,
+    alternates: {
+      canonical: '/contact',
+    },
     openGraph: {
       title,
       description,
+      url: '/contact',
+      type: "website",
     },
     twitter: {
+      card: "summary",
       title,
       description,
     }

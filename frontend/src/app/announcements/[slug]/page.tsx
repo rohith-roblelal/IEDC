@@ -1,3 +1,4 @@
+import { getBaseUrl } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -21,24 +22,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Clean markdown characters for the description meta tag
     const plainTextContent = announcement.content.replace(/[#*`_]/g, '').substring(0, 160);
     
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const baseUrl = getBaseUrl();
     
     return {
       title: announcement.title,
       description: plainTextContent,
       alternates: {
-        canonical: `${baseUrl}/announcements/${slug}`,
+        canonical: `/announcements/${slug}`,
       },
       openGraph: {
         title: announcement.title,
         description: plainTextContent,
-        url: `${baseUrl}/announcements/${slug}`,
+        url: `/announcements/${slug}`,
         type: "article",
+        images: [{ url: '/api/og', alt: 'IEDC SNMIMT — Innovation and Entrepreneurship Development Cell' }],
       },
       twitter: {
-        card: "summary",
+        card: "summary_large_image",
         title: announcement.title,
         description: plainTextContent,
+        images: ['/api/og'],
       }
     };
   } catch {
@@ -80,7 +83,7 @@ export default async function AnnouncementDetailPage({ params }: Props) {
     notFound();
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://iedcsnmimt.com';
+  const baseUrl = getBaseUrl();
   const jsonLdData = {
     headline: announcement.title,
     description: announcement.content.replace(/[#*`_]/g, '').substring(0, 160),
@@ -130,7 +133,7 @@ export default async function AnnouncementDetailPage({ params }: Props) {
               "@type": "Organization",
               "name": "IEDC SNMIMT"
             },
-            "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/announcements/${slug}`
+            "url": `${baseUrl}/announcements/${slug}`
           })
         }}
       />

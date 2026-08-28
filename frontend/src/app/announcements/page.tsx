@@ -1,20 +1,26 @@
+import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import Link from "next/link";
 import { Megaphone, Pin, Clock, ChevronRight } from "lucide-react";
 import { AnnouncementsAPI, AnnouncementResponse } from "@/lib/api/announcements";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return {
     title: "Announcements",
     description: "Stay updated with the latest news, announcements, and important notices from IEDC SNMIMT. Get notified about upcoming deadlines, funding, and campus events.",
     alternates: {
-      canonical: `${baseUrl}/announcements`,
+      canonical: '/announcements',
     },
     openGraph: {
       title: "Announcements | IEDC SNMIMT",
       description: "Stay updated with the latest news, announcements, and important notices from IEDC SNMIMT. Get notified about upcoming deadlines, funding, and campus events.",
-      url: `${baseUrl}/announcements`,
+      url: `${getBaseUrl()}/announcements`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: "Announcements | IEDC SNMIMT",
+      description: "Stay updated with the latest news, announcements, and important notices from IEDC SNMIMT. Get notified about upcoming deadlines, funding, and campus events.",
     }
   };
 }
@@ -61,7 +67,7 @@ export default async function AnnouncementsPage() {
             "@type": "CollectionPage",
             "name": "IEDC SNMIMT Announcements",
             "description": "Stay updated with the latest news, announcements, and notices from IEDC SNMIMT.",
-            "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/announcements`
+            "url": `${getBaseUrl()}/announcements`
           })
         }}
       />

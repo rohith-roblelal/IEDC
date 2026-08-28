@@ -1,25 +1,32 @@
+import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import EventsClient from "./EventsClient";
 import { EventsAPI } from "@/lib/api/events";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
   return {
     title: "Events",
     description: "Discover upcoming and past events hosted by IEDC SNMIMT. Register for our hackathons, technical workshops, ideathons, and exclusive student innovation programs.",
     alternates: {
-      canonical: `${baseUrl}/events`,
+      canonical: '/events',
     },
     openGraph: {
       title: "Events | IEDC SNMIMT",
       description: "Discover upcoming and past events hosted by IEDC SNMIMT. Register for our hackathons, technical workshops, ideathons, and exclusive student innovation programs.",
       url: `${baseUrl}/events`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Events | IEDC SNMIMT",
+      description: "Discover upcoming and past events hosted by IEDC SNMIMT. Register for our hackathons, technical workshops, ideathons, and exclusive student innovation programs.",
     }
   };
 }
 
 export default async function EventsPage() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
   let upcomingEvents = [];
   let pastEvents = [];
 

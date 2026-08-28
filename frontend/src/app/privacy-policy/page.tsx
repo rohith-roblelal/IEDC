@@ -2,7 +2,10 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Privacy Policy for IEDC SNMIMT",
+  description: "Read IEDC SNMIMT's privacy policy covering data collection, usage, storage, and your rights as a user.",
+  alternates: {
+    canonical: '/privacy-policy',
+  },
 };
 
 export default function PrivacyPolicyPage() {

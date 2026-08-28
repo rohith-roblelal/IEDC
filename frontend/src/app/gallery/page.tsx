@@ -1,18 +1,19 @@
+import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import GalleryClient from "./GalleryClient";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  
   return {
     title: "Gallery",
     description: "Explore the IEDC SNMIMT event gallery. View highlights, photos, and posters from our recent hackathons, technical workshops, and entrepreneurship programs.",
     alternates: {
-      canonical: `${baseUrl}/gallery`,
+      canonical: '/gallery',
     },
     openGraph: {
       title: "Event Gallery | IEDC SNMIMT",
       description: "Explore the IEDC SNMIMT event gallery. View highlights, photos, and posters from our recent hackathons, technical workshops, and entrepreneurship programs.",
-      url: `${baseUrl}/gallery`,
+      url: `${getBaseUrl()}/gallery`,
     },
     twitter: {
       card: "summary_large_image",
@@ -28,7 +29,7 @@ export default function GalleryPage() {
     "@type": "ImageGallery",
     "name": "IEDC SNMIMT Event Gallery",
     "description": "Posters and highlights from our incredible events.",
-    "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/gallery`,
+    "url": `${getBaseUrl()}/gallery`,
     "publisher": {
       "@type": "Organization",
       "name": "IEDC SNMIMT"

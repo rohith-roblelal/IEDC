@@ -1,72 +1,60 @@
 import { MetadataRoute } from 'next';
 
-export const revalidate = 86400; // Cache sitemap for 24 hours
+export const revalidate = 86400; // Cache sitemap for 24 hours (ISR)
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://iedcsnmimt.com';
+  const rawBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://iedcsnmimt.com';
+  // Safely normalize trailing slash
+  const baseUrl = rawBaseUrl.replace(/\/$/, '');
 
-  // Base routes
+  // Prevent exposing sitemap on preview or staging environments
+  const isPreviewOrStaging = 
+    process.env.NEXT_PUBLIC_ENVIRONMENT === 'preview' || 
+    process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging' ||
+    baseUrl.includes('vercel.app');
+
+  if (isPreviewOrStaging) {
+    return [];
+  }
+
+  // Known public static routes (excluding private/admin routes)
   const routes: MetadataRoute.Sitemap = [
-    {
-      url: `${baseUrl}`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/events`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/startups`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/team`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/gallery`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
+    { url: `${baseUrl}` },
+    { url: `${baseUrl}/events` },
+    { url: `${baseUrl}/startups` },
+    { url: `${baseUrl}/team` },
+    { url: `${baseUrl}/about` },
+    { url: `${baseUrl}/gallery` },
+    { url: `${baseUrl}/announcements` },
+    { url: `${baseUrl}/contact` },
+    { url: `${baseUrl}/privacy-policy` },
+    { url: `${baseUrl}/terms` },
   ];
 
   try {
-    // Fetch dynamic content
-    // Use an absolute URL that hits our backend, not the Next.js API route if this is SSR.
-    // If NEXT_PUBLIC_API_URL is configured, use it. Otherwise fallback to localhost.
+    // Re-use existing backend fetch abstraction by hitting the configured backend API
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
+    // Fetch published content in parallel to avoid N+1 queries.
+    // Relying on backend filtering for publication status and valid data.
     const [eventsRes, startupsRes, announcementsRes] = await Promise.all([
       fetch(`${apiUrl}/events?is_published=true`),
-      fetch(`${apiUrl}/startups`), // public startup endpoint handles published logic
-      fetch(`${apiUrl}/announcements`)
+      fetch(`${apiUrl}/startups?is_published=true`),
+      fetch(`${apiUrl}/announcements?is_published=true`)
     ]);
 
     if (eventsRes.ok) {
       const eventsData = await eventsRes.json();
       const events = eventsData.items || (Array.isArray(eventsData) ? eventsData : []);
       events.forEach((event: any) => {
-        routes.push({
-          url: `${baseUrl}/events/${event.slug || event.id}`,
-          lastModified: new Date(event.updated_at || event.created_at || Date.now()),
-          changeFrequency: 'weekly',
-          priority: 0.8,
-        });
+        // Exclude records without a valid slug
+        if (event.slug) {
+          const route: any = { url: `${baseUrl}/events/${event.slug}` };
+          if (event.updated_at || event.created_at) {
+            route.lastModified = new Date(event.updated_at || event.created_at);
+          }
+          routes.push(route);
+        }
       });
     }
 
@@ -74,12 +62,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const startupsData = await startupsRes.json();
       const startups = startupsData.items || (Array.isArray(startupsData) ? startupsData : []);
       startups.forEach((startup: any) => {
-        routes.push({
-          url: `${baseUrl}/startups/${startup.slug || startup.id}`,
-          lastModified: new Date(startup.updated_at || startup.created_at || Date.now()),
-          changeFrequency: 'monthly',
-          priority: 0.8,
-        });
+        if (startup.slug) {
+          const route: any = { url: `${baseUrl}/startups/${startup.slug}` };
+          if (startup.updated_at || startup.created_at) {
+            route.lastModified = new Date(startup.updated_at || startup.created_at);
+          }
+          routes.push(route);
+        }
       });
     }
 
@@ -87,17 +76,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const announcementsData = await announcementsRes.json();
       const announcements = announcementsData.items || (Array.isArray(announcementsData) ? announcementsData : []);
       announcements.forEach((ann: any) => {
-        routes.push({
-          url: `${baseUrl}/announcements/${ann.slug || ann.id}`,
-          lastModified: new Date(ann.updated_at || ann.created_at || Date.now()),
-          changeFrequency: 'weekly',
-          priority: 0.8,
-        });
+        if (ann.slug) {
+          const route: any = { url: `${baseUrl}/announcements/${ann.slug}` };
+          if (ann.updated_at || ann.created_at) {
+            route.lastModified = new Date(ann.updated_at || ann.created_at);
+          }
+          routes.push(route);
+        }
       });
     }
   } catch (error) {
+    // Graceful degradation: Log error but return whatever static/dynamic routes we have so far
     console.error('Error generating dynamic sitemap:', error);
   }
 
-  return routes;
+  // Deduplicate URLs to prevent SEO penalties
+  const uniqueRoutes = Array.from(new Map(routes.map(item => [item.url, item])).values());
+
+  return uniqueRoutes;
 }
