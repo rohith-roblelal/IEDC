@@ -146,6 +146,28 @@ This document tracks the ongoing development, features implemented, and upcoming
 
 The remaining work has been organized into structured production sprints. Each sprint has clearly defined objectives, implementation tasks, and exit criteria to ensure the application is production-ready before deployment.
 
+### 📈 Technical SEO & Performance Roadmap (Active)
+
+We are currently executing a 14-step SEO and frontend performance roadmap:
+
+**Completed:**
+* ✅ 01 — `robots.ts`
+* ✅ 02 — `sitemap.ts`
+* ✅ 03 — Canonical URLs
+* ✅ 04 — OG/Twitter metadata
+* ✅ 05 — `llms.txt`
+* ✅ 06 — Organization JSON-LD
+* ✅ 07 — Event JSON-LD
+* ✅ 08 — Breadcrumb JSON-LD
+* ✅ 09 — Favicon / Icons + Web Manifest
+* ✅ 10 — Next.js `<Image>` Migration
+
+**Next Steps (Pending):**
+* ⏳ 11 — Responsive image sizing (Configuring `sizes` attribute for LCP/optimization)
+* ⏳ 12 — Proper alt (Accessibility sweep for missing or unhelpful image alt text)
+* ⏳ 13 — Gallery optimization (Specific lazy-loading and layout logic for the masonry/grid gallery)
+* ⏳ 14 — Event poster/hero optimization (Preloading and strict LCP optimization for above-the-fold banners)
+
 ---
 
 # 🚀 Sprint 4 — Authentication & Security (Highest Priority)
