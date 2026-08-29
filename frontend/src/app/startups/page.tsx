@@ -1,6 +1,7 @@
 import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import StartupsClient from "./StartupsClient";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -34,6 +35,13 @@ export default function StartupsPage() {
 
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", item: getBaseUrl() },
+          { name: "Startups", item: `${getBaseUrl()}/startups` },
+        ]}
+      />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}

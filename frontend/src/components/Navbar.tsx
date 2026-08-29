@@ -35,15 +35,17 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-[#0A0E27]/80 backdrop-blur-md border-b border-white/10">
       <div className="max-w-[1100px] mx-auto px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative h-[22px] w-[22px] transition-transform group-hover:scale-105">
-            <Image 
-              src={settings.logo_url || "/logo.png"} 
-              alt={`${settings.site_name} Logo`} 
-              fill
-              sizes="22px"
-              className="object-contain"
-            />
-          </div>
+          {settings.logo_url && (
+            <div className="relative h-[22px] w-[22px] transition-transform group-hover:scale-105">
+              <Image 
+                src={settings.logo_url} 
+                alt={`${settings.site_name} Logo`} 
+                fill
+                sizes="22px"
+                className="object-contain"
+              />
+            </div>
+          )}
           <span className="font-bold text-lg text-white tracking-wide">{settings.site_name}</span>
         </Link>
 

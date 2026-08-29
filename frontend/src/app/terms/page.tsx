@@ -1,4 +1,6 @@
 import { Metadata } from "next";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import { getBaseUrl } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Terms of Service",

@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { EventsAPI, EventResponse } from "@/lib/api/events";
 import EventDetailClient from "./EventDetailClient";
 import JsonLd from "@/components/seo/JsonLd";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 const baseUrl = getBaseUrl();
 
@@ -75,41 +76,40 @@ export default async function EventDetailPage({ params }: Props) {
     CANCELLED: "https://schema.org/EventCancelled",
   };
 
+  // Strip HTML for safe plain text description
+  const safeDescription = event.short_description || 
+    (event.description ? event.description.replace(/<[^>]*>?/gm, '').substring(0, 160).trim() : "");
+
   const eventJsonLd = {
+    "@id": `${baseUrl}/events/${slug}#event`,
+    url: `${baseUrl}/events/${slug}`,
     name: event.title,
-    description: event.short_description || event.description.substring(0, 160),
-    image: event.banner_url,
+    description: safeDescription,
+    ...(event.banner_url ? { image: event.banner_url } : {}),
     startDate: event.start_datetime,
-    endDate: event.end_datetime || event.start_datetime,
-    eventStatus: statusMap[event.status] || "https://schema.org/EventScheduled",
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    location: {
-      "@type": "Place",
-      name: event.venue || "IEDC SNMIMT",
-    },
+    ...(event.end_datetime ? { endDate: event.end_datetime } : {}),
+    ...(event.status && statusMap[event.status] ? { eventStatus: statusMap[event.status] } : {}),
+    ...(event.venue ? {
+      location: {
+        "@type": "Place",
+        name: event.venue,
+      }
+    } : {}),
     organizer: {
       "@type": "Organization",
-      name: "IEDC SNMIMT",
-      url: baseUrl,
+      "@id": `${baseUrl}/#organization`,
     }
   };
 
-  const breadcrumbJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
-      { "@type": "ListItem", "position": 2, "name": "Events", "item": `${baseUrl}/events` },
-      { "@type": "ListItem", "position": 3, "name": event.title, "item": `${baseUrl}/events/${slug}` },
-    ]
-  };
-
-  return (
+    return (
     <main>
       <JsonLd type="Event" data={eventJsonLd} />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", item: baseUrl },
+          { name: "Events", item: `${baseUrl}/events` },
+          { name: event.title, item: `${baseUrl}/events/${slug}` },
+        ]}
       />
       <EventDetailClient event={event} />
     </main>

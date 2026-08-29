@@ -6,6 +6,7 @@ import {
   Settings, Palette, Home, Info, Mail, Share2, Search, Sliders,
   Save, Upload, Loader2, CheckCircle, Plus, Trash2, Image
 } from "lucide-react";
+import NextImage from "next/image";
 import { useToast } from "@/components/ui/ToastProvider";
 import { revalidateSettings } from "./actions";
 import { clientFetch } from "@/lib/api/client";
@@ -59,7 +60,9 @@ const ImageUploadField = ({ label, urlKey, inputRef, endpoint, settings, field, 
     <label className="block text-sm font-medium text-[#C4C4D4] mb-1.5">{label}</label>
     <div className="flex items-center gap-4">
       {settings?.[urlKey] ? (
-        <img src={settings[urlKey]} alt={label} className="w-16 h-16 rounded-lg object-contain bg-[#0A0E27] border border-white/5 p-1" />
+        <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-[#0A0E27] border border-white/5">
+          <NextImage src={settings[urlKey]} alt={label} fill className="object-contain p-1" />
+        </div>
       ) : (
         <div className="w-16 h-16 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/30">
           <Image size={24} />

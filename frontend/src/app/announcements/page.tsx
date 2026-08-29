@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Megaphone, Pin, Clock, ChevronRight } from "lucide-react";
 import { AnnouncementsAPI, AnnouncementResponse } from "@/lib/api/announcements";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {

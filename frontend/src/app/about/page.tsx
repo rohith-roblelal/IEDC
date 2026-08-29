@@ -1,6 +1,7 @@
 import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import AboutClient from "./AboutClient";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export async function generateMetadata(): Promise<Metadata> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
@@ -44,14 +45,19 @@ export default function AboutPage() {
     "description": "Fostering and nurturing innovations combined with entrepreneurship.",
     "url": `${getBaseUrl()}/about`,
     "mainEntity": {
-      "@type": "Organization",
-      "name": "IEDC SNMIMT",
-      "url": getBaseUrl(),
+      "@id": `${getBaseUrl()}/#organization`
     }
   };
 
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", item: getBaseUrl() },
+          { name: "About", item: `${getBaseUrl()}/about` },
+        ]}
+      />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}

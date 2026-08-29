@@ -6,6 +6,7 @@ import { Clock, Pin } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AnnouncementsAPI } from "@/lib/api/announcements";
 import JsonLd from "@/components/seo/JsonLd";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -98,6 +99,13 @@ export default async function AnnouncementDetailPage({ params }: Props) {
 
   return (
     <main className="py-24 px-6 relative max-w-3xl mx-auto min-h-screen">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", item: baseUrl },
+          { name: "Announcements", item: `${baseUrl}/announcements` },
+          { name: announcement.title, item: `${baseUrl}/announcements/${slug}` },
+        ]}
+      />
       <JsonLd type="Article" data={jsonLdData} />
       <nav aria-label="Breadcrumb" className="mb-8 text-sm font-medium">
         <ol className="flex items-center space-x-2 text-[#C4C4D4]">

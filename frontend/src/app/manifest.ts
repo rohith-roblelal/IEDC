@@ -4,36 +4,19 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "IEDC SNMIMT",
     short_name: "IEDC SNMIMT",
-    description: "Innovation and Entrepreneurship Development Cell at SNMIMT",
+    description: "Innovation and Entrepreneurship Development Cell at SNM Institute of Management and Technology, Kerala.",
     start_url: "/",
+    scope: "/",
     display: "standalone",
-    background_color: "#0A0E27",
-    theme_color: "#3B82F6",
     orientation: "portrait",
+    background_color: "#05081A",
+    theme_color: "#A855F7",
     icons: [
       {
-        src: "/logo.png",
-        sizes: "192x192",
+        src: "/icon.png",
+        sizes: "256x256",
         type: "image/png",
         purpose: "any",
-      },
-      {
-        src: "/logo.png",
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "maskable",
-      },
-      {
-        src: "/logo.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any",
-      },
-      {
-        src: "/logo.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable",
       },
     ],
   };

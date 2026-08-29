@@ -87,6 +87,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Allow local network devices (e.g. phones, other machines) to access
+  // the Next.js dev server without cross-origin resource blocks.
+  // This setting has zero effect in production builds.
+  allowedDevOrigins: ['192.168.1.36', '192.168.1.*'],
 };
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({

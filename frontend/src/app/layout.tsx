@@ -48,11 +48,13 @@ export async function generateMetadata(): Promise<Metadata> {
       ? {
           icon: settings.favicon_url,
           shortcut: settings.favicon_url,
-          apple: settings.favicon_url,
+          // Apple touch icon always uses the verified local asset.
+          // The admin-uploaded favicon_url may not meet Apple's 180×180 requirement.
+          apple: "/apple-icon.png",
         }
       : {
           icon: "/favicon.ico",
-          apple: "/logo.png",
+          apple: "/apple-icon.png",
         },
     manifest: "/manifest.webmanifest",
     openGraph: {
@@ -93,24 +95,46 @@ export default async function RootLayout({
       <head suppressHydrationWarning>
       </head>
       <body suppressHydrationWarning className={`${poppins.variable} font-sans bg-[radial-gradient(circle_at_75%_20%,#3D1A5C,#0D1030_70%)] bg-fixed bg-[#0D1030] text-white antialiased min-h-screen flex flex-col relative`}>
+        {/* Organization JSON-LD — Step 06: Schema.org structured data for IEDC SNMIMT */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "EducationalOrganization",
+              // Organization (not EducationalOrganization): IEDC SNMIMT is the
+              // innovation/entrepreneurship cell — not the host institution itself.
+              "@type": "Organization",
+              // Stable identifier — referenced by future Event and Breadcrumb schema.
+              "@id": `${getBaseUrl()}/#organization`,
               "name": initialSettings?.site_name || "IEDC SNMIMT",
               "url": getBaseUrl(),
-              "logo": initialSettings?.logo_url,
-              "description": initialSettings?.about_description || "Innovation and Entrepreneurship Development Cell at SNMIMT",
+              "description": initialSettings?.about_description ||
+                "IEDC has been developed to foster and nurture innovations combined with entrepreneurship amongst young minds.",
+              // Logo: include only when a public URL is available from settings.
+              // If settings.logo_url is null (default), the property is omitted via
+              // JSON.stringify dropping undefined values.
+              ...(initialSettings?.logo_url
+                ? { "logo": initialSettings.logo_url }
+                : {}),
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Maliankara P.O, Moothankunnam",
+                "addressLocality": "Ernakulam",
+                "addressRegion": "Kerala",
+                "postalCode": "683516",
+                "addressCountry": "IN",
+              },
+              // Only the three verified social profiles are included.
+              // twitter_url, youtube_url, github_url are NOT included — they are
+              // unverified in the authoritative application defaults.
               "sameAs": [
-                initialSettings?.facebook_url,
-                initialSettings?.instagram_url,
-                initialSettings?.linkedin_url,
-                initialSettings?.twitter_url,
-                initialSettings?.youtube_url,
-                initialSettings?.github_url,
-              ].filter(Boolean)
+                initialSettings?.facebook_url ||
+                  "https://www.facebook.com/people/Iedc-Snmimt/61555494891838/",
+                initialSettings?.instagram_url ||
+                  "https://www.instagram.com/iedc.snm",
+                initialSettings?.linkedin_url ||
+                  "https://www.linkedin.com/in/iedcsnmimt/",
+              ],
             })
           }}
         />

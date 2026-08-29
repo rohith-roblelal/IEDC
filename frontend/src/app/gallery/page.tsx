@@ -1,6 +1,7 @@
 import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import GalleryClient from "./GalleryClient";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export async function generateMetadata(): Promise<Metadata> {
   
@@ -38,6 +39,13 @@ export default function GalleryPage() {
 
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", item: getBaseUrl() },
+          { name: "Gallery", item: `${getBaseUrl()}/gallery` },
+        ]}
+      />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}

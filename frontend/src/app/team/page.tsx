@@ -1,6 +1,7 @@
 import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import TeamClient from "./TeamClient";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -32,13 +33,19 @@ export default function TeamPage() {
     "description": "Meet the dedicated team behind IEDC SNMIMT, driving innovation and entrepreneurship on campus.",
     "url": `${getBaseUrl()}/team`,
     "about": {
-      "@type": "Organization",
-      "name": "IEDC SNMIMT"
+      "@id": `${getBaseUrl()}/#organization`
     }
   };
 
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", item: getBaseUrl() },
+          { name: "Team", item: `${getBaseUrl()}/team` },
+        ]}
+      />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}

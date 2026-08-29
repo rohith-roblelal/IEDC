@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { UploadCloud, X, Loader2 } from "lucide-react";
 import { clientFetch } from "@/lib/api/client";
+import NextImage from "next/image";
 
 interface ImageUploadProps {
   value: string | null | undefined;
@@ -64,7 +65,7 @@ export function ImageUpload({ value, onChange, folder }: ImageUploadProps) {
       
       {value ? (
         <div className="relative rounded-xl border border-white/10 overflow-hidden bg-[#0D1030] group w-full aspect-video md:aspect-auto md:h-48">
-          <img src={value} alt="Uploaded preview" className="w-full h-full object-cover" />
+          <NextImage src={value} alt="Uploaded preview" fill className="object-cover" />
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <button
               type="button"

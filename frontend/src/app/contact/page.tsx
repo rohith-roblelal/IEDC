@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import ContactClient from "./ContactClient";
 import { clientFetch } from "@/lib/api/client";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import { getBaseUrl } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
   let title = "Contact | IEDC SNMIMT";

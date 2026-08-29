@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import StartupsClient from "../StartupsClient";
 import { startupsApi } from "@/lib/api/startups";
 import JsonLd from "@/components/seo/JsonLd";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -86,22 +87,15 @@ export default async function StartupDetailPage({ params }: Props) {
     }
   };
 
-  const breadcrumbJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
-      { "@type": "ListItem", "position": 2, "name": "Startups", "item": `${baseUrl}/startups` },
-      { "@type": "ListItem", "position": 3, "name": startup.name, "item": `${baseUrl}/startups/${slug}` },
-    ]
-  };
-
-  return (
+    return (
     <main>
       <JsonLd type="Organization" data={schema} />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", item: baseUrl },
+          { name: "Startups", item: `${baseUrl}/startups` },
+          { name: startup.name, item: `${baseUrl}/startups/${slug}` },
+        ]}
       />
       {/* AI GEO Summary Block */}
       <section className="sr-only" aria-label="Quick Summary">

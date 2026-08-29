@@ -2,6 +2,7 @@ import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import EventsClient from "./EventsClient";
 import { EventsAPI } from "@/lib/api/events";
+import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
 
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = getBaseUrl();
@@ -54,6 +55,13 @@ export default async function EventsPage() {
 
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", item: getBaseUrl() },
+          { name: "Events", item: `${getBaseUrl()}/events` },
+        ]}
+      />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
