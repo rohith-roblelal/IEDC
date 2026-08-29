@@ -61,7 +61,7 @@ const ImageUploadField = ({ label, urlKey, inputRef, endpoint, settings, field, 
     <div className="flex items-center gap-4">
       {settings?.[urlKey] ? (
         <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-[#0A0E27] border border-white/5">
-          <NextImage src={settings[urlKey]} alt={label} fill className="object-contain p-1" />
+          <NextImage src={settings[urlKey]} alt={label} fill sizes="64px" className="object-contain p-1" />
         </div>
       ) : (
         <div className="w-16 h-16 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/30">

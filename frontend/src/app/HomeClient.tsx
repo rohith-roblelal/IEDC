@@ -145,10 +145,11 @@ export default function HomeClient({ announcements = [], podcasts = [], partners
             >
               <Image 
                 src={settings.hero_image_url || "/hero_banner.jpg"} 
-                alt={`${settings.site_name || 'IEDC'} Hero Banner`} 
+                alt=""
                 width={400}
                 height={400}
                 priority={true}
+                sizes="(max-width: 768px) 100vw, 400px"
                 className="object-contain w-full max-w-[400px] h-auto mix-blend-screen" 
               />
             </motion.div>
@@ -354,6 +355,7 @@ export default function HomeClient({ announcements = [], podcasts = [], partners
                       src={selectedPartner.image_url} 
                       alt={selectedPartner.name} 
                       fill
+                      sizes="160px"
                       className="object-contain p-2" 
                     />
                   </div>

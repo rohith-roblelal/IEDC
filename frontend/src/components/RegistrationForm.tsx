@@ -250,7 +250,7 @@ export function RegistrationForm({ event, onSuccess, onCancel }: RegistrationFor
                 <p className="text-xs text-gray-600 mb-3">Please scan the QR code to complete payment, then upload the screenshot below.</p>
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   <div className="relative w-[150px] aspect-square rounded-lg shadow-sm border border-gray-200 overflow-hidden shrink-0">
-                    <Image src={field.qr_image_url} alt="Payment QR Code" fill sizes="150px" className="object-contain" />
+                    <Image src={field.qr_image_url} alt="Payment QR code" fill sizes="150px" className="object-contain" />
                   </div>
                   <div className="flex-1 w-full">
                     <label className="block text-sm font-medium text-white mb-2">Upload Payment Screenshot *</label>

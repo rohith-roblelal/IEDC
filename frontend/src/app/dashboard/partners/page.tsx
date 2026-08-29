@@ -218,7 +218,7 @@ export default function PartnersPage() {
                     <td className="px-6 py-4">
                       {partner.image_url ? (
                         <div className="relative w-16 h-12 rounded bg-white overflow-hidden flex items-center justify-center p-1.5 shadow-sm">
-                          <Image src={partner.image_url} alt={partner.name} fill className="object-contain" />
+                          <Image src={partner.image_url} alt={partner.name} fill sizes="64px" className="object-contain" />
                         </div>
                       ) : (
                         <div className="w-16 h-12 rounded bg-white/10 flex items-center justify-center p-1 text-[#C4C4D4] text-xs font-bold text-center leading-tight shadow-sm border border-white/5">

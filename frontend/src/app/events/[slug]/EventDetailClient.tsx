@@ -49,7 +49,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
           <div className="w-full h-64 md:h-96 relative">
             <Image 
               src={event.banner_url} 
-              alt={event.title || "Event Banner"} 
+              alt={event.title || ""} 
               fill
               sizes="100vw"
               className="object-contain p-4 md:p-8" 

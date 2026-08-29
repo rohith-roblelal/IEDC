@@ -234,7 +234,7 @@ export default function TeamPage() {
                       <div className="flex items-center gap-4">
                         {member.photo_url ? (
                           <div className="relative w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0 bg-[#0A0E27]">
-                            <Image src={member.photo_url} alt={member.name} fill className="object-cover" />
+                            <Image src={member.photo_url} alt={member.name} fill sizes="40px" className="object-cover" />
                           </div>
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold shrink-0">

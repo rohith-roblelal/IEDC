@@ -66,9 +66,9 @@ export default function GalleryClient() {
                 >
                   <Image 
                     src={img.image_url} 
-                    alt={img.description || "Gallery item"} 
+                    alt={img.description || ""} 
                     fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                     className="object-cover transition-transform duration-700 group-hover:scale-105" 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6 z-10">
@@ -115,7 +115,7 @@ export default function GalleryClient() {
                 exit={{ scale: 0.95, opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 src={selectedImage.image_url} 
-                alt={selectedImage.description || "Enlarged view"} 
+                alt={selectedImage.description || ""} 
                 className="max-w-full max-h-[70vh] object-contain rounded-xl shadow-2xl"
               />
               {selectedImage.description && (

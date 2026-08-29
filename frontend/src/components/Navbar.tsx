@@ -39,7 +39,7 @@ export default function Navbar() {
             <div className="relative h-[22px] w-[22px] transition-transform group-hover:scale-105">
               <Image 
                 src={settings.logo_url} 
-                alt={`${settings.site_name} Logo`} 
+                alt=""
                 fill
                 sizes="22px"
                 className="object-contain"

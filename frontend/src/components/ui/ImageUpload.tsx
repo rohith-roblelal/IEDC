@@ -65,7 +65,7 @@ export function ImageUpload({ value, onChange, folder }: ImageUploadProps) {
       
       {value ? (
         <div className="relative rounded-xl border border-white/10 overflow-hidden bg-[#0D1030] group w-full aspect-video md:aspect-auto md:h-48">
-          <NextImage src={value} alt="Uploaded preview" fill className="object-cover" />
+          <NextImage src={value} alt="" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <button
               type="button"

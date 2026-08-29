@@ -176,10 +176,9 @@ export default function GalleryPage() {
                 <div className="absolute inset-0 z-0">
                   <Image 
                     src={img.image_url} 
-                    alt={img.description || "Gallery item"} 
+                    alt={img.description || ""} 
                     fill 
-                    priority={idx < 6}
-                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1200px) 25vw, 20vw"
                     className="object-cover transition-transform duration-700 group-hover:scale-105" 
                   />
                 </div>

@@ -20,7 +20,7 @@ export function EventCard({ event }: EventCardProps) {
           <div className="w-full h-40 relative rounded-xl mb-2 bg-black/20 overflow-hidden">
             <Image 
               src={event.banner_url} 
-              alt={event.title || "Event Banner"} 
+              alt={event.title || ""} 
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-contain" 

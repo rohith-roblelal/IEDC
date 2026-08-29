@@ -28,7 +28,7 @@ export default function Footer() {
                 <div className="relative h-6 w-6">
                   <Image 
                     src={settings.logo_url} 
-                    alt={`${settings.site_name} Logo`} 
+                    alt=""
                     fill
                     sizes="24px"
                     className="object-contain"

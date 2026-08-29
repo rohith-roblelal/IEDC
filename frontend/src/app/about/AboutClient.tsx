@@ -164,7 +164,7 @@ export default function AboutClient() {
               <Image 
                 className="object-cover grayscale hover:grayscale-0 transition-all duration-700" 
                 src={settings?.about_inspiration_image_url || "https://iedcsnmimt.vercel.app/static/media/steve.0ead07c00054eb156af5.png"}
-                alt={settings?.about_inspiration_author || "Inspiration Portrait"} 
+                alt=""
                 fill
                 sizes="(max-width: 768px) 100vw, 320px"
               />
