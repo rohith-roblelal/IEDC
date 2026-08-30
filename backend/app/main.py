@@ -61,7 +61,12 @@ async def lifespan(app: FastAPI):
             await conn.execute(text("SELECT 1"))
         logger.info("database_connected")
     except Exception as e:
-        logger.critical("database_startup_validation_failed", error=str(e))
+        logger.warning(
+            "database_startup_validation_failed",
+            error=str(e),
+            environment=settings.ENVIRONMENT,
+            message="Continuing startup in non-production mode; database connectivity is degraded.",
+        )
         if settings.ENVIRONMENT != "development":
             raise RuntimeError(f"Critical startup dependency failed: PostgreSQL {e}")
 
@@ -248,7 +253,7 @@ if settings.FRONTEND_URLS:
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "Accept", "Cookie", "X-Requested-With"],
     )
 
@@ -258,6 +263,6 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 def root():
     return {"message": f"Welcome to the {settings.PROJECT_NAME} API"}
