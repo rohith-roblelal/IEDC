@@ -24,7 +24,7 @@ from app.schemas.schemas import Token, ForgotPasswordRequest, ResetPasswordReque
 from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.api.dependencies import oauth2_scheme, get_current_user
-from app.models.models import TokenBlocklist, PasswordResetToken, UserSession
+from app.models.models import TokenBlocklist, PasswordResetToken, UserSession, User
 from app.api.middleware.turnstile import verify_bot_token
 from app.services.audit import log_audit_event
 from app.services.email import email_service
@@ -429,6 +429,6 @@ async def reset_password(
     valid_token_obj.used_at = datetime.now(timezone.utc)
     
     await db.commit()
-    await log_audit_event(db, "PASSWORD_RESET_COMPLETED", user_id=user.id, ip_address=client_ip)
-    
+    await log_audit_event(db, "PASSWORD_RESET_COMPLETED", user_id=updated_user.id, ip_address=client_ip)
+
     return {"status": "success", "message": "Password has been successfully reset"}
