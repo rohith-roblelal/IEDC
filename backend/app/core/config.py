@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     # Security / JWT
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 8  # 8 hours — reduce further in high-security environments
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
     
     # CORS
     FRONTEND_URLS: str = "http://localhost:3000,http://127.0.0.1:3000"
@@ -31,6 +33,11 @@ class Settings(BaseSettings):
     REDIS_SOCKET_TIMEOUT: int = 5
     REDIS_HEALTH_CHECK_INTERVAL: int = 30
 
+    # JWT / Sessions
+    JWT_ALGORITHM: Literal["HS256"] = "HS256"
+    JWT_ISSUER: str = "iedc-snmimt"
+    JWT_AUDIENCE: Optional[str] = None
+
     # Super Admin Init
     FIRST_SUPERADMIN_PASSWORD: str
 
@@ -43,9 +50,9 @@ class Settings(BaseSettings):
     # Email
     EMAIL_FROM: str = "IEDC SNMIMT <noreply@iedcsnmimt.com>"
     EMAIL_FROM_NAME: str = "IEDC SNMIMT"
+    RESEND_API_KEY: Optional[str] = None
     
     # Observability
-    RESEND_API_KEY: Optional[str] = None
     TURNSTILE_SECRET_KEY: Optional[str] = None
     OTEL_EXPORTER_OTLP_ENDPOINT: Optional[str] = None
     
@@ -113,6 +120,8 @@ class Settings(BaseSettings):
                  raise ValueError("MAX_UPLOAD_SIZE_MB must be greater than 0.")
             if self.ACCESS_TOKEN_EXPIRE_MINUTES <= 0:
                  raise ValueError("ACCESS_TOKEN_EXPIRE_MINUTES must be greater than 0.")
+            if not self.RESEND_API_KEY or not self.RESEND_API_KEY.strip():
+                 raise ValueError("RESEND_API_KEY is required in production.")
         return self
 
 settings = Settings()

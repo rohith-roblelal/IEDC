@@ -39,6 +39,25 @@ class TokenBlocklist(Base):
     jti: Mapped[str] = mapped_column(String(36), primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    token_family: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    refresh_token_hash: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    refresh_token_jti: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    user_agent: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    last_used_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    revoked_reason: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+
+    user = relationship("User", backref="sessions")
+
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
     

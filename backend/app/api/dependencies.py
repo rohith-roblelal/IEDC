@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 import jwt
@@ -10,7 +11,7 @@ from typing import Optional
 
 from app.core.config import settings
 from app.database.session import get_db
-from app.models.models import User, TokenBlocklist
+from app.models.models import User, TokenBlocklist, UserSession
 from app.models.enums import Role
 from app.schemas.schemas import TokenData
 
@@ -56,18 +57,48 @@ async def get_current_user(
 ) -> User:
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=["HS256"]
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer=settings.JWT_ISSUER,
+            audience=settings.JWT_AUDIENCE,
+            options={"require": ["exp", "sub", "role", "jti", "iat", "nbf"]},
         )
         jti = payload.get("jti")
+        session_id = payload.get("sid")
         token_data = TokenData(email=payload.get("sub"), role=payload.get("role"))
         if token_data.email is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-            
+
         # Check blocklist
         if jti:
             blocked_token = await db.execute(select(TokenBlocklist).where(TokenBlocklist.jti == jti))
             if blocked_token.scalars().first():
                 raise HTTPException(status_code=401, detail="Token has been revoked")
+
+        if session_id:
+            try:
+                session_uuid = uuid.UUID(str(session_id))
+            except (ValueError, TypeError):
+                raise HTTPException(status_code=401, detail="Invalid session token")
+
+            user_lookup = await db.execute(select(User).where(User.email == token_data.email, User.deleted_at.is_(None)))
+            user = user_lookup.scalars().first()
+            if user is None:
+                raise HTTPException(status_code=401, detail="User not found")
+
+            session_result = await db.execute(
+                select(UserSession).where(
+                    UserSession.id == session_uuid,
+                    UserSession.user_id == user.id,
+                    UserSession.is_active.is_(True),
+                    UserSession.revoked_at.is_(None),
+                    UserSession.expires_at > datetime.now(timezone.utc),
+                )
+            )
+            session = session_result.scalars().first()
+            if session is None:
+                raise HTTPException(status_code=401, detail="Session has been revoked or expired")
     except (PyJWTError, ValidationError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -106,16 +137,45 @@ async def get_optional_current_user(
         return None
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=["HS256"]
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer=settings.JWT_ISSUER,
+            audience=settings.JWT_AUDIENCE,
+            options={"require": ["exp", "sub", "role", "jti", "iat", "nbf"]},
         )
         jti = payload.get("jti")
+        session_id = payload.get("sid")
         token_data = TokenData(email=payload.get("sub"), role=payload.get("role"))
         if token_data.email is None:
             return None
-            
+
         if jti:
             blocked_token = await db.execute(select(TokenBlocklist).where(TokenBlocklist.jti == jti))
             if blocked_token.scalars().first():
+                return None
+
+        if session_id:
+            try:
+                session_uuid = uuid.UUID(str(session_id))
+            except (ValueError, TypeError):
+                return None
+
+            user_lookup = await db.execute(select(User).where(User.email == token_data.email, User.deleted_at.is_(None)))
+            user = user_lookup.scalars().first()
+            if user is None:
+                return None
+
+            session_result = await db.execute(
+                select(UserSession).where(
+                    UserSession.id == session_uuid,
+                    UserSession.user_id == user.id,
+                    UserSession.is_active.is_(True),
+                    UserSession.revoked_at.is_(None),
+                    UserSession.expires_at > datetime.now(timezone.utc),
+                )
+            )
+            if session_result.scalars().first() is None:
                 return None
     except (PyJWTError, ValidationError):
         return None

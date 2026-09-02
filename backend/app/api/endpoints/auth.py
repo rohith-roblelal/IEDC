@@ -9,13 +9,22 @@ import secrets
 import uuid
 
 from app.database.session import get_db
-from app.auth.security import verify_password, create_access_token, needs_password_rehash, get_password_hash, generate_reset_token
+from app.auth.security import (
+    verify_password,
+    create_access_token,
+    create_refresh_token,
+    needs_password_rehash,
+    get_password_hash,
+    generate_reset_token,
+    hash_token_for_storage,
+    build_refresh_cookie_name,
+)
 from app.repositories.user import UserRepository
 from app.schemas.schemas import Token, ForgotPasswordRequest, ResetPasswordRequest
 from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.api.dependencies import oauth2_scheme, get_current_user
-from app.models.models import TokenBlocklist, PasswordResetToken
+from app.models.models import TokenBlocklist, PasswordResetToken, UserSession
 from app.api.middleware.turnstile import verify_bot_token
 from app.services.audit import log_audit_event
 from app.services.email import email_service
@@ -28,6 +37,28 @@ router = APIRouter()
 
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_DURATION_MINUTES = 15
+
+
+def _set_session_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False,
+        samesite="lax",
+        path="/",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+    response.set_cookie(
+        key=build_refresh_cookie_name(),
+        value=refresh_token,
+        httponly=True,
+        secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False,
+        samesite="lax",
+        path="/",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+    )
+
 
 @router.post("/login")
 @limiter.limit("5/minute")
@@ -84,22 +115,26 @@ async def login_access_token(
 
     auth_logger.info("login_success", user_id=str(user.id))
     await log_audit_event(db, "LOGIN_SUCCESS", user_id=user.id, ip_address=client_ip)
-    
-    access_token = create_access_token(
-        subject=user.email, role=user.role.value
+
+    session_id = uuid.uuid4()
+    token_family = str(uuid.uuid4())
+    refresh_token = create_refresh_token(str(session_id), token_family)
+    session = UserSession(
+        id=session_id,
+        user_id=user.id,
+        token_family=token_family,
+        refresh_token_hash=hash_token_for_storage(refresh_token),
+        refresh_token_jti=jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM], options={"verify_exp": False, "verify_aud": False, "verify_iss": False}).get("jti", str(uuid.uuid4())),
+        user_agent=request.headers.get("user-agent", "Unknown"),
+        ip_address=client_ip,
+        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
     )
-    
-    # Set HttpOnly cookie
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False,
-        samesite="lax",
-        path="/",
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    )
-    
+    db.add(session)
+    await db.commit()
+
+    access_token = create_access_token(subject=user.email, role=user.role.value, session_id=str(session_id))
+    _set_session_cookies(response, access_token, refresh_token)
+
     return {
         "message": "Login successful",
         "user": {
@@ -125,19 +160,27 @@ async def get_me(current_user=Depends(get_current_user)):
 @router.post("/logout")
 async def logout(
     request: Request,
-    response: Response, 
+    response: Response,
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Logout the user by adding the token to the blocklist and clearing the cookie.
+    Logout the user by revoking the active session and clearing the auth cookies.
     """
     client_ip = request.client.host if request.client else None
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer=settings.JWT_ISSUER,
+            audience=settings.JWT_AUDIENCE,
+            options={"require": ["exp", "sub", "role", "jti", "iat", "nbf"]},
+        )
         jti = payload.get("jti")
         email = payload.get("sub", "unknown")
-        
+        session_id = payload.get("sid")
+
         user_repo = UserRepository(db)
         user = await user_repo.get_by_email(email=email)
         user_id = user.id if user else None
@@ -145,20 +188,132 @@ async def logout(
         if jti:
             blocked_token = TokenBlocklist(jti=jti)
             db.add(blocked_token)
-            auth_logger.info("logout", user_id=str(user_id) if user_id else "unknown")
-            await log_audit_event(db, "LOGOUT", user_id=user_id, ip_address=client_ip)
-            await db.commit()
+
+        if session_id:
+            try:
+                session_uuid = uuid.UUID(str(session_id))
+            except (ValueError, TypeError):
+                session_uuid = None
+            if session_uuid is not None:
+                session_result = await db.execute(select(UserSession).where(UserSession.id == session_uuid, UserSession.user_id == user_id))
+                session = session_result.scalars().first()
+                if session is not None:
+                    session.revoked_at = datetime.now(timezone.utc)
+                    session.revoked_reason = "logout"
+                    session.is_active = False
+
+        auth_logger.info("logout", user_id=str(user_id) if user_id else "unknown")
+        await log_audit_event(db, "LOGOUT", user_id=user_id, ip_address=client_ip)
+        await db.commit()
     except jwt.InvalidTokenError:
         auth_logger.warning("logout_failed", reason="Invalid token")
         await log_audit_event(db, "LOGOUT_FAILED", ip_address=client_ip, metadata_json={"reason": "Invalid token"})
-        
-    response.delete_cookie(
-        key="access_token",
-        secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False,
-        samesite="lax",
-        path="/",
-    )
+
+    response.delete_cookie(key="access_token", secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False, samesite="lax", path="/")
+    response.delete_cookie(key=build_refresh_cookie_name(), secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False, samesite="lax", path="/")
     return {"status": "success", "message": "Logged out successfully"}
+
+
+@router.post("/refresh")
+@limiter.limit("10/minute")
+async def refresh_access_token(request: Request, response: Response, db: AsyncSession = Depends(get_db)):
+    refresh_token = request.cookies.get(build_refresh_cookie_name())
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+
+    try:
+        payload = jwt.decode(
+            refresh_token,
+            settings.SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer=settings.JWT_ISSUER,
+            audience=settings.JWT_AUDIENCE,
+            options={"require": ["exp", "sub", "sid", "fam", "jti", "iat", "nbf"]},
+        )
+    except jwt.InvalidTokenError as exc:
+        raise HTTPException(status_code=401, detail="Invalid refresh token") from exc
+
+    session_id = payload.get("sid")
+    family_id = payload.get("fam")
+    jti = payload.get("jti")
+    if not session_id or not family_id or not jti:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    try:
+        session_uuid = uuid.UUID(str(session_id))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Invalid refresh session")
+
+    session_result = await db.execute(
+        select(UserSession).where(
+            UserSession.id == session_uuid,
+            UserSession.token_family == family_id,
+            UserSession.is_active.is_(True),
+            UserSession.revoked_at.is_(None),
+            UserSession.expires_at > datetime.now(timezone.utc),
+        )
+    )
+    session = session_result.scalars().first()
+    if session is None:
+        raise HTTPException(status_code=401, detail="Refresh session is no longer valid")
+
+    if session.refresh_token_jti != jti:
+        session.revoked_at = datetime.now(timezone.utc)
+        session.revoked_reason = "refresh_reuse"
+        session.is_active = False
+        await db.commit()
+        await log_audit_event(db, "REFRESH_TOKEN_REUSE", user_id=session.user_id, ip_address=request.client.host if request.client else None)
+        raise HTTPException(status_code=401, detail="Refresh token replay detected")
+
+    user_result = await db.execute(select(User).where(User.id == session.user_id, User.deleted_at.is_(None)))
+    user = user_result.scalars().first()
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    new_refresh_token = create_refresh_token(str(session.id), session.token_family)
+    session.refresh_token_hash = hash_token_for_storage(new_refresh_token)
+    session.refresh_token_jti = jwt.decode(new_refresh_token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM], options={"verify_exp": False, "verify_aud": False, "verify_iss": False}).get("jti", str(uuid.uuid4()))
+    session.last_used_at = datetime.now(timezone.utc)
+    session.expires_at = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    await db.commit()
+
+    access_token = create_access_token(subject=user.email, role=user.role.value, session_id=str(session.id))
+    _set_session_cookies(response, access_token, new_refresh_token)
+    await log_audit_event(db, "REFRESH_SUCCESS", user_id=user.id, ip_address=request.client.host if request.client else None)
+    return {"status": "success", "message": "Session refreshed"}
+
+
+@router.post("/change-password")
+@limiter.limit("5/minute")
+async def change_password(
+    request: Request,
+    response: Response,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    body: dict = None,
+):
+    if body is None:
+        raise HTTPException(status_code=422, detail="Request body required")
+    current_password = body.get("current_password")
+    new_password = body.get("new_password")
+    if not current_password or not new_password:
+        raise HTTPException(status_code=400, detail="Current and new password are required")
+    if not verify_password(current_password, str(current_user.hashed_password)):
+        await log_audit_event(db, "PASSWORD_CHANGE_FAILED", user_id=current_user.id, ip_address=request.client.host if request.client else None)
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    current_user.hashed_password = get_password_hash(new_password)
+    current_user.failed_login_attempts = 0
+    current_user.locked_until = None
+    session_result = await db.execute(select(UserSession).where(UserSession.user_id == current_user.id, UserSession.is_active.is_(True), UserSession.revoked_at.is_(None)))
+    for session in session_result.scalars().all():
+        session.revoked_at = datetime.now(timezone.utc)
+        session.revoked_reason = "password_change"
+        session.is_active = False
+    await db.commit()
+    response.delete_cookie(key="access_token", secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False, samesite="lax", path="/")
+    response.delete_cookie(key=build_refresh_cookie_name(), secure=settings.ENVIRONMENT == "production" if hasattr(settings, "ENVIRONMENT") else False, samesite="lax", path="/")
+    await log_audit_event(db, "PASSWORD_CHANGE_COMPLETED", user_id=current_user.id, ip_address=request.client.host if request.client else None)
+    return {"status": "success", "message": "Password updated successfully"}
 
 @router.post("/forgot-password")
 @limiter.limit("3/minute")

@@ -19,18 +19,33 @@ class StorageService:
         """Validate file size and MIME type (including Magic Bytes)."""
         if allowed_types is None:
             allowed_types = [
-                "image/jpeg", "image/png", "image/webp", 
-                "image/gif", "image/svg+xml", "image/x-icon", 
-                "image/vnd.microsoft.icon", "image/ico", "application/octet-stream"
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/gif",
             ]
-            
+
+        lower_name = (file.filename or "").lower()
+        if lower_name.endswith((".svg", ".svgz")):
+            storage_logger.warning("upload_rejected", reason="disallowed_svg_extension", filename=file.filename)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="SVG uploads are not allowed for security reasons."
+            )
+
         # 1. Basic client content-type check
-        if not (file.content_type in allowed_types or file.content_type.startswith("image/")):
+        if file.content_type and file.content_type not in allowed_types:
             storage_logger.warning("upload_rejected", reason="invalid_content_type", content_type=file.content_type)
-            print(f"Rejected file upload. Content-Type: {file.content_type}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid file type: {file.content_type}. Allowed types: {', '.join(allowed_types)}"
+            )
+
+        if file.content_type == "application/octet-stream":
+            storage_logger.warning("upload_rejected", reason="generic_octet_stream", content_type=file.content_type)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Generic binary uploads are not allowed. Please upload a known image type."
             )
             
         # 2. Check maximum file size
@@ -52,14 +67,9 @@ class StorageService:
         mime = kind.mime if kind else None
         
         if mime:
-            if not (mime in allowed_types or mime.startswith("image/")):
+            if mime not in allowed_types:
                 storage_logger.warning("upload_rejected", reason="malicious_magic_bytes", detected_mime=mime)
                 raise HTTPException(status_code=400, detail=f"Malicious file type detected: {mime}")
-        elif file.content_type == "image/svg+xml" and "image/svg+xml" in allowed_types:
-            # SVG is XML text, filetype doesn't reliably guess it.
-            pass
-        elif "application/octet-stream" in allowed_types:
-            pass
         else:
             storage_logger.warning("upload_rejected", reason="missing_magic_bytes", content_type=file.content_type)
             raise HTTPException(status_code=400, detail="Could not verify file signature (Magic Bytes).")

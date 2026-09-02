@@ -16,8 +16,15 @@ def get_user_ip_and_id(request: Request) -> str:
         token = auth.split(" ")[1]
         try:
             import jwt
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], options={"verify_signature": False, "verify_aud": False, "verify_exp": False})
-            
+            payload = jwt.decode(
+                token,
+                settings.SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM],
+                issuer=settings.JWT_ISSUER,
+                audience=settings.JWT_AUDIENCE,
+                options={"require": ["sub", "role", "jti", "exp", "iat", "nbf"]},
+            )
+
             user_id = payload.get("sub")
             if user_id:
                 return f"{ip}:{user_id}"
