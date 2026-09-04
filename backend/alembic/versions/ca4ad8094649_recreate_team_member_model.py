@@ -56,4 +56,16 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_team_members_deleted_at'), table_name='team_members')
     op.drop_index(op.f('ix_team_members_created_at'), table_name='team_members')
     op.drop_table('team_members')
+    
+    # Reconstruct exact historical schema from 8780585ae4b6 (Note: data deleted by upgrade() is NOT recovered)
+    op.create_table('team_members',
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.Column('name', sa.String(length=255), nullable=False),
+    sa.Column('position', sa.String(length=255), nullable=False),
+    sa.Column('image_url', sa.String(length=512), nullable=True),
+    sa.Column('is_lead', sa.Boolean(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
     # ### end Alembic commands ###

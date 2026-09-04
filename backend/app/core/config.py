@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     RELOAD: bool = False
     
+    # Metrics
+    METRICS_BEARER_TOKEN: Optional[str] = None
+    
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
     @field_validator("SECRET_KEY")
@@ -122,6 +125,8 @@ class Settings(BaseSettings):
                  raise ValueError("ACCESS_TOKEN_EXPIRE_MINUTES must be greater than 0.")
             if not self.RESEND_API_KEY or not self.RESEND_API_KEY.strip():
                  raise ValueError("RESEND_API_KEY is required in production.")
+            if not self.METRICS_BEARER_TOKEN or len(self.METRICS_BEARER_TOKEN) < 32:
+                 raise ValueError("METRICS_BEARER_TOKEN is required and must be at least 32 characters long in production.")
         return self
 
 settings = Settings()

@@ -14,5 +14,6 @@ rule_files:
 scrape_configs:
   - job_name: "fastapi_backend"
     metrics_path: "/metrics"
+    bearer_token_file: "/tmp/metrics_token"
     static_configs:
       - targets: ["backend:8000"]

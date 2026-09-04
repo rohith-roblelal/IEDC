@@ -26,6 +26,35 @@ services:
           name: iedc-redis
           property: connectionString
 
+  - type: worker
+    name: iedc-worker
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: arq app.worker.WorkerSettings
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        sync: false
+      - key: FIRST_SUPERADMIN_PASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: iedc-redis
+          property: connectionString
+
   - type: redis
     name: iedc-redis
     ipAllowList: [] # internal only

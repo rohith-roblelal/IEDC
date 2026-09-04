@@ -259,9 +259,21 @@ if settings.FRONTEND_URLS:
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-# Mount Prometheus Metrics
+# Mount Prometheus Metrics securely
 metrics_app = make_asgi_app()
-app.mount("/metrics", metrics_app)
+
+async def metrics_endpoint(scope, receive, send):
+    request = Request(scope, receive)
+    token = request.headers.get("Authorization", "")
+    expected = getattr(settings, "METRICS_BEARER_TOKEN", None)
+    
+    if not expected or token != f"Bearer {expected}":
+        response = JSONResponse({"detail": "Unauthorized"}, status_code=401)
+        await response(scope, receive, send)
+        return
+    await metrics_app(scope, receive, send)
+
+app.mount("/metrics", metrics_endpoint)
 
 @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 def root():
