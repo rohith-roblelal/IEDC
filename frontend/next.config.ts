@@ -11,7 +11,7 @@ const csp = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""};
   style-src 'self' 'unsafe-inline';
-  img-src 'self' data: blob: https://${supabaseHost};
+  img-src 'self' data: blob: https://${supabaseHost} https://iedcsnmimt.vercel.app;
   connect-src 'self' https://${supabaseHost} https://*.sentry.io;
   font-src 'self' data:;
   media-src 'self' https://${supabaseHost};
@@ -92,6 +92,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: supabaseHost,
+      },
+      {
+        protocol: 'https',
+        hostname: 'iedcsnmimt.vercel.app',
       },
     ],
   },
