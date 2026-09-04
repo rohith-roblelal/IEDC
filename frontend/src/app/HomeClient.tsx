@@ -136,7 +136,7 @@ export default function HomeClient({ announcements = [], podcasts = [], partners
             </Link>
           </div>
           
-          {settings.hero_image_url ? (
+          {true ? (
             <motion.div 
                initial={{ scale: 0.95, opacity: 0 }}
                animate={{ scale: 1, opacity: 1 }}
@@ -144,8 +144,8 @@ export default function HomeClient({ announcements = [], podcasts = [], partners
                className="mt-11 mx-auto w-[min(400px,100%)] flex items-center justify-center"
             >
               <Image 
-                src={settings.hero_image_url || "/hero_banner.jpg"} 
-                alt=""
+                src="/hero_banner.png" 
+                alt="IEDC SNMIMT Logo"
                 width={400}
                 height={400}
                 priority={true}
