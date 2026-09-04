@@ -22,12 +22,6 @@ export default function ReportGenerationModal({
   const [endDate, setEndDate] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      applyPreset("12months");
-    }
-  }, [isOpen]);
-
   const applyPreset = (p: PresetType) => {
     setPreset(p);
     setError(null);
@@ -66,6 +60,13 @@ export default function ReportGenerationModal({
     setStartDate(`${start.getFullYear()}-${pad(start.getMonth()+1)}-${pad(start.getDate())}`);
     setEndDate(`${end.getFullYear()}-${pad(end.getMonth()+1)}-${pad(end.getDate())}`);
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      applyPreset("12months");
+    }
+  }, [isOpen]);
+
 
   const handleGenerate = async () => {
     setError(null);

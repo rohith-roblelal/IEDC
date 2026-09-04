@@ -4,7 +4,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, noload
 
 from app.models.models import (
     Startup, StartupGalleryImage, Batch, Technology,
@@ -61,12 +61,12 @@ class StartupRepository:
         from app.database.pagination import paginate
         query = select(Startup).options(
             selectinload(Startup.batch),
-            selectinload(Startup.gallery_images),
             selectinload(Startup.founders),
-            selectinload(Startup.awards),
-            selectinload(Startup.funding),
-            selectinload(Startup.press_links),
-            selectinload(Startup.technologies)
+            selectinload(Startup.technologies),
+            noload(Startup.gallery_images),
+            noload(Startup.awards),
+            noload(Startup.funding),
+            noload(Startup.press_links)
         ).where(Startup.deleted_at.is_(None))
         
         if published_only:

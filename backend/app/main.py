@@ -266,3 +266,5 @@ app.mount("/metrics", metrics_app)
 @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 def root():
     return {"message": f"Welcome to the {settings.PROJECT_NAME} API"}
+
+

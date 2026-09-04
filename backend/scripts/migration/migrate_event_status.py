@@ -4,7 +4,7 @@ import sys
 from datetime import datetime, timezone
 
 # Add the project root to python path so we can import from app
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import SessionLocal
