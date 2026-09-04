@@ -141,6 +141,18 @@ This document tracks the ongoing development, features implemented, and upcoming
 - **SSRF & XSS**: Implemented strict `nh3` HTML sanitization and `httpx` redirect validation to block SSRF and XSS vectors.
 - **Secret Scanning**: Executed comprehensive deep git history scans to verify zero high-entropy secret leakage.
 
+#### Phase 10 — Final Production Release Gates ✅
+- **Metrics Security**: Secured `/metrics` with a bearer token wrapper in `main.py` and enforced `METRICS_BEARER_TOKEN`.
+- **Worker Configuration**: Configured background `worker` service in `render.yaml` and `docker-compose.prod.yml` to run ARQ tasks.
+- **Workflow Cleanup**: Deleted obsolete SSH deployment workflows to enforce Render as the sole continuous deployment path.
+- **Migration Safety**: Restored destructive `downgrade()` logic in migration `ca4ad8094649` to properly recreate tables instead of blindly dropping them.
+- **Observability Secrets**: Hardened Grafana, Prometheus, and Alertmanager configurations by injecting secrets via tmp volumes instead of environment variable fallbacks.
+- **Frontend Hardening**: Hardened `next.config.ts` by restricting Image API to the exact Supabase backend and enabling strict HSTS headers.
+
+#### Post-Production UI Polish ✅
+- **Hero Image Integration**: Updated `HomeClient.tsx` to force the home hero banner to use a newly designed, transparent PNG logo (`hero_banner.png`), overriding legacy database fallbacks.
+- **Frontend Build Stability**: Removed obsolete `shadcn/tailwind.css` imports to fix Turbopack crashing during local development.
+
 
 ## In Progress / Next Steps (Production Roadmap)
 
