@@ -2,6 +2,7 @@ import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import StartupsClient from "./StartupsClient";
 import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import { clientFetch } from "@/lib/api/client";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function StartupsPage() {
+export default async function StartupsPage() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -32,6 +33,14 @@ export default function StartupsPage() {
     "description": "Discover the innovative startups incubated and nurtured at IEDC SNMIMT.",
     "url": `${getBaseUrl()}/startups`
   };
+
+  let startups = [];
+  try {
+    const data = await clientFetch("api/v1/startups", { next: { revalidate: 60 } });
+    startups = data.items || (Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Failed to fetch startups:", err);
+  }
 
   return (
     <>
@@ -51,7 +60,7 @@ export default function StartupsPage() {
         <p>What is this page? A directory of student startups incubated at IEDC SNMIMT.</p>
         <p>What will you find here? Information about various campus startups, their founders, industries, and current development stages.</p>
       </section>
-      <StartupsClient />
+      <StartupsClient initialStartups={startups} />
     </>
   );
 }

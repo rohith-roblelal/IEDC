@@ -2,6 +2,7 @@ import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import AboutClient from "./AboutClient";
 import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import { clientFetch } from "@/lib/api/client";
 
 export async function generateMetadata(): Promise<Metadata> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
@@ -37,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "AboutPage",
@@ -48,6 +49,14 @@ export default function AboutPage() {
       "@id": `${getBaseUrl()}/#organization`
     }
   };
+
+  let team = [];
+  try {
+    const data = await clientFetch("api/v1/team", { next: { revalidate: 60 } });
+    team = data.items || (Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Failed to fetch team for about page:", err);
+  }
 
   return (
     <>
@@ -67,7 +76,7 @@ export default function AboutPage() {
         <p>What is this page? The About page for IEDC SNMIMT.</p>
         <p>What is the mission? To dive into the inner potential and to promote technological disruptions when proffering the nurturing mind to think laterally and divergently.</p>
       </section>
-      <AboutClient />
+      <AboutClient initialTeam={team} />
     </>
   );
 }

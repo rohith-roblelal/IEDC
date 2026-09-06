@@ -8,9 +8,9 @@ import Image from "next/image";
 import { TeamCard } from "@/components/TeamCard";
 import { Lightbulb, Users, Globe2, Rocket, ArrowRight, Quote } from "lucide-react";
 
-export default function AboutClient() {
+export default function AboutClient({ initialTeam = [] }: { initialTeam?: any[] }) {
   const settings = useSettings();
-  const [team, setTeam] = useState<any[]>([]);
+  const [team, setTeam] = useState<any[]>(initialTeam);
 
   const ds = settings?.derived_stats || {};
   const rawStats = settings?.about_stats_json || [
@@ -35,20 +35,6 @@ export default function AboutClient() {
 
   const displayStats = processedStats;
 
-  useEffect(() => {
-    const fetchTeam = async () => {
-      try {
-        const res = await fetch("/api/v1/team");
-        if (res.ok) {
-          const data = await res.json();
-          setTeam(data.items || (Array.isArray(data) ? data : []));
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchTeam();
-  }, []);
 
   // Filter for exact leadership roles per the requirements
   const leadershipRoles = [

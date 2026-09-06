@@ -2,6 +2,7 @@ import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import GalleryClient from "./GalleryClient";
 import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import { galleryApi } from "@/lib/api/gallery";
 
 export async function generateMetadata(): Promise<Metadata> {
   
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function GalleryPage() {
+export default async function GalleryPage() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "ImageGallery",
@@ -36,6 +37,14 @@ export default function GalleryPage() {
       "name": "IEDC SNMIMT"
     }
   };
+
+  let images = [];
+  try {
+    const res = await galleryApi.getImages({ is_published: true });
+    images = Array.isArray(res) ? res : (res as any).items ?? [];
+  } catch (err) {
+    console.error("Failed to fetch gallery:", err);
+  }
 
   return (
     <>
@@ -55,7 +64,7 @@ export default function GalleryPage() {
         <p>What is this page? A visual gallery containing event posters, highlights, and snapshots from IEDC SNMIMT activities.</p>
         <p>What kind of images are here? Photos and promotional material from hackathons, workshops, and startup networking events.</p>
       </section>
-      <GalleryClient />
+      <GalleryClient initialImages={images} />
     </>
   );
 }

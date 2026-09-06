@@ -2,6 +2,7 @@ import { getBaseUrl } from "@/lib/utils";
 import { Metadata } from "next";
 import TeamClient from "./TeamClient";
 import BreadcrumbJsonLd from "@/components/seo/BreadcrumbJsonLd";
+import { clientFetch } from "@/lib/api/client";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function TeamPage() {
+export default async function TeamPage() {
   // CollectionPage for the team directory
   const schema = {
     "@context": "https://schema.org",
@@ -36,6 +37,14 @@ export default function TeamPage() {
       "@id": `${getBaseUrl()}/#organization`
     }
   };
+
+  let team = [];
+  try {
+    const data = await clientFetch("api/v1/team", { next: { revalidate: 60 } });
+    team = data.items || (Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Failed to fetch team:", err);
+  }
 
   return (
     <>
@@ -55,7 +64,7 @@ export default function TeamPage() {
         <p>What is this page? A directory of the leadership and core team members of IEDC SNMIMT.</p>
         <p>Who will you find here? Nodal officers, student leaders, executive committee members, and assistant leads driving innovation at SNMIMT.</p>
       </section>
-      <TeamClient />
+      <TeamClient initialTeam={team} />
     </>
   );
 }

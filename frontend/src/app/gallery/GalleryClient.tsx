@@ -6,25 +6,9 @@ import { Image as ImageIcon, X } from "lucide-react";
 import Image from "next/image";
 import { galleryApi } from "@/lib/api/gallery";
 
-export default function GalleryClient() {
-  const [images, setImages] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function GalleryClient({ initialImages = [] }: { initialImages?: any[] }) {
+  const [images, setImages] = useState<any[]>(initialImages);
   const [selectedImage, setSelectedImage] = useState<any | null>(null);
-
-  useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const res = await galleryApi.getImages({ is_published: true });
-        const items = Array.isArray(res) ? res : (res.items ?? []);
-        setImages(items);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchImages();
-  }, []);
 
   return (
     <div className="min-h-screen pt-24 pb-20 px-6">
@@ -43,11 +27,7 @@ export default function GalleryClient() {
           </p>
         </motion.div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
-          </div>
-        ) : images.length === 0 ? (
+        {images.length === 0 ? (
           <div className="text-center text-[#C4C4D4] py-20 bg-[#111432]/50 rounded-3xl border border-white/5">
             <p className="text-xl">No images uploaded yet.</p>
             <p className="mt-2 text-sm">Check back later for exciting photos!</p>

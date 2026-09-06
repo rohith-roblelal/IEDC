@@ -8,38 +8,21 @@ import { groupTeamByRole, sortGroupedRoles, formatRoleDisplay } from "@/lib/team
 
 interface StartupsClientProps {
   initialStartupSlug?: string;
+  initialStartups?: any[];
 }
 
-export default function StartupsClient({ initialStartupSlug }: StartupsClientProps = {}) {
-  const [startups, setStartups] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function StartupsClient({ initialStartupSlug, initialStartups = [] }: StartupsClientProps = {}) {
+  const [startups, setStartups] = useState<any[]>(initialStartups);
   const [selectedStartup, setSelectedStartup] = useState<any | null>(null);
 
   useEffect(() => {
-    const fetchStartups = async () => {
-      try {
-        const res = await fetch("/api/v1/startups");
-        if (res.ok) {
-          const data = await res.json();
-          const items = data.items || (Array.isArray(data) ? data : []);
-          setStartups(items);
-          
-          if (initialStartupSlug) {
-            const found = items.find((s: any) => s.slug === initialStartupSlug || s.id === initialStartupSlug);
-            if (found) {
-              setSelectedStartup(found);
-            }
-          }
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+    if (initialStartupSlug && startups.length > 0) {
+      const found = startups.find((s: any) => s.slug === initialStartupSlug || s.id === initialStartupSlug);
+      if (found) {
+        setSelectedStartup(found);
       }
-    };
-
-    fetchStartups();
-  }, []);
+    }
+  }, [initialStartupSlug, startups]);
 
   const detailTeamGrouped = useMemo(() => {
     if (!selectedStartup) return { sortedRoles: [], grouped: {} };
@@ -63,12 +46,7 @@ export default function StartupsClient({ initialStartupSlug }: StartupsClientPro
           </p>
         </motion.div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="w-8 h-8 border-4 border-[#22D46B]/30 border-t-[#22D46B] rounded-full animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {startups.map((startup, index) => (
               <motion.div
                 key={startup.id}
@@ -167,7 +145,6 @@ export default function StartupsClient({ initialStartupSlug }: StartupsClientPro
               </div>
             )}
           </div>
-        )}
       </main>
 
       <AnimatePresence>

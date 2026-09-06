@@ -14,26 +14,8 @@ function getGridClass(count: number, maxCols: number = 4) {
   return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mx-auto";
 }
 
-export default function TeamClient() {
-  const [team, setTeam] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTeam = async () => {
-      try {
-        const res = await fetch(`/api/v1/team?_t=${Date.now()}`);
-        if (res.ok) {
-          const data = await res.json();
-          setTeam(data.items || (Array.isArray(data) ? data : []));
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchTeam();
-  }, []);
+export default function TeamClient({ initialTeam = [] }: { initialTeam?: any[] }) {
+  const [team, setTeam] = useState<any[]>(initialTeam);
 
   const nodalOfficers = team.filter(m => m.category === "Nodal Officer" && m.is_published);
   const assistantNodalOfficers = team.filter(m => m.category === "Assistant Nodal Officer" && m.is_published);
@@ -50,12 +32,7 @@ export default function TeamClient() {
         Meet the faculty mentors and student leaders driving innovation and entrepreneurship at SNMIMT.
       </p>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
-        </div>
-      ) : (
-        <div className="space-y-14">
+      <div className="space-y-14">
           {allNodalOfficers.length > 0 && (
             <div>
               <p className="text-center text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[#8B7FE8] mb-6">Nodal officer & Assistant Nodal officer</p>
@@ -92,7 +69,6 @@ export default function TeamClient() {
             </div>
           )}
         </div>
-      )}
     </div>
   );
 }
