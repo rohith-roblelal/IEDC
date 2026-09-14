@@ -42,7 +42,7 @@ export default function GalleryClient({ initialImages = [] }: { initialImages?: 
                   transition={{ delay: idx * 0.05, duration: 0.4 }}
                   key={img.id} 
                   onClick={() => setSelectedImage(img)}
-                  className="group relative rounded-2xl overflow-hidden border border-white/10 bg-[#0A0E27] cursor-pointer aspect-[4/5] shadow-lg"
+                  className="group relative rounded-2xl overflow-hidden border border-white/10 bg-[#0A0E27] cursor-pointer aspect-[3/4] shadow-lg"
                 >
                   <Image 
                     src={img.image_url} 

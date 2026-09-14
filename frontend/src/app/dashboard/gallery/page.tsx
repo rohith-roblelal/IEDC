@@ -171,7 +171,7 @@ export default function GalleryPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.05 }}
                 key={img.id} 
-                className="group relative rounded-2xl overflow-hidden border border-white/5 bg-[#111127] shadow-lg aspect-[4/5]"
+                className="group relative rounded-2xl overflow-hidden border border-white/5 bg-[#111127] shadow-lg aspect-[3/4]"
               >
                 <div className="absolute inset-0 z-0">
                   <Image 
