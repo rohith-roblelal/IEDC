@@ -152,6 +152,7 @@ This document tracks the ongoing development, features implemented, and upcoming
 #### Post-Production UI Polish ✅
 - **Hero Image Integration**: Updated `HomeClient.tsx` to force the home hero banner to use a newly designed, transparent PNG logo (`hero_banner.png`), overriding legacy database fallbacks.
 - **Frontend Build Stability**: Removed obsolete `shadcn/tailwind.css` imports to fix Turbopack crashing during local development.
+- **Poster Dimensions**: Standardized event poster aspect ratios to a unified 3:4 portrait layout across the public gallery, admin dashboard gallery, events listing, and event detail pages.
 
 
 ## In Progress / Next Steps (Production Roadmap)
