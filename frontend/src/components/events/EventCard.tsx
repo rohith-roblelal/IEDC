@@ -17,13 +17,13 @@ export function EventCard({ event }: EventCardProps) {
         className="bg-gradient-to-br from-[#3A2065]/55 to-[#0D1030]/90 border border-white/10 rounded-[18px] p-7 flex flex-col gap-3.5 shadow-xl h-full transition-transform duration-300 hover:-translate-y-1.5"
       >
         {event.banner_url ? (
-          <div className="w-full h-40 relative rounded-xl mb-2 bg-black/20 overflow-hidden">
+          <div className="w-full aspect-[3/4] relative rounded-xl mb-2 bg-black/20 overflow-hidden">
             <Image 
               src={event.banner_url} 
               alt={event.title || ""} 
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-contain" 
+              className="object-cover" 
             />
           </div>
         ) : (

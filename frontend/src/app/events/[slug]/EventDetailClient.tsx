@@ -46,15 +46,16 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
         className="bg-[#0A0E27] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
       >
         {event.banner_url && (
-          <div className="w-full h-64 md:h-96 relative">
-            <Image 
-              src={event.banner_url} 
-              alt={event.title || ""} 
-              fill
-              sizes="100vw"
-              className="object-contain p-4 md:p-8" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0E27] to-transparent"></div>
+          <div className="w-full bg-black/20 pt-8 pb-32 flex justify-center">
+            <div className="relative w-full max-w-[300px] md:max-w-[400px] aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+              <Image 
+                src={event.banner_url} 
+                alt={event.title || ""} 
+                fill
+                sizes="(max-width: 768px) 300px, 400px"
+                className="object-cover" 
+              />
+            </div>
           </div>
         )}
 
