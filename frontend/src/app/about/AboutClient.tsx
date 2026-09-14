@@ -229,7 +229,12 @@ export default function AboutClient({ initialTeam = [] }: { initialTeam?: any[] 
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <div className={`grid gap-6 mb-10 ${
+            featuredTeam.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' : 
+            featuredTeam.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto' : 
+            featuredTeam.length === 3 ? 'grid-cols-1 sm:grid-cols-3 max-w-4xl mx-auto' : 
+            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+          }`}>
             {featuredTeam.map((member, i) => (
               <TeamCard key={member.id || i} member={member} featured={false} />
             ))}
