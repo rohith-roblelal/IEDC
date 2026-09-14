@@ -47,6 +47,6 @@ To mitigate this, you must configure **PgBouncer** (in transaction pooling mode)
 3. Copy the pooled connection string (it will typically append `-pooler` to the endpoint host).
 4. Update your production `.env` file:
    ```env
-   DATABASE_URL=postgresql+asyncpg://user:password@ep-withered-rain-123456-pooler.us-east-2.aws.neon.tech/neondb
+   DATABASE_URL=postgresql+asyncpg://<USER>:<PASSWORD>@<PROJECT_ENDPOINT>-pooler.<REGION>.aws.neon.tech/<DB_NAME>
    ```
 5. Ensure `backend/app/database/session.py` maintains `pool_size=20` and `max_overflow=50` to gracefully handle the FastAPI application-side queue.
